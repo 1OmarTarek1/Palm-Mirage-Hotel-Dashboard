@@ -1,1 +1,6 @@
-export const Sidebar = () => <div>Sidebar</div>;
+// sidebar component 
+export default function Sidebar() {
+  return (
+    <div>Sidebar</div>
+  )
+}
