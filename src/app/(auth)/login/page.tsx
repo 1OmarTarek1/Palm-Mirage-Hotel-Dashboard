@@ -21,8 +21,11 @@ import { loginSchema, loginSchemaType } from "@/schema/auth.schema";
 import { loginUser } from "@/services/auth.services";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<loginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -33,6 +36,8 @@ export default function Login() {
 
   async function onlogin(values: loginSchemaType) {
     const data = await loginUser(values);
+    console.log(data);
+    
   }
 
   return (
@@ -70,12 +75,25 @@ export default function Login() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      id="password"
-                      type="password"
-                      placeholder="Please Enter Your password"
-                    />
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Please Enter Your password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
