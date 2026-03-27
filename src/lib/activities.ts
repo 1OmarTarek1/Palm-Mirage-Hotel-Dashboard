@@ -1,0 +1,123 @@
+import axios from "axios";
+import type { Activity, ActivityCategory, ActivityIcon, ActivityStat } from "@/components/Activities/data";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+
+interface ApiActivityImage {
+  secure_url?: string;
+}
+
+interface ApiActivity {
+  _id?: string;
+  id?: string;
+  category: ActivityCategory;
+  label: string;
+  title: string;
+  description: string;
+  image?: string | ApiActivityImage;
+  stats?: ActivityStat[];
+  highlights?: string[];
+  icon?: ActivityIcon;
+  createdAt?: string;
+}
+
+function getAccessTokenFromCookies() {
+  if (typeof document === "undefined") return null;
+
+  const tokenCookie = document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith("accessToken="));
+
+  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
+}
+
+function mapApiActivity(activity: ApiActivity): Activity {
+  const image =
+    typeof activity.image === "string"
+      ? activity.image
+      : activity.image?.secure_url ?? "";
+
+  return {
+    id: activity._id ?? activity.id ?? "",
+    category: activity.category,
+    label: activity.label,
+    title: activity.title,
+    description: activity.description,
+    image,
+    stats: activity.stats ?? [],
+    highlights: activity.highlights ?? [],
+    icon: activity.icon ?? "Ship",
+    createdAt: activity.createdAt?.slice(0, 10) ?? "",
+  };
+}
+
+function getErrorMessage(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.message ?? error.message;
+  }
+
+  return error instanceof Error ? error.message : "Request failed";
+}
+
+export async function fetchActivities() {
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/activity`);
+
+    return (data?.data?.activities ?? []).map(mapApiActivity);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function updateActivity(activity: Activity) {
+  const accessToken = getAccessTokenFromCookies();
+  if (!accessToken) {
+    throw new Error("Missing access token");
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("category", activity.category);
+    formData.append("label", activity.label);
+    formData.append("title", activity.title);
+    formData.append("description", activity.description);
+    formData.append("highlights", JSON.stringify(activity.highlights));
+    formData.append("stats", JSON.stringify(activity.stats));
+    formData.append("icon", activity.icon);
+
+    if (activity.imageFile) {
+      formData.append("image", activity.imageFile);
+    }
+
+    const { data } = await axios.patch(
+      `${API_BASE_URL}/activity/${activity.id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return mapApiActivity(data?.data?.activity);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function deleteActivity(activityId: string) {
+  const accessToken = getAccessTokenFromCookies();
+  if (!accessToken) {
+    throw new Error("Missing access token");
+  }
+
+  try {
+    await axios.delete(`${API_BASE_URL}/activity/${activityId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
