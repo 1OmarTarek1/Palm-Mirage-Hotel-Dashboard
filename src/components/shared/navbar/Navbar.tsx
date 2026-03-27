@@ -262,10 +262,10 @@ export default function Navbar({
                             <div
                               className={`absolute bottom-0.5 top-0.5 w-[2.1rem] rounded-full bg-card shadow-sm transition-transform duration-300 ease-in-out ${language === 'ar' ? 'translate-x-[2.1rem]' : 'translate-x-0'}`}
                             />
-                            <span className={`relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${language === 'en' ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <span className={`font-main relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${language === 'en' ? 'text-primary' : 'text-muted-foreground'}`}>
                               EN
                             </span>
-                            <span className={`relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${language === 'ar' ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <span className={`font-main relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${language === 'ar' ? 'text-primary' : 'text-muted-foreground'}`}>
                               AR
                             </span>
                           </button>
