@@ -207,8 +207,12 @@ export default function DynamicTable<T extends object>({
     const col = columns.find((c) => c.key === sortConfig.key);
 
     return [...filteredData].sort((a, b) => {
-      const aVal = col ? resolveSortValue(a, col) : a[sortConfig.key];
-      const bVal = col ? resolveSortValue(b, col) : b[sortConfig.key];
+      const aVal = col
+        ? resolveSortValue(a, col)
+        : (a as Record<string, unknown>)[String(sortConfig.key)];
+      const bVal = col
+        ? resolveSortValue(b, col)
+        : (b as Record<string, unknown>)[String(sortConfig.key)];
 
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
@@ -234,8 +238,9 @@ export default function DynamicTable<T extends object>({
   return (
     <div ref={tableContainerRef} className="w-full">
       {/* Top Controls: Search + Filters */}
-      <div className="mb-10 flex flex-wrap items-center justify-between gap-6">
-        <div className="flex flex-1 items-center gap-4 min-w-75">
+      <div className="sticky top-16 z-30 rounded-t-[28px] border-b border-border bg-card/95 py-4 backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex min-w-75 flex-1 items-center gap-4">
           <SearchBar
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
@@ -245,24 +250,25 @@ export default function DynamicTable<T extends object>({
           {hasActiveFilters && (
             <button
               onClick={handleReset}
-              className="group flex cursor-pointer items-center gap-2 whitespace-nowrap text-sm font-bold text-gray-500 transition-all hover:text-indigo-600"
+              className="group flex cursor-pointer items-center gap-2 whitespace-nowrap font-main text-sm font-bold text-muted-foreground transition-all hover:text-primary"
             >
               <RotateCcw size={16} className="group-hover:-rotate-180 transition-transform duration-500" />
               Reset
             </button>
           )}
-        </div>
-
-        {/* Filters Panel - Now aligned to the right */}
-        {filtersConfig.length > 0 && (
-          <div className="flex items-center">
-            <FiltersPanel
-              filtersConfig={filtersConfig}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
           </div>
-        )}
+
+          {/* Filters Panel - Now aligned to the right */}
+          {filtersConfig.length > 0 && (
+            <div className="flex items-center">
+              <FiltersPanel
+                filtersConfig={filtersConfig}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Table Section */}

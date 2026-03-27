@@ -3,6 +3,13 @@
 import React from "react";
 import { Filter as FilterIcon } from "lucide-react";
 import { FilterConfig } from "./types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FiltersPanelProps<T> {
   filtersConfig: FilterConfig<T>[];
@@ -31,9 +38,9 @@ const FiltersPanel = <T,>({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="mr-2 flex items-center gap-2 text-gray-400">
+      <div className="mr-2 flex items-center gap-2 text-muted-foreground">
         <FilterIcon size={16} />
-        <span className="text-xs font-semibold uppercase tracking-wider">
+        <span className="font-header text-xs font-semibold uppercase tracking-wider">
           Filters
         </span>
       </div>
@@ -41,21 +48,27 @@ const FiltersPanel = <T,>({
       {filtersConfig.map((f) => (
         <div key={String(f.key)} className="flex items-center gap-2">
           {f.type === "select" ? (
-            <select
-              value={filters[f.key] || ""}
-              onChange={(e) => onFilterChange(f.key, e.target.value)}
-              className="rounded-lg border border-gray-100 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50"
+            <Select
+              value={filters[f.key] ? String(filters[f.key]) : "__all__"}
+              onValueChange={(value) =>
+                onFilterChange(f.key, value === "__all__" ? "" : value)
+              }
             >
-              <option value="">All {f.label}</option>
-              {f.options?.map((opt) => (
-                <option key={String(opt.value)} value={String(opt.value)}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-10 min-w-40 rounded-xl px-3 py-2 text-xs font-medium">
+                <SelectValue placeholder={`All ${f.label}`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All {f.label}</SelectItem>
+                {f.options?.map((opt) => (
+                  <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : f.type === "range" ? (
-            <div className="flex items-center gap-1 rounded-lg border border-gray-100 bg-white px-2 py-1 shadow-sm">
-              <span className="text-[10px] font-bold uppercase text-gray-300">
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-card px-2 py-1.5 shadow-sm">
+              <span className="font-header text-[10px] font-bold uppercase text-muted-foreground/70">
                 {f.label}:
               </span>
               <input
@@ -64,16 +77,16 @@ const FiltersPanel = <T,>({
                 placeholder="Min"
                 value={filters[f.key]?.min || ""}
                 onChange={(e) => handleRangeChange(f.key, "min", e.target.value)}
-                className="w-16 bg-transparent text-xs outline-none placeholder:text-gray-300"
+                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
               />
-              <span className="text-gray-300">-</span>
+              <span className="text-muted-foreground/70">-</span>
               <input
                 type="number"
                 min="0"
                 placeholder="Max"
                 value={filters[f.key]?.max || ""}
                 onChange={(e) => handleRangeChange(f.key, "max", e.target.value)}
-                className="w-16 bg-transparent text-xs outline-none placeholder:text-gray-300"
+                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
               />
             </div>
           ) : null}

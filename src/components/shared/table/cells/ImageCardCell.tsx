@@ -15,7 +15,7 @@ export default function ImageCardCell({ row, column, resolvedValue }: CellProps)
         isLeftAligned ? "justify-start text-left" : isRightAligned ? "justify-end text-right" : "justify-center text-center"
       }`}
     >
-      <div className="h-16 w-24 overflow-hidden rounded-2xl bg-gray-100 shadow-sm border border-gray-100/50">
+      <div className="h-16 w-24 overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
         {imageUrl ? (
           <img 
             src={imageUrl} 
@@ -27,9 +27,9 @@ export default function ImageCardCell({ row, column, resolvedValue }: CellProps)
         )}
       </div>
       <div className={`flex flex-col gap-0.5 ${isLeftAligned ? "items-start" : isRightAligned ? "items-end" : "items-center"}`}>
-        <span className="text-sm font-extrabold text-[#111111] leading-tight">{String(resolvedValue)}</span>
+        <span className="font-header text-sm font-extrabold leading-tight text-foreground">{String(resolvedValue)}</span>
         {subtitle && (
-          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest opacity-80">
+          <span className="font-main text-[10px] font-black uppercase tracking-widest text-primary/85">
             {String(subtitle)}
           </span>
         )}

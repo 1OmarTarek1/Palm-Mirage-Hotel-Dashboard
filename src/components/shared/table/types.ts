@@ -4,6 +4,7 @@ export interface Column<T> {
   key: keyof T | string; // Allow arbitrary keys for custom accessors
   title: string;
   cellAlign?: "left" | "center" | "right";
+  headerAlign?: "left" | "center" | "right";
   sortable?: boolean;
   searchable?: boolean;
   filterable?: boolean;
@@ -26,7 +27,7 @@ export interface FilterConfig<T> {
 }
 
 export interface SortConfig<T> {
-  key: keyof T;
+  key: Column<T>["key"];
   direction: "asc" | "desc";
 }
 

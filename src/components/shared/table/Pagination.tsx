@@ -39,13 +39,13 @@ const Pagination: React.FC<PaginationProps> = ({
   const endIndex = Math.min(currentPage * pageSize, totalEntries);
 
   return (
-    <div className="mt-6 flex items-center justify-between">
-      <p className="text-sm text-gray-400">
+    <div className="mt-6 flex items-center justify-between rounded-b-[28px] border-t border-border pt-6 px-2">
+      <p className="font-main text-sm text-muted-foreground">
         Showing{" "}
-        <span className="font-medium text-gray-600">
+        <span className="font-medium text-foreground">
           {startIndex}-{endIndex}
         </span>{" "}
-        of <span className="font-medium text-gray-600">{totalEntries}</span>{" "}
+        of <span className="font-medium text-foreground">{totalEntries}</span>{" "}
         entries
       </p>
 
@@ -53,7 +53,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft size={16} />
         </button>
@@ -62,7 +62,7 @@ const Pagination: React.FC<PaginationProps> = ({
           page === "..." ? (
             <span
               key={`ellipsis-${i}`}
-              className="flex h-8 w-8 items-center justify-center text-sm text-gray-400"
+              className="flex h-8 w-8 items-center justify-center font-main text-sm text-muted-foreground"
             >
               ...
             </span>
@@ -70,10 +70,10 @@ const Pagination: React.FC<PaginationProps> = ({
             <button
               key={page}
               onClick={() => onPageChange(page as number)}
-              className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+              className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border font-main text-sm font-medium transition-colors ${
                 currentPage === page
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                  : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
               {page}
@@ -84,7 +84,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight size={16} />
         </button>

@@ -25,27 +25,27 @@ export default function TableBody<T extends object>({
   };
 
   return (
-    <tbody className="divide-y divide-gray-100/50">
+    <tbody className="divide-y divide-border/70">
       {isLoading ? (
         Array.from({ length: skeletonRowCount }).map((_, rowIndex) => (
           <tr key={`skeleton-${rowIndex}`} className="animate-pulse">
             {columns.map((col, colIndex) => (
               <td
                 key={`${String(col.key)}-${colIndex}`}
-                className={`px-6 py-6 text-[13.5px] font-medium text-gray-700 ${getCellAlignmentClass(col.cellAlign)}`}
+                className={`px-6 py-4 font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}
               >
                 {col.type === "image-card" ? (
                   <div className={`flex items-center gap-3 ${col.cellAlign === "left" ? "justify-start" : col.cellAlign === "right" ? "justify-end" : "justify-center"}`}>
-                    <div className="h-12 w-12 rounded-2xl bg-gray-200" />
+                    <div className="h-12 w-12 rounded-2xl bg-muted" />
                     <div className="space-y-2">
-                      <div className="h-3.5 w-28 rounded-full bg-gray-200" />
-                      <div className="h-3 w-20 rounded-full bg-gray-100" />
+                      <div className="h-3.5 w-28 rounded-full bg-muted" />
+                      <div className="h-3 w-20 rounded-full bg-accent" />
                     </div>
                   </div>
                 ) : col.type === "action-dropdown" ? (
-                  <div className={`${col.cellAlign === "left" ? "" : col.cellAlign === "right" ? "ml-auto" : "mx-auto"} h-8 w-8 rounded-lg bg-gray-200`} />
+                  <div className={`${col.cellAlign === "left" ? "" : col.cellAlign === "right" ? "ml-auto" : "mx-auto"} h-8 w-8 rounded-lg bg-muted`} />
                 ) : (
-                  <div className={`${col.cellAlign === "left" ? "" : col.cellAlign === "right" ? "ml-auto" : "mx-auto"} h-4 w-20 rounded-full bg-gray-200`} />
+                  <div className={`${col.cellAlign === "left" ? "" : col.cellAlign === "right" ? "ml-auto" : "mx-auto"} h-4 w-20 rounded-full bg-muted`} />
                 )}
               </td>
             ))}
@@ -53,21 +53,21 @@ export default function TableBody<T extends object>({
         ))
       ) : data.length === 0 ? (
         <tr>
-          <td
-            colSpan={columns.length}
-            className="px-6 py-12 text-center text-sm text-gray-400"
-          >
-            No data available matching your criteria
-          </td>
+            <td
+              colSpan={columns.length}
+              className="px-6 py-12 text-center font-main text-sm text-muted-foreground"
+            >
+              No data available matching your criteria
+            </td>
         </tr>
       ) : (
         data.map((row, rowIndex) => (
           <tr
             key={resolveRowKey(row, startIndex + rowIndex)}
-            className="transition-colors hover:bg-gray-50/50 group"
+            className="group transition-colors hover:bg-muted/35"
           >
             {columns.map((col) => (
-              <td key={String(col.key)} className={`px-6 py-6 text-[13.5px] font-medium text-gray-700 ${getCellAlignmentClass(col.cellAlign)}`}>
+              <td key={String(col.key)} className={`px-6 py-4 font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}>
                 <CellRenderer 
                   row={row} 
                   column={col} 
