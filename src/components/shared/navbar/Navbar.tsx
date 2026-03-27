@@ -79,8 +79,7 @@ export default function Navbar({
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E5E7EB] shadow-sm transition-colors duration-300">
-      <div className="max-w-screen-2xl mx-auto h-full px-4 flex items-center justify-between gap-2">
-        {/* ── Mobile Search View ── */}
+<div className="max-w-screen-2xl mx-auto h-full px-4 md:px-8 lg:px-12 flex items-center justify-between gap-2">        {/* ── Mobile Search View ── */}
         {mobileSearchOpen ? (
           <div className="flex items-center w-full h-full gap-2 animate-in fade-in zoom-in-95 duration-200 md:hidden">
             <button
