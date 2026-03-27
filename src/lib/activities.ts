@@ -5,6 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3
 
 interface ApiActivityImage {
   secure_url?: string;
+  public_id?: string;
 }
 
 interface ApiActivity {
@@ -15,6 +16,7 @@ interface ApiActivity {
   title: string;
   description: string;
   image?: string | ApiActivityImage;
+  attacthments?: ApiActivityImage[];
   stats?: ActivityStat[];
   highlights?: string[];
   icon?: ActivityIcon;
@@ -35,7 +37,7 @@ function mapApiActivity(activity: ApiActivity): Activity {
   const image =
     typeof activity.image === "string"
       ? activity.image
-      : activity.image?.secure_url ?? "";
+      : activity.image?.secure_url ?? activity.attacthments?.[0]?.secure_url ?? "";
 
   return {
     id: activity._id ?? activity.id ?? "",
@@ -72,7 +74,7 @@ export async function fetchActivities() {
 export async function updateActivity(activity: Activity) {
   const accessToken = getAccessTokenFromCookies();
   if (!accessToken) {
-    throw new Error("Missing access token");
+    throw new Error("Your session has expired. Please sign in again.");
   }
 
   try {
@@ -105,10 +107,42 @@ export async function updateActivity(activity: Activity) {
   }
 }
 
+export async function createActivity(activity: Activity) {
+  const accessToken = getAccessTokenFromCookies();
+  if (!accessToken) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("category", activity.category);
+    formData.append("label", activity.label);
+    formData.append("title", activity.title);
+    formData.append("description", activity.description);
+    formData.append("highlights", JSON.stringify(activity.highlights));
+    formData.append("stats", JSON.stringify(activity.stats));
+    formData.append("icon", activity.icon);
+
+    if (activity.imageFile) {
+      formData.append("image", activity.imageFile);
+    }
+
+    await axios.post(`${API_BASE_URL}/activity`, formData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return fetchActivities();
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
 export async function deleteActivity(activityId: string) {
   const accessToken = getAccessTokenFromCookies();
   if (!accessToken) {
-    throw new Error("Missing access token");
+    throw new Error("Your session has expired. Please sign in again.");
   }
 
   try {
