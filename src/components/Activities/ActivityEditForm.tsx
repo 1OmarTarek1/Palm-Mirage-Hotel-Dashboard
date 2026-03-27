@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   activityCategoryOptions,
   activityIconOptions,
@@ -85,81 +92,96 @@ export default function ActivityEditForm({
     <div className="space-y-6">
       <div className="grid gap-5 md:grid-cols-2">
         <label className="space-y-2 md:col-span-2">
-          <span className="text-sm font-semibold text-slate-700">Activity Image</span>
+          <span className="font-main text-sm font-semibold text-foreground">Activity Image</span>
           <div className="space-y-3">
-            <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
-              <img
-                src={formData.image}
-                alt={formData.title}
-                className="h-48 w-full object-cover"
-              />
+            <div className="overflow-hidden rounded-[24px] border border-border bg-muted/35">
+              {formData.image ? (
+                <img
+                  src={formData.image}
+                  alt={formData.title || "Activity preview"}
+                  className="h-48 w-full object-cover"
+                />
+              ) : (
+                <div className="font-main flex h-48 items-center justify-center text-sm text-muted-foreground">
+                  Upload an activity image to preview it here.
+                </div>
+              )}
             </div>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-700"
+              className="font-main block w-full cursor-pointer rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground file:mr-4 file:cursor-pointer file:rounded-full file:border-2 file:border-primary file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:transition-all file:duration-[600ms] hover:file:bg-secondary"
             />
           </div>
         </label>
 
         <label className="space-y-2">
-          <span className="text-sm font-semibold text-slate-700">Title</span>
+          <span className="font-main text-sm font-semibold text-foreground">Title</span>
           <input
             value={formData.title}
             onChange={(event) => handleChange("title", event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white"
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-sm font-semibold text-slate-700">Label</span>
+          <span className="font-main text-sm font-semibold text-foreground">Label</span>
           <input
             value={formData.label}
             onChange={(event) => handleChange("label", event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white"
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-sm font-semibold text-slate-700">Category</span>
-          <select
+          <span className="font-main text-sm font-semibold text-foreground">Category</span>
+          <Select
             value={formData.category}
-            onChange={(event) => handleChange("category", event.target.value as Activity["category"])}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white"
+            onValueChange={(value) => handleChange("category", value as Activity["category"])}
           >
-            {activityCategoryOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {activityCategoryOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="space-y-2">
-          <span className="text-sm font-semibold text-slate-700">Icon</span>
-          <select
+          <span className="font-main text-sm font-semibold text-foreground">Icon</span>
+          <Select
             value={formData.icon}
-            onChange={(event) => handleChange("icon", event.target.value as Activity["icon"])}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white"
+            onValueChange={(value) => handleChange("icon", value as Activity["icon"])}
           >
-            {activityIconOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
+              <SelectValue placeholder="Select icon" />
+            </SelectTrigger>
+            <SelectContent>
+              {activityIconOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-700">Highlights</span>
+            <span className="font-main text-sm font-semibold text-foreground">Highlights</span>
             <button
               type="button"
               onClick={handleAddHighlight}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              aria-label="Add highlight"
             >
-              Add Highlight
+              <Plus size={16} />
             </button>
           </div>
 
@@ -167,18 +189,18 @@ export default function ActivityEditForm({
             {formData.highlights.map((highlight, index) => (
               <div
                 key={`${index}-${highlight}`}
-                className="grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_auto]"
+                className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_auto]"
               >
                 <input
                   value={highlight}
                   onChange={(event) => handleHighlightChange(index, event.target.value)}
                   placeholder="Highlight"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500"
+                  className="font-main w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveHighlight(index)}
-                  className="flex h-[50px] w-[50px] cursor-pointer items-center justify-center rounded-2xl border border-red-200 text-red-600 transition hover:bg-red-50"
+                  className="flex h-[50px] w-[50px] cursor-pointer items-center justify-center rounded-2xl border border-red-200/70 text-red-600 transition hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/15"
                   aria-label="Remove highlight"
                 >
                   <Trash2 size={18} />
@@ -187,7 +209,7 @@ export default function ActivityEditForm({
             ))}
 
             {formData.highlights.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+              <div className="font-main rounded-[24px] border border-dashed border-border bg-muted/35 px-4 py-5 text-sm text-muted-foreground">
                 No highlights added yet.
               </div>
             ) : null}
@@ -196,13 +218,14 @@ export default function ActivityEditForm({
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-700">Stats</span>
+            <span className="font-main text-sm font-semibold text-foreground">Stats</span>
             <button
               type="button"
               onClick={handleAddStat}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              aria-label="Add stat"
             >
-              Add Stat
+              <Plus size={16} />
             </button>
           </div>
 
@@ -210,24 +233,24 @@ export default function ActivityEditForm({
             {formData.stats.map((stat, index) => (
               <div
                 key={`${index}-${stat.label}`}
-                className="grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_1fr_auto]"
+                className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_1fr_auto]"
               >
                 <input
                   value={stat.value}
                   onChange={(event) => handleStatChange(index, "value", event.target.value)}
                   placeholder="Value"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500"
+                  className="font-main w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary"
                 />
                 <input
                   value={stat.label}
                   onChange={(event) => handleStatChange(index, "label", event.target.value)}
                   placeholder="Label"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500"
+                  className="font-main w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveStat(index)}
-                  className="flex h-[50px] w-[50px] cursor-pointer items-center justify-center rounded-2xl border border-red-200 text-red-600 transition hover:bg-red-50"
+                  className="flex h-[50px] w-[50px] cursor-pointer items-center justify-center rounded-2xl border border-red-200/70 text-red-600 transition hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/15"
                   aria-label="Remove stat"
                 >
                   <Trash2 size={18} />
@@ -236,7 +259,7 @@ export default function ActivityEditForm({
             ))}
 
             {formData.stats.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+              <div className="font-main rounded-[24px] border border-dashed border-border bg-muted/35 px-4 py-5 text-sm text-muted-foreground">
                 No stats added yet.
               </div>
             ) : null}
@@ -244,12 +267,12 @@ export default function ActivityEditForm({
         </div>
 
         <label className="space-y-2 md:col-span-2">
-          <span className="text-sm font-semibold text-slate-700">Description</span>
+          <span className="font-main text-sm font-semibold text-foreground">Description</span>
           <textarea
             value={formData.description}
             onChange={(event) => handleChange("description", event.target.value)}
             rows={5}
-            className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white"
+            className="font-main w-full rounded-3xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
       </div>

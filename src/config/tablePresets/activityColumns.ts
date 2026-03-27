@@ -7,6 +7,7 @@ export const activityPreset = createTablePreset<Activity>(
       key: "title",
       title: "Activity",
       cellAlign: "left",
+      headerAlign: "left",
       searchable: true,
       sortable: true,
       type: "image-card",

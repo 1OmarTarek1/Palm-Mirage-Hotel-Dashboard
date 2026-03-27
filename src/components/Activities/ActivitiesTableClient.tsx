@@ -1,23 +1,35 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityColumns, activityFilters } from "@/config/tablePresets/activityColumns";
-import { deleteActivity, fetchActivities, updateActivity } from "@/lib/activities";
-import type { Activity } from "./data";
+import { createActivity, deleteActivity, fetchActivities, updateActivity } from "@/lib/activities";
+import ActivityAddForm from "./ActivityAddForm";
+import { createEmptyActivityDraft, type Activity } from "./data";
 import ActivityDeleteConfirm from "./ActivityDeleteConfirm";
 import ActivityDetailsView from "./ActivityDetailsView";
 import ActivityEditForm from "./ActivityEditForm";
 
-export default function ActivitiesTableClient() {
+export interface ActivitiesTableClientHandle {
+  openAddModal: () => void;
+}
+
+const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function ActivitiesTableClient(_, ref) {
   const [activities, setActivities] = React.useState<Activity[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [creatingDraft, setCreatingDraft] = useState<Activity | null>(null);
   const [viewingActivityId, setViewingActivityId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Activity | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => {
+      setCreatingDraft(createEmptyActivityDraft());
+    },
+  }));
 
   React.useEffect(() => {
     let isMounted = true;
@@ -25,14 +37,13 @@ export default function ActivitiesTableClient() {
     const loadActivities = async () => {
       try {
         setIsLoading(true);
-        setErrorMessage(null);
         const data = await fetchActivities();
         if (isMounted) {
           setActivities(data);
         }
       } catch (error) {
         if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : "Failed to load activities");
+          toast.error(error instanceof Error ? error.message : "Failed to load activities");
         }
       } finally {
         if (isMounted) {
@@ -64,6 +75,7 @@ export default function ActivitiesTableClient() {
   );
 
   const handleCloseViewModal = () => setViewingActivityId(null);
+  const handleCloseAddModal = () => setCreatingDraft(null);
   const handleCloseEditModal = () => {
     setEditingActivityId(null);
     setEditingDraft(null);
@@ -79,6 +91,7 @@ export default function ActivitiesTableClient() {
         setActivities((currentActivities) =>
           currentActivities.filter((activity) => activity.id !== deletingActivity.id)
         );
+        toast.success("Activity deleted successfully.");
 
         if (viewingActivityId === deletingActivity.id) {
           handleCloseViewModal();
@@ -90,7 +103,7 @@ export default function ActivitiesTableClient() {
 
         handleCloseDeleteModal();
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Failed to delete activity");
+        toast.error(error instanceof Error ? error.message : "Failed to delete activity");
       }
     })();
   };
@@ -125,21 +138,31 @@ export default function ActivitiesTableClient() {
             activity.id === updatedActivity.id ? updatedActivity : activity
           )
         );
+        toast.success("Activity updated successfully.");
         handleCloseEditModal();
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Failed to save activity");
+        toast.error(error instanceof Error ? error.message : "Failed to save activity");
+      }
+    })();
+  };
+
+  const handleCreateActivity = () => {
+    if (!creatingDraft) return;
+
+    void (async () => {
+      try {
+        const refreshedActivities = await createActivity(creatingDraft);
+        setActivities(refreshedActivities);
+        toast.success("Activity created successfully.");
+        handleCloseAddModal();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to create activity");
       }
     })();
   };
 
   return (
     <>
-      {errorMessage ? (
-        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-          {errorMessage}
-        </div>
-      ) : null}
-
       <DynamicTable<Activity>
         columns={activityColumns}
         data={activities}
@@ -149,6 +172,21 @@ export default function ActivitiesTableClient() {
         searchPlaceholder="Search experiences..."
         actions={actions}
       />
+
+      <SharedModal
+        isOpen={Boolean(creatingDraft)}
+        onClose={handleCloseAddModal}
+        title="Add Activity"
+        onSave={handleCreateActivity}
+        saveLabel="Create Activity"
+      >
+        {creatingDraft ? (
+          <ActivityAddForm
+            activity={creatingDraft}
+            onChange={setCreatingDraft}
+          />
+        ) : null}
+      </SharedModal>
 
       <SharedModal
         isOpen={Boolean(viewingActivity)}
@@ -185,4 +223,6 @@ export default function ActivitiesTableClient() {
       </SharedModal>
     </>
   );
-}
+});
+
+export default ActivitiesTableClient;

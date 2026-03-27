@@ -33,6 +33,22 @@ export interface Activity {
   createdAt: string;
 }
 
+export function createEmptyActivityDraft(): Activity {
+  return {
+    id: "",
+    title: "",
+    category: "nile",
+    label: "",
+    image: "",
+    imageFile: null,
+    icon: "Ship",
+    highlights: [],
+    stats: [],
+    description: "",
+    createdAt: "",
+  };
+}
+
 export const activityCategoryOptions: ActivityCategory[] = [
   "nile",
   "heritage",
