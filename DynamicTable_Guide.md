@@ -228,6 +228,28 @@ How it works:
 - it searches only inside columns marked with `searchable: true`
 - search is debounced by `300ms`
 - no extra API request is sent while typing
+- search runs before pagination, so it checks all loaded rows, not only the current page
+
+### Search Pipeline
+
+The search flow inside `DynamicTable` is:
+
+1. The user types into `SearchBar`.
+2. The value is stored in `searchTerm`.
+3. A `300ms` debounce updates `debouncedSearchTerm`.
+4. The table starts from the full `data` array.
+5. It builds a list of searchable columns by reading `columns.filter((c) => c.searchable)`.
+6. For each row, it reads the cell value through `resolveValue(...)`.
+7. The value is converted to lowercase text and checked with `includes(...)`.
+8. Matching rows move to the next step of the pipeline: sorting, then pagination.
+
+### What This Means
+
+- Search is generic and reusable across tables.
+- Search does not inspect every field in the row automatically.
+- Search only looks at columns you explicitly mark as `searchable: true`.
+- Pagination does not limit the search scope. Pagination only slices the final result after search and sort are complete.
+- If the parent passes 100 loaded rows, the search checks all 100 rows.
 
 Example:
 
@@ -239,6 +261,27 @@ Example:
 }
 ```
 
+### When Generic Search Is Enough
+
+The current search is a good fit when:
+
+- the dataset is already loaded in the client
+- the row count is small or medium
+- matching plain text is enough
+- you want the same table engine to work for multiple entities
+
+### When You May Need Custom Search
+
+You may need table-specific or server-side search when:
+
+- the dataset is very large
+- the search should hit the API instead of local memory
+- the searchable value is not directly represented by a column
+- you need fuzzy search, token search, Arabic normalization, or advanced matching rules
+- you want to combine several fields into one custom searchable string
+
+In other words, the current design is not "one search per table". It is "one generic search engine, configured by each table's columns".
+
 ## Filters
 
 Filtering is also client-side.
@@ -246,6 +289,59 @@ Filtering is also client-side.
 Supported filter types:
 - `select`
 - `range`
+
+### Filter Pipeline
+
+Filters are applied in the same `filteredData` step as search.
+
+The order is:
+
+1. Start with the full `data` array.
+2. Apply global search if `debouncedSearchTerm` is not empty.
+3. Apply each configured column filter from the `filters` state.
+4. Return the fully filtered result.
+5. Apply sorting.
+6. Apply pagination last.
+
+This means filters also work across all loaded rows, not only the visible page.
+
+### Select Filters
+
+A `select` filter compares the row value with the selected option.
+
+- `__all__` is used in the UI as the neutral value
+- when `__all__` is selected, the stored filter becomes an empty string
+- empty string means "do not filter this field"
+
+### Range Filters
+
+A `range` filter expects an object like:
+
+```ts
+{ min?: number | string; max?: number | string }
+```
+
+Behavior:
+
+- empty `min` and `max` means the filter is ignored
+- only `min` means "greater than or equal to min"
+- only `max` means "less than or equal to max"
+- if both are present and `min > max`, the table auto-swaps them
+- row values are converted to numbers before comparison
+
+### Active Filter State
+
+`DynamicTable` treats these as active controls:
+
+- search term
+- column filters
+- sort state
+
+That is why the reset action clears all three together:
+
+- `searchTerm`
+- `filters`
+- `sortConfig`
 
 Example:
 

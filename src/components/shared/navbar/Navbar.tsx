@@ -5,12 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ArrowLeft,
   Bell,
   Globe,
   LogOut,
   Moon,
-  Search,
   Settings,
   Sun,
   User,
@@ -43,8 +41,6 @@ export default function Navbar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -76,69 +72,30 @@ export default function Navbar({
       style={{ paddingRight: "var(--removed-body-scroll-bar-size, 0px)" }}
     >
       <div className="mx-auto flex h-full max-w-screen-2xl items-center justify-between gap-2 px-4 md:px-8 lg:px-12">
-        {mobileSearchOpen ? (
-          <div className="flex h-full w-full items-center gap-2 animate-in fade-in zoom-in-95 duration-200 md:hidden">
-            <button
-              onClick={() => setMobileSearchOpen(false)}
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <input
-              type="search"
-              autoFocus
-              placeholder="Search..."
-              className="font-main h-10 flex-1 rounded-full border border-border bg-muted px-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-        ) : (
-          <>
-            <Link href="/dashboard" className="group flex shrink-0 items-center gap-2">
-              <div className="relative h-11 w-11 overflow-hidden rounded-full border border-primary/30 bg-card shadow-md transition-shadow duration-300">
-                <Image
-                  src="/logo.png"
-                  alt="Palm Mirage Logo"
-                  fill
-                  sizes="44px"
-                  className="object-contain p-1"
-                />
-              </div>
-              <div className="leading-tight">
-                <span className="font-header block whitespace-nowrap text-[15px] font-semibold tracking-tight text-primary transition-colors sm:text-[16px]">
-                  Palm Mirage
-                </span>
-                <span className="font-main block text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                  Luxury Hotel
-                </span>
-              </div>
-            </Link>
-
-            <div className="mx-auto hidden max-w-md flex-1 md:block">
-              <div className={`relative transition-all duration-300 ${searchFocused ? 'scale-[1.01]' : ''}`}>
-                <span
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 ${searchFocused ? 'text-primary' : 'text-muted-foreground'}`}
-                >
-                  <Search className="h-4 w-4" />
-                </span>
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className="font-main h-10 w-full rounded-full border border-border bg-muted pl-9 pr-4 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+        <>
+          <Link href="/dashboard" className="group flex shrink-0 items-center gap-2">
+            <div className="relative h-11 w-11 overflow-hidden rounded-full border border-primary/30 bg-card shadow-md transition-shadow duration-300">
+              <Image
+                src="/logo.png"
+                alt="Palm Mirage Logo"
+                fill
+                sizes="44px"
+                className="object-contain p-1"
+              />
             </div>
+            <div className="leading-tight">
+              <span className="font-header block whitespace-nowrap text-[15px] font-semibold tracking-tight text-primary transition-colors sm:text-[16px]">
+                Palm Mirage
+              </span>
+              <span className="font-main block text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                Luxury Hotel
+              </span>
+            </div>
+          </Link>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMobileSearchOpen(true)}
-                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary md:hidden"
-              >
-                <Search className="h-5 w-5" />
-              </button>
+          <div className="flex items-center gap-2">
 
-              <div className="relative hidden sm:block" ref={langDropdownRef}>
+            <div className="relative hidden sm:block" ref={langDropdownRef}>
                 <button
                   onClick={() => setLangDropdownOpen((value) => !value)}
                   className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary"
@@ -171,34 +128,40 @@ export default function Navbar({
                     </div>
                   </div>
                 ) : null}
-              </div>
+            </div>
 
-              <button
-                onClick={() => dispatch(toggleTheme())}
-                className="hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary sm:flex"
-                aria-label="Toggle theme"
-              >
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
+            <button
+              onClick={() => dispatch(toggleTheme())}
+              className="hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary sm:flex"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
 
-              <button className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary">
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-card transition-transform duration-150 group-hover:scale-110">
-                    {notificationCount > 99 ? '+99' : notificationCount}
-                  </span>
-                ) : null}
-              </button>
+            <button className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary">
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-card transition-transform duration-150 group-hover:scale-110">
+                  {notificationCount > 99 ? '+99' : notificationCount}
+                </span>
+              ) : null}
+            </button>
 
-              <div className="mx-1 hidden h-6 w-px bg-border sm:block" />
+            <div className="mx-1 hidden h-6 w-px bg-border sm:block" />
 
-              <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((value) => !value)}
                   className="flex cursor-pointer items-center rounded-full transition-all duration-150 focus:outline-none"
                 >
-                  <div className="relative h-10 w-10 rounded-full border border-border bg-muted transition-all duration-200 hover:border-primary">
-                    <img src={displayAvatar} alt="Avatar" className="h-full w-full rounded-full object-cover" />
+                  <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border bg-muted transition-all duration-200 hover:border-primary">
+                    <Image
+                      src={displayAvatar}
+                      alt="Avatar"
+                      fill
+                      sizes="40px"
+                      className="rounded-full object-cover"
+                    />
                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
                   </div>
                 </button>
@@ -286,10 +249,9 @@ export default function Navbar({
                     </div>
                   </div>
                 ) : null}
-              </div>
             </div>
-          </>
-        )}
+          </div>
+        </>
       </div>
     </header>
   );
