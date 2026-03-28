@@ -24,9 +24,12 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter()
   const form = useForm<loginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -38,6 +41,9 @@ export default function Login() {
   async function onlogin(values: loginSchemaType) {
     const data = await loginUser(values);
     console.log(data);
+    if(data.message == "Done"){
+      router.push("/table")
+    }
   }
 
   return (
@@ -81,7 +87,7 @@ export default function Login() {
                           {...field}
                           id="email"
                           type="email"
-                          placeholder="name@example.com"
+                          placeholder="Enter Your Email"
                           className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
                         />
                       </div>
