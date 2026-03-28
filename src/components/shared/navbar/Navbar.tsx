@@ -220,7 +220,7 @@ export default function Navbar({
                               event.stopPropagation();
                               setLanguage(language === 'en' ? 'ar' : 'en');
                             }}
-                            className="relative flex h-7 w-[4.5rem] cursor-pointer items-center rounded-full border border-border bg-muted p-0.5 focus:outline-none"
+                            className="relative flex h-7 w-18 cursor-pointer items-center rounded-full border border-border bg-muted p-0.5 focus:outline-none"
                           >
                             <div
                               className={`absolute bottom-0.5 top-0.5 w-[2.1rem] rounded-full bg-card shadow-sm transition-transform duration-300 ease-in-out ${language === 'ar' ? 'translate-x-[2.1rem]' : 'translate-x-0'}`}
