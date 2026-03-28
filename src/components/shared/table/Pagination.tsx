@@ -39,7 +39,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const endIndex = Math.min(currentPage * pageSize, totalEntries);
 
   return (
-    <div className="mt-6 flex items-center justify-between rounded-b-[28px] border-t border-border pt-6 px-2">
+    <div className="flex items-center justify-between rounded-b-[28px] border-t border-border pt-6 px-2">
       <p className="font-main text-sm text-muted-foreground">
         Showing{" "}
         <span className="font-medium text-foreground">
