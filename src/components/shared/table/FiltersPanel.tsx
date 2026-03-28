@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Filter as FilterIcon } from "lucide-react";
+import { Filter as FilterIcon, RotateCcw } from "lucide-react";
 import { FilterConfig } from "./types";
 import {
   Select,
@@ -15,12 +15,16 @@ interface FiltersPanelProps<T> {
   filtersConfig: FilterConfig<T>[];
   filters: Partial<Record<keyof T, any>>;
   onFilterChange: (key: keyof T, value: any) => void;
+  hasActiveFilters?: boolean;
+  onReset?: () => void;
 }
 
 const FiltersPanel = <T,>({
   filtersConfig,
   filters,
   onFilterChange,
+  hasActiveFilters = false,
+  onReset,
 }: FiltersPanelProps<T>) => {
   if (filtersConfig.length === 0) return null;
 
@@ -38,12 +42,26 @@ const FiltersPanel = <T,>({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="mr-2 flex items-center gap-2 text-muted-foreground">
-        <FilterIcon size={16} />
-        <span className="font-header text-xs font-semibold uppercase tracking-wider">
-          Filters
-        </span>
-      </div>
+      <button
+        type="button"
+        onClick={hasActiveFilters ? onReset : undefined}
+        aria-label={hasActiveFilters ? "Reset filters" : "Filters"}
+        title={hasActiveFilters ? "Reset filters" : "Filters"}
+        className={`mr-2 flex items-center gap-2 transition-all ${
+          hasActiveFilters
+            ? "group cursor-pointer text-muted-foreground hover:text-primary"
+            : "cursor-default text-muted-foreground"
+        }`}
+      >
+        {hasActiveFilters ? (
+          <RotateCcw
+            size={16}
+            className="transition-transform duration-500 group-hover:-rotate-180"
+          />
+        ) : (
+          <FilterIcon size={16} />
+        )}
+      </button>
 
       {filtersConfig.map((f) => (
         <div key={String(f.key)} className="flex items-center gap-2">

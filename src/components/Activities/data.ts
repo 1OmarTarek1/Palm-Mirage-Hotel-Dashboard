@@ -14,6 +14,8 @@ export type ActivityCategory =
   | "balloon"
   | "culinary";
 
+export type ActivityPricingType = "per_person" | "per_group";
+
 export interface ActivityStat {
   value: string;
   label: string;
@@ -30,6 +32,12 @@ export interface Activity {
   highlights: string[];
   stats: ActivityStat[];
   description: string;
+  location: string;
+  basePrice: number;
+  pricingType: ActivityPricingType;
+  durationMinutes: number;
+  defaultCapacity: number;
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -45,6 +53,12 @@ export function createEmptyActivityDraft(): Activity {
     highlights: [],
     stats: [],
     description: "",
+    location: "",
+    basePrice: 0,
+    pricingType: "per_person",
+    durationMinutes: 60,
+    defaultCapacity: 10,
+    isActive: true,
     createdAt: "",
   };
 }
@@ -65,4 +79,9 @@ export const activityIconOptions: ActivityIcon[] = [
   "Palette",
   "CloudSun",
   "ChefHat",
+];
+
+export const activityPricingTypeOptions: ActivityPricingType[] = [
+  "per_person",
+  "per_group",
 ];

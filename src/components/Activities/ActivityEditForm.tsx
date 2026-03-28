@@ -12,6 +12,7 @@ import {
 import {
   activityCategoryOptions,
   activityIconOptions,
+  activityPricingTypeOptions,
   type Activity,
   type ActivityStat,
 } from "./data";
@@ -20,6 +21,9 @@ interface ActivityEditFormProps {
   activity: Activity;
   onChange: (activity: Activity) => void;
 }
+
+const formatPricingTypeLabel = (value: Activity["pricingType"]) =>
+  value === "per_group" ? "Per Group" : "Per Person";
 
 export default function ActivityEditForm({
   activity,
@@ -35,6 +39,11 @@ export default function ActivityEditForm({
     const updated = { ...formData, [key]: value };
     setFormData(updated);
     onChange(updated);
+  };
+
+  const handleNumberChange = <K extends keyof Activity>(key: K, value: string) => {
+    const parsed = Number(value);
+    handleChange(key, (Number.isNaN(parsed) ? 0 : parsed) as Activity[K]);
   };
 
   const handleStatChange = (index: number, key: keyof ActivityStat, value: string) => {
@@ -154,7 +163,7 @@ export default function ActivityEditForm({
         </label>
 
         <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Icon</span>
+          <span className="font-main text-sm font-semibold text-foreground">icon</span>
           <Select
             value={formData.icon}
             onValueChange={(value) => handleChange("icon", value as Activity["icon"])}
@@ -170,6 +179,88 @@ export default function ActivityEditForm({
               ))}
             </SelectContent>
           </Select>
+        </label>
+
+        <label className="space-y-2">
+          <span className="font-main text-sm font-semibold text-foreground">Location</span>
+          <input
+            value={formData.location}
+            onChange={(event) => handleChange("location", event.target.value)}
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+          />
+        </label>
+
+        <label className="space-y-2">
+          <span className="font-main text-sm font-semibold text-foreground">Base Price</span>
+          <input
+            type="number"
+            min="0"
+            value={formData.basePrice}
+            onChange={(event) => handleNumberChange("basePrice", event.target.value)}
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+          />
+        </label>
+
+        <label className="space-y-2">
+          <span className="font-main text-sm font-semibold text-foreground">Pricing Type</span>
+          <Select
+            value={formData.pricingType}
+            onValueChange={(value) => handleChange("pricingType", value as Activity["pricingType"])}
+          >
+            <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
+              <SelectValue placeholder="Select pricing type" />
+            </SelectTrigger>
+            <SelectContent>
+              {activityPricingTypeOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {formatPricingTypeLabel(option)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+
+        <label className="space-y-2">
+          <span className="font-main text-sm font-semibold text-foreground">Duration (minutes)</span>
+          <input
+            type="number"
+            min="15"
+            step="15"
+            value={formData.durationMinutes}
+            onChange={(event) => handleNumberChange("durationMinutes", event.target.value)}
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+          />
+        </label>
+
+        <label className="space-y-2">
+          <span className="font-main text-sm font-semibold text-foreground">Default Capacity</span>
+          <input
+            type="number"
+            min="1"
+            value={formData.defaultCapacity}
+            onChange={(event) => handleNumberChange("defaultCapacity", event.target.value)}
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+          />
+        </label>
+
+        <label className="space-y-3 rounded-[24px] border border-border bg-muted/35 p-4 md:col-span-2">
+          <span className="font-main text-sm font-semibold text-foreground">Visibility</span>
+          <button
+            type="button"
+            onClick={() => handleChange("isActive", !formData.isActive)}
+            className={`flex w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm transition ${
+              formData.isActive
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground"
+            }`}
+          >
+            <span className="font-main font-semibold">
+              {formData.isActive ? "Visible for booking" : "Hidden from booking"}
+            </span>
+            <span className="font-main text-xs uppercase tracking-[0.2em]">
+              {formData.isActive ? "Active" : "Hidden"}
+            </span>
+          </button>
         </label>
 
         <div className="space-y-3">

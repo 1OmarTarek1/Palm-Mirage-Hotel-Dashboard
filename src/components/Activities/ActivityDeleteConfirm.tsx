@@ -22,6 +22,11 @@ export default function ActivityDeleteConfirm({ activity }: ActivityDeleteConfir
 
       <div className="grid gap-3 rounded-[28px] border border-border bg-muted/35 p-5 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card px-4 py-3">
+          <p className="font-main text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Base Price</p>
+          <p className="font-main mt-1 text-sm font-semibold text-foreground">${activity.basePrice}</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card px-4 py-3">
           <p className="font-main text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Category</p>
           <p className="font-main mt-1 text-sm font-semibold text-foreground">{activity.category}</p>
         </div>

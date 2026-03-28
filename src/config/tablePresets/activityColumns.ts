@@ -22,16 +22,19 @@ export const activityPreset = createTablePreset<Activity>(
       type: "badge"
     },
     {
-      key: "icon",
-      title: "Icon",
-      type: "icon" // Uses IconCell internally inside CellRenderer mapping
+      key: "basePrice",
+      title: "Base Price",
+      sortable: true,
+      searchable: true,
+      type: "text"
     },
     {
-      key: "highlights",
-      title: "Highlights",
-      type: "count",
-      accessorType: "count",
-      config: { suffix: "info" }
+      key: "isActive",
+      title: "Status",
+      sortable: true,
+      searchable: true,
+      filterable: true,
+      type: "badge"
     },
     {
       key: "createdAt",
@@ -56,16 +59,12 @@ export const activityPreset = createTablePreset<Activity>(
       ],
     },
     {
-      key: "icon",
-      label: "Icon",
+      key: "isActive",
+      label: "Status",
       type: "select",
       options: [
-        { label: "Ship", value: "Ship" },
-        { label: "Landmark", value: "Landmark" },
-        { label: "Mountain", value: "Mountain" },
-        { label: "Palette", value: "Palette" },
-        { label: "CloudSun", value: "CloudSun" },
-        { label: "ChefHat", value: "ChefHat" },
+        { label: "Active", value: "true" },
+        { label: "Hidden", value: "false" },
       ],
     },
   ]

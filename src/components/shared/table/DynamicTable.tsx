@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { RotateCcw } from "lucide-react";
 
 import { Column, DynamicTableProps, SortConfig, Filters } from "./types";
 import { resolveSortValue, resolveValue } from "./utils";
@@ -246,16 +245,6 @@ export default function DynamicTable<T extends object>({
             onSearchChange={handleSearch}
             placeholder={searchPlaceholder}
           />
-
-          {hasActiveFilters && (
-            <button
-              onClick={handleReset}
-              className="group flex cursor-pointer items-center gap-2 whitespace-nowrap font-main text-sm font-bold text-muted-foreground transition-all hover:text-primary"
-            >
-              <RotateCcw size={16} className="group-hover:-rotate-180 transition-transform duration-500" />
-              Reset
-            </button>
-          )}
           </div>
 
           {/* Filters Panel - Now aligned to the right */}
@@ -265,6 +254,8 @@ export default function DynamicTable<T extends object>({
                 filtersConfig={filtersConfig}
                 filters={filters}
                 onFilterChange={handleFilterChange}
+                hasActiveFilters={hasActiveFilters}
+                onReset={handleReset}
               />
             </div>
           )}

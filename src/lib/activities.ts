@@ -1,5 +1,11 @@
 import axios from "axios";
-import type { Activity, ActivityCategory, ActivityIcon, ActivityStat } from "@/components/Activities/data";
+import type {
+  Activity,
+  ActivityCategory,
+  ActivityIcon,
+  ActivityPricingType,
+  ActivityStat,
+} from "@/components/Activities/data";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
 
@@ -15,6 +21,12 @@ interface ApiActivity {
   label: string;
   title: string;
   description: string;
+  location?: string;
+  basePrice?: number;
+  pricingType?: ActivityPricingType;
+  durationMinutes?: number;
+  defaultCapacity?: number;
+  isActive?: boolean;
   image?: string | ApiActivityImage;
   attacthments?: ApiActivityImage[];
   stats?: ActivityStat[];
@@ -45,6 +57,12 @@ function mapApiActivity(activity: ApiActivity): Activity {
     label: activity.label,
     title: activity.title,
     description: activity.description,
+    location: activity.location ?? "",
+    basePrice: Number(activity.basePrice ?? 0),
+    pricingType: activity.pricingType ?? "per_person",
+    durationMinutes: Number(activity.durationMinutes ?? 60),
+    defaultCapacity: Number(activity.defaultCapacity ?? 1),
+    isActive: Boolean(activity.isActive ?? true),
     image,
     stats: activity.stats ?? [],
     highlights: activity.highlights ?? [],
@@ -59,6 +77,29 @@ function getErrorMessage(error: unknown) {
   }
 
   return error instanceof Error ? error.message : "Request failed";
+}
+
+function buildActivityFormData(activity: Activity) {
+  const formData = new FormData();
+  formData.append("category", activity.category);
+  formData.append("label", activity.label);
+  formData.append("title", activity.title);
+  formData.append("description", activity.description);
+  formData.append("location", activity.location);
+  formData.append("basePrice", String(activity.basePrice));
+  formData.append("pricingType", activity.pricingType);
+  formData.append("durationMinutes", String(activity.durationMinutes));
+  formData.append("defaultCapacity", String(activity.defaultCapacity));
+  formData.append("isActive", String(activity.isActive));
+  formData.append("highlights", JSON.stringify(activity.highlights));
+  formData.append("stats", JSON.stringify(activity.stats));
+  formData.append("icon", activity.icon);
+
+  if (activity.imageFile) {
+    formData.append("image", activity.imageFile);
+  }
+
+  return formData;
 }
 
 export async function fetchActivities() {
@@ -78,22 +119,9 @@ export async function updateActivity(activity: Activity) {
   }
 
   try {
-    const formData = new FormData();
-    formData.append("category", activity.category);
-    formData.append("label", activity.label);
-    formData.append("title", activity.title);
-    formData.append("description", activity.description);
-    formData.append("highlights", JSON.stringify(activity.highlights));
-    formData.append("stats", JSON.stringify(activity.stats));
-    formData.append("icon", activity.icon);
-
-    if (activity.imageFile) {
-      formData.append("image", activity.imageFile);
-    }
-
     const { data } = await axios.patch(
       `${API_BASE_URL}/activity/${activity.id}`,
-      formData,
+      buildActivityFormData(activity),
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -114,20 +142,7 @@ export async function createActivity(activity: Activity) {
   }
 
   try {
-    const formData = new FormData();
-    formData.append("category", activity.category);
-    formData.append("label", activity.label);
-    formData.append("title", activity.title);
-    formData.append("description", activity.description);
-    formData.append("highlights", JSON.stringify(activity.highlights));
-    formData.append("stats", JSON.stringify(activity.stats));
-    formData.append("icon", activity.icon);
-
-    if (activity.imageFile) {
-      formData.append("image", activity.imageFile);
-    }
-
-    await axios.post(`${API_BASE_URL}/activity`, formData, {
+    await axios.post(`${API_BASE_URL}/activity`, buildActivityFormData(activity), {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
