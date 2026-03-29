@@ -62,9 +62,10 @@ export default function Navbar({
 
   const displayName = user?.name || 'Guest User';
   const displayEmail = user?.email || 'guest@example.com';
+  const avatarSeed = encodeURIComponent(displayName);
   const displayAvatar =
     user?.avatarUrl ||
-    `https://api.dicebear.com/9.x/avataaars/svg?seed=${displayName}&backgroundColor=E5E7EB`;
+    `https://api.dicebear.com/9.x/avataaars/svg?seed=${avatarSeed}&backgroundColor=E5E7EB`;
 
   return (
     <header
@@ -155,13 +156,7 @@ export default function Navbar({
                   className="flex cursor-pointer items-center rounded-full transition-all duration-150 focus:outline-none"
                 >
                   <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border bg-muted transition-all duration-200 hover:border-primary">
-                    <Image
-                      src={displayAvatar}
-                      alt="Avatar"
-                      fill
-                      sizes="40px"
-                      className="rounded-full object-cover"
-                    />
+                    <img src={displayAvatar} alt="Avatar" className="h-full w-full rounded-full object-cover" />
                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
                   </div>
                 </button>
