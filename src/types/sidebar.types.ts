@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 export interface NavItem {
   label: string;
-  href?: string;
+  path: string;
   icon: ReactNode;
   children?: NavItem[];
   roles?: ("Admin" | "Manager" | "User")[];
