@@ -1,1 +1,5 @@
-export default function ActivitiesPage() { return <div>Activities Page</div>; }
+import ActivitiesPageClient from "@/components/Activities/ActivitiesPageClient";
+
+export default function ActivitiesPage() {
+  return <ActivitiesPageClient />;
+}
