@@ -4,6 +4,7 @@ import { Comfortaa, Philosopher } from "next/font/google";
 
 import AppProviders from "@/components/providers/AppProviders";
 import Navbar from "@/components/shared/navbar/Navbar";
+import Sidebar from "@/components/shared/sidebar/Sidebar";
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -57,7 +58,9 @@ function getThemeInitScript() {
   `;
 }
 
-export default async function RootLayout({ children }: Readonly<RootLayoutProps>) {
+export default async function RootLayout({
+  children,
+}: Readonly<RootLayoutProps>) {
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get("theme")?.value;
   const initialTheme = resolveInitialTheme(themeCookie);
@@ -72,10 +75,15 @@ export default async function RootLayout({ children }: Readonly<RootLayoutProps>
       <head>
         <script dangerouslySetInnerHTML={{ __html: getThemeInitScript() }} />
       </head>
-      <body className={`${comfortaa.variable} ${philosopher.variable} antialiased`}>
+      <body
+        className={`${comfortaa.variable} ${philosopher.variable} antialiased`}
+      >
         <AppProviders>
           <Navbar user={null} />
-          <main className="min-h-screen w-full pt-16">{children}</main>
+          <div className="flex min-h-screen w-full">
+            <Sidebar />
+            <main className="pt-16">{children}</main>
+          </div>
         </AppProviders>
       </body>
     </html>
