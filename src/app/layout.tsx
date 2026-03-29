@@ -82,7 +82,7 @@ export default async function RootLayout({
           <Navbar user={null} />
           <div className="flex min-h-screen w-full">
             <Sidebar />
-            <main className="pt-16">{children}</main>
+            <main className="pt-16 w-full">{children}</main>
           </div>
         </AppProviders>
       </body>

@@ -24,8 +24,6 @@ export default function Sidebar() {
     return () => window.removeEventListener("resize", checkWidth);
   }, []);
 
-  if (isCollapsed === null) return null;
-
   return (
     <div
       className={`sticky top-0 h-screen shadow-xl transition-all duration-300 ${
@@ -84,17 +82,17 @@ export default function Sidebar() {
           ) : (
             <ul className="flex flex-col gap-1 px-2">
               {Array.isArray(NAV_ITEMS) && NAV_ITEMS.length > 0 ? (
-                NAV_ITEMS.filter((item) => item?.label && item?.href).map(
+                NAV_ITEMS.filter((item) => item?.label && item?.path).map(
                   (item) => (
                     <li key={item.label}>
                       <Link
-                        href={item.href ?? "#"}
+                        href={item?.path}
                         className={`flex items-center gap-3 py-2 px-3 rounded-md transition-all duration-200 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-primary ${
                           isCollapsed ? "justify-center" : "justify-start"
                         }`}
                       >
                         {item.icon}
-                        {!isCollapsed && <span>{item.label}</span>}
+                        {!isCollapsed && <p>{item.label}</p>}
                       </Link>
                     </li>
                   ),
