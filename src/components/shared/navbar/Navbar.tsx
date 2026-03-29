@@ -62,10 +62,7 @@ export default function Navbar({
 
   const displayName = user?.name || 'Guest User';
   const displayEmail = user?.email || 'guest@example.com';
-  const avatarSeed = encodeURIComponent(displayName);
-  const displayAvatar =
-    user?.avatarUrl ||
-    `https://api.dicebear.com/9.x/avataaars/svg?seed=${avatarSeed}&backgroundColor=E5E7EB`;
+  const displayAvatar = user?.avatarUrl;
 
   return (
     <header
@@ -155,9 +152,18 @@ export default function Navbar({
                   onClick={() => setDropdownOpen((value) => !value)}
                   className="flex cursor-pointer items-center rounded-full transition-all duration-150 focus:outline-none"
                 >
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border bg-muted transition-all duration-200 hover:border-primary">
-                    <img src={displayAvatar} alt="Avatar" className="h-full w-full rounded-full object-cover" />
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+                  <div className="relative h-10 w-10 rounded-full border border-border bg-card transition-all duration-200 hover:border-primary">
+                    {displayAvatar ? (
+                      <Image
+                        src={displayAvatar}
+                        alt="Avatar"
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center rounded-full border border-border/70 text-muted-foreground">
+                        <User className="h-6 w-6" />
+                      </div>
+                    )}
                   </div>
                 </button>
 
