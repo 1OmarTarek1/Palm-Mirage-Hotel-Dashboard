@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SharedModalProps {
   isOpen: boolean;
@@ -26,11 +27,6 @@ export default function SharedModal({
   cancelLabel = "Cancel",
   saveVariant = "primary",
 }: SharedModalProps) {
-  const saveButtonClassName =
-    saveVariant === "danger"
-      ? "rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-      : "rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700";
-
   useEffect(() => {
     if (!isOpen) return;
 
@@ -54,28 +50,28 @@ export default function SharedModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 px-4 py-8 backdrop-blur-[2px]"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className={`relative flex max-h-[90vh] w-full flex-col ${maxWidthClassName} overflow-hidden rounded-4xl bg-white shadow-2xl shadow-slate-900/20`}
+        className={`relative flex max-h-[90vh] w-full flex-col ${maxWidthClassName} overflow-hidden rounded-4xl border border-border bg-card shadow-2xl shadow-black/10`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title ?? "Dialog"}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 md:px-8">
+        <div className="flex items-center justify-between border-b border-border px-6 py-5 md:px-8">
           <div>
             {title ? (
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">{title}</h2>
+              <h2 className="font-header text-xl font-bold tracking-tight text-foreground">{title}</h2>
             ) : null}
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
             aria-label="Close modal"
           >
             <X size={18} />
@@ -86,23 +82,27 @@ export default function SharedModal({
           {children}
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-5 md:px-8">
-          <button
+        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-5 md:px-8">
+          <Button
             type="button"
+            variant="palmSecondary"
+            size="sm"
             onClick={onClose}
-            className="cursor-pointer rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            className="px-5 text-sm"
           >
             {cancelLabel}
-          </button>
+          </Button>
 
           {onSave ? (
-            <button
+            <Button
               type="button"
+              variant={saveVariant === "danger" ? "palmDanger" : "palmPrimary"}
+              size="sm"
               onClick={onSave}
-              className={`cursor-pointer ${saveButtonClassName}`}
+              className={saveVariant === "danger" ? "px-5 text-sm" : "px-5 text-sm"}
             >
               {saveLabel}
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
