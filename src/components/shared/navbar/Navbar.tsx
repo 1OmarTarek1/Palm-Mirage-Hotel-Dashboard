@@ -173,7 +173,7 @@ export default function Navbar({
               >
                 <div className="relative h-10 w-10 rounded-full border border-border bg-card transition-all duration-200 hover:border-primary">
                   {displayAvatar ? (
-                    <img
+                    <Image
                       src={displayAvatar}
                       alt="Avatar"
                       className="h-full w-full rounded-full object-cover"
@@ -183,7 +183,6 @@ export default function Navbar({
                       <User className="h-6 w-6" />
                     </div>
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" />
                 </div>
               </button>
 
