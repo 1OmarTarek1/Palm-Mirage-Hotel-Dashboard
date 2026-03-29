@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 
-import { useAppTheme } from "@/hooks/useAppTheme";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { toggleTheme } from "@/store/slices/themeSlice";
 
 export interface UserData {
   name: string;
@@ -27,19 +28,15 @@ export default function Navbar({
   onSignOut,
 }: NavbarProps) {
   const pathname = usePathname();
-  const { isDark, setTheme } = useAppTheme();
+  const dispatch = useAppDispatch();
+  const isDarkMode = useAppSelector((state) => state.theme.isDark);
 
-  const [mounted, setMounted] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<"en" | "ar">("en");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,7 +50,6 @@ export default function Navbar({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -62,17 +58,10 @@ export default function Navbar({
   const displayAvatar = user?.avatarUrl;
 
   const handleThemeToggle = () => {
-    if (!mounted) return;
-    setTheme(isDark ? "light" : "dark");
+    document.cookie = `theme=${isDarkMode ? "light" : "dark"}; path=/; max-age=31536000; samesite=lax`;
+    window.dispatchEvent(new Event("theme-preference-saved"));
+    dispatch(toggleTheme());
   };
-
-  const themeIcon = !mounted ? (
-    <Moon className="h-5 w-5" />
-  ) : isDark ? (
-    <Sun className="h-5 w-5" />
-  ) : (
-    <Moon className="h-5 w-5" />
-  );
 
   return (
     <header
@@ -106,6 +95,7 @@ export default function Navbar({
               <button
                 onClick={() => setLangDropdownOpen((value) => !value)}
                 className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary"
+                type="button"
               >
                 <Globe className="h-5 w-5" />
               </button>
@@ -123,6 +113,7 @@ export default function Navbar({
                           ? "bg-muted text-primary"
                           : "text-foreground hover:bg-muted hover:text-primary"
                       }`}
+                      type="button"
                     >
                       English
                     </button>
@@ -137,6 +128,7 @@ export default function Navbar({
                           : "text-foreground hover:bg-muted hover:text-primary"
                       }`}
                       style={{ fontFamily: "Arial, sans-serif" }}
+                      type="button"
                     >
                       العربية
                     </button>
@@ -151,10 +143,13 @@ export default function Navbar({
               aria-label="Toggle theme"
               type="button"
             >
-              {themeIcon}
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
-            <button className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary">
+            <button
+              className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary"
+              type="button"
+            >
               <Bell className="h-5 w-5" />
               {notificationCount > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-card transition-transform duration-150 group-hover:scale-110">
@@ -173,7 +168,7 @@ export default function Navbar({
               >
                 <div className="relative h-10 w-10 rounded-full border border-border bg-card transition-all duration-200 hover:border-primary">
                   {displayAvatar ? (
-                    <Image
+                    <img
                       src={displayAvatar}
                       alt="Avatar"
                       className="h-full w-full rounded-full object-cover"
@@ -183,6 +178,7 @@ export default function Navbar({
                       <User className="h-6 w-6" />
                     </div>
                   )}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" />
                 </div>
               </button>
 
@@ -226,8 +222,8 @@ export default function Navbar({
 
                       <div className="flex items-center justify-between px-4 py-2">
                         <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
-                          {themeIcon}
-                          <span>{!mounted || isDark ? "Light Mode" : "Dark Mode"}</span>
+                          {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                          <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
                         </div>
                         <button
                           onClick={(event) => {
@@ -235,50 +231,15 @@ export default function Navbar({
                             handleThemeToggle();
                           }}
                           className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors duration-300 focus:outline-none ${
-                            mounted && isDark ? "bg-primary" : "bg-border"
+                            isDarkMode ? "bg-primary" : "bg-border"
                           }`}
                           type="button"
                         >
                           <span
                             className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                              mounted && isDark ? "translate-x-5" : "translate-x-0"
+                              isDarkMode ? "translate-x-5" : "translate-x-0"
                             }`}
                           />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between px-4 py-2">
-                        <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
-                          <Globe className="h-4 w-4" />
-                          <span>Language</span>
-                        </div>
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setLanguage(language === "en" ? "ar" : "en");
-                          }}
-                          className="relative flex h-7 w-18 cursor-pointer items-center rounded-full border border-border bg-muted p-0.5 focus:outline-none"
-                          type="button"
-                        >
-                          <div
-                            className={`absolute bottom-0.5 top-0.5 w-[2.1rem] rounded-full bg-card shadow-sm transition-transform duration-300 ease-in-out ${
-                              language === "ar" ? "translate-x-[2.1rem]" : "translate-x-0"
-                            }`}
-                          />
-                          <span
-                            className={`font-main relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${
-                              language === "en" ? "text-primary" : "text-muted-foreground"
-                            }`}
-                          >
-                            EN
-                          </span>
-                          <span
-                            className={`font-main relative z-10 w-1/2 text-center text-[10px] font-bold transition-colors duration-300 ${
-                              language === "ar" ? "text-primary" : "text-muted-foreground"
-                            }`}
-                          >
-                            AR
-                          </span>
                         </button>
                       </div>
                     </div>

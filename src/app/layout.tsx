@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Comfortaa, Philosopher } from "next/font/google";
 
 import AppProviders from "@/components/providers/AppProviders";
@@ -32,9 +33,45 @@ export interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
+function resolveInitialTheme(themeCookie?: string) {
+  return themeCookie === "dark" ? "dark" : "light";
+}
+
+function getThemeInitScript() {
+  return `
+    (() => {
+      const themeCookie = document.cookie
+        .split('; ')
+        .find((cookie) => cookie.startsWith('theme='))
+        ?.split('=')[1];
+
+      const isDark =
+        themeCookie === 'dark' ||
+        (!themeCookie && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      const root = document.documentElement;
+      root.classList.toggle('dark', isDark);
+      root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      root.style.colorScheme = isDark ? 'dark' : 'light';
+    })();
+  `;
+}
+
+export default async function RootLayout({ children }: Readonly<RootLayoutProps>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get("theme")?.value;
+  const initialTheme = resolveInitialTheme(themeCookie);
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={initialTheme === "dark" ? "dark" : undefined}
+      data-theme={initialTheme}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemeInitScript() }} />
+      </head>
       <body className={`${comfortaa.variable} ${philosopher.variable} antialiased`}>
         <AppProviders>
           <Navbar user={null} />
