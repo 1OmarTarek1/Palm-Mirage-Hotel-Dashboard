@@ -32,25 +32,25 @@ export default function Sidebar() {
         isCollapsed ? "w-16" : "w-60"
       }`}
     >
-      <aside className="flex flex-col h-full text-slate-900 bg-white">
-        <header className="px-4 py-4 border-b border-slate-200 mt-20">
+      <aside className="flex flex-col h-full text-sidebar-foreground bg-sidebar border-r border-sidebar-border ring-1 ring-sidebar-ring transition-colors duration-300">
+        <header className="px-4 py-4 border-b border-sidebar-border mt-20">
           <div
             className={`flex items-center transition-all duration-300 ${
               isCollapsed ? "justify-center" : "justify-start gap-3"
             }`}
           >
             {/* Logo Icon */}
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-amber-100">
-              <Hotel className="w-5 h-5 text-[#e2a624]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-sidebar-primary">
+              <Hotel className="w-5 h-5 text-sidebar-primary-foreground" />
             </div>
 
             {/* Title */}
             {!isCollapsed && (
               <div className="flex flex-col leading-tight">
-                <h1 className="text-base font-semibold text-slate-900">
+                <h1 className="text-base font-semibold text-sidebar-foreground">
                   Hotel Dashboard
                 </h1>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-sidebar-accent-foreground">
                   Management System
                 </span>
               </div>
@@ -62,7 +62,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setIsCollapsed((prev) => !prev)}
-            className="absolute -right-6 top-5 -translate-y-1/2 rounded-full bg-slate-100 p-2 shadow-md transition duration-300 hover:bg-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 text-slate-900"
+            className="absolute -right-6 top-5 -translate-y-1/2 rounded-full bg-sidebar-accent p-2 shadow-md transition duration-300 hover:bg-sidebar-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-primary text-sidebar-foreground"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -78,7 +78,7 @@ export default function Sidebar() {
 
         <nav className="mt-5 flex-1 overflow-y-auto">
           {hasError ? (
-            <div className="m-4 text-xs text-red-200 bg-red-800/30 p-2 rounded">
+            <div className="m-4 text-xs text-destructive bg-destructive/15 p-2 rounded">
               Sidebar failed to load. Please reload.
             </div>
           ) : (
@@ -89,7 +89,7 @@ export default function Sidebar() {
                     <li key={item.label}>
                       <Link
                         href={item.href ?? "#"}
-                        className={`flex items-center gap-3 py-2 px-3 rounded-md transition-all duration-200 bg-gray-100 text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 ${
+                        className={`flex items-center gap-3 py-2 px-3 rounded-md transition-all duration-200 bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-primary ${
                           isCollapsed ? "justify-center" : "justify-start"
                         }`}
                       >
