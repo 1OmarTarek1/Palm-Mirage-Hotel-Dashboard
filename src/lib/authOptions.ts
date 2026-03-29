@@ -1,5 +1,6 @@
 import {NextAuthOptions} from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import { jwtDecode } from "jwt-decode";
 
 export const authOptions: NextAuthOptions ={
     providers :[
@@ -9,7 +10,7 @@ export const authOptions: NextAuthOptions ={
                 email:{label:"Email" , type:"text" , placeholder:"Please Enter Your Email"},
                 password:{label:"Password" , type:"password",placeholder:"******"}
                 },
-                 authorize :async (credentials)=>{
+                authorize :async (credentials)=>{
                     const response = await fetch("http://localhost:5000/auth/login",{
                         method:"POST",
                         body:JSON.stringify(credentials),
@@ -17,12 +18,20 @@ export const authOptions: NextAuthOptions ={
                             "Content-Type":"application/json"
                         }
                     })
-                    const user = await response.json();
-                    if(response.ok && user){
-                        return user;
+                    const data = await response.json();
+                    if(data.message == "Done"){
+                        const decodedToken:{id:string} = jwtDecode(data.token)
+                        return {
+                            id:decodedToken.id,
+                            user:data.user,
+                            token:data.token
+                        }
                     }
-                    return null;
-                 }
-        })
+                    else{
+                        throw new Error (data.message || "Wrong Credintials")
+                    }
+                }
+        }
+    )
     ]
 }
