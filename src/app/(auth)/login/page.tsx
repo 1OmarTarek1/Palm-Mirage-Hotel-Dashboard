@@ -26,6 +26,9 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 // import { toast } from "react-toastify";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,12 +42,32 @@ export default function Login() {
   });
 
   async function onlogin(values: loginSchemaType) {
-    const data = await loginUser(values);
-    console.log(data);
-    if(data.message == "Done"){
-      router.push("/table")
+    // const data = await loginUser(values);
+    // console.log(data);
+    // if(data.message == "Done"){che
+    //   router.push("/table")
+    // }
+
+    const response = await signIn("credentials",{
+      email:values.email,
+      password:values.password,
+      redirect:false
+    })
+
+    if(response?.ok){
+      router.push('/')
+      toast.success("logged in success ✅",{
+        position:"top-right",
+        duration:3000
+      })
+    }else{
+      toast.error(response?.error ,{
+        position:"top-right",
+        duration:3000
+      })
     }
   }
+  
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4">

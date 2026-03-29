@@ -8,6 +8,7 @@ import Sidebar from "@/components/shared/sidebar/Sidebar";
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "sonner";
 
 const comfortaa = Comfortaa({
   variable: "--font-main",
@@ -85,6 +86,7 @@ export default async function RootLayout({
             <main className="pt-16 w-full">{children}</main>
           </div>
         </AppProviders>
+        <Toaster richColors/>
       </body>
     </html>
   );
