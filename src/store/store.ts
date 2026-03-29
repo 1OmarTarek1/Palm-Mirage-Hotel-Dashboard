@@ -1,10 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
-import themeReducer from "./slices/themeSlice";
+
+const noopReducer = (state = {}) => state;
 
 export const store = configureStore({
-  reducer: {
-    theme: themeReducer,
-  },
+  reducer: noopReducer,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
