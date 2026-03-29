@@ -24,8 +24,11 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
+<<<<<<< HEAD
 import { useRouter } from "next/navigation";
 // import { toast } from "react-toastify";
+=======
+>>>>>>> 5e87322 (resolve: conf in auth page)
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
