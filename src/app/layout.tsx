@@ -9,6 +9,7 @@ import Sidebar from "@/components/shared/sidebar/Sidebar";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from "sonner";
+import AuthProvider from "@/components/providers/Auth-Provider";
 
 const comfortaa = Comfortaa({
   variable: "--font-main",
@@ -79,14 +80,16 @@ export default async function RootLayout({
       <body
         className={`${comfortaa.variable} ${philosopher.variable} antialiased`}
       >
-        <AppProviders>
-          <Navbar user={null} />
-          <div className="flex min-h-screen w-full">
-            <Sidebar />
-            <main className="pt-16 w-full">{children}</main>
-          </div>
-        </AppProviders>
-        <Toaster richColors/>
+        <AuthProvider>
+          <AppProviders>
+            <Navbar user={null} />
+            <div className="flex min-h-screen w-full">
+              <Sidebar />
+              <main className="pt-16 w-full">{children}</main>
+            </div>
+          </AppProviders>
+          <Toaster richColors />
+        </AuthProvider>
       </body>
     </html>
   );
