@@ -23,10 +23,10 @@ export default function ActivitiesPageClient() {
         <div className="mb-6 flex justify-end">
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/activities/schedules">Manage Activity Schedules</Link>
+              <Link href="/activities/schedules">Manage Activity Schedules</Link>
             </Button>
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/activities/bookings">Manage Activity Bookings</Link>
+              <Link href="/activities/bookings">Manage Activity Bookings</Link>
             </Button>
           </div>
         </div>
