@@ -11,12 +11,16 @@ const IconMap: Record<string, React.ReactNode> = {
   ChefHat: <ChefHat size={18} />,
 };
 
-export default function IconCell({ resolvedValue }: CellProps) {
+export default function IconCell({ resolvedValue, displayMode = "table" }: CellProps) {
   const iconKey = String(resolvedValue);
   const icon = IconMap[iconKey] || null;
   return (
-    <div className="flex justify-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-muted text-primary shadow-sm">
+    <div className={`flex ${displayMode === "card" ? "justify-start" : "justify-center"}`}>
+      <div
+        className={`flex items-center justify-center rounded-2xl border border-border bg-muted text-primary shadow-sm ${
+          displayMode === "card-compact" ? "h-8 w-8" : "h-10 w-10"
+        }`}
+      >
         {icon}
       </div>
     </div>

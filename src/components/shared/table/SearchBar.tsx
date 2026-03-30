@@ -2,20 +2,23 @@
 
 import React from "react";
 import { Search, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   searchTerm,
   onSearchChange,
   placeholder = "Search...",
+  className,
 }) => {
   return (
-    <div className="relative w-full max-w-sm">
+    <div className={cn("relative w-full lg:max-w-md xl:max-w-lg", className)}>
       <Search
         size={18}
         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"

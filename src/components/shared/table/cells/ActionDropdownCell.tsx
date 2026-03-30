@@ -3,7 +3,11 @@ import ActionDropdown from "../ActionDropdown";
 import { CellProps } from "./types";
 import { RowActionConfig } from "../types";
 
-export default function ActionDropdownCell<T>({ row, column }: CellProps<T>) {
+export default function ActionDropdownCell<T>({
+  row,
+  column,
+  displayMode = "table",
+}: CellProps<T>) {
   const config = column.config as
     | {
         actions?: RowActionConfig<T>[];
@@ -18,7 +22,11 @@ export default function ActionDropdownCell<T>({ row, column }: CellProps<T>) {
   if (resolvedActions.length === 0) return null;
 
   return (
-    <div className="flex items-center justify-center">
+    <div
+      className={`flex items-center ${
+        displayMode === "card" ? "justify-end" : "justify-center"
+      }`}
+    >
       <ActionDropdown actions={resolvedActions} />
     </div>
   );

@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-
-import { Column, DynamicTableProps, SortConfig, Filters } from "./types";
-import { resolveSortValue, resolveValue } from "./utils";
-
-// Components
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Column, DynamicTableProps, FilterValue, Filters, RangeFilterValue, SortConfig } from "./types";
+import { resolveRowKey, resolveSortValue, resolveValue } from "./utils";
 import SearchBar from "./SearchBar";
 import FiltersPanel from "./FiltersPanel";
 import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import Pagination from "./Pagination";
+import MobileCard, { MobileCardSkeleton } from "./MobileCard";
 
-/**
- * DynamicTable Component
- * Modular, Scalable, and High-Performance.
- * Strict Pipeline: Filter -> Sort -> Paginate
- */
 export default function DynamicTable<T extends object>({
   columns,
   data,
@@ -26,7 +19,6 @@ export default function DynamicTable<T extends object>({
   filtersConfig = [],
   actions,
 }: DynamicTableProps<T>) {
-  // ─── Computed Columns (Actions Integration) ───────────────────────────────
   const enabledActions = useMemo(() => {
     if (!actions || actions.length === 0) return [];
 
@@ -46,7 +38,7 @@ export default function DynamicTable<T extends object>({
 
     return [...columns, actionColumn];
   }, [columns, enabledActions]);
-  // ─── State Management ───────────────────────────────────────────────────────
+
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters<T>>({});
@@ -56,7 +48,6 @@ export default function DynamicTable<T extends object>({
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
-  // Stable filter key to avoid JSON.stringify re-render issue
   const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
@@ -67,7 +58,6 @@ export default function DynamicTable<T extends object>({
     return () => window.clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Reset pagination to first page when search or filters change
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
@@ -83,13 +73,11 @@ export default function DynamicTable<T extends object>({
     previousPageRef.current = currentPage;
   }, [currentPage]);
 
-  // ─── Handlers (Memoized) ───────────────────────────────────────────────────
-
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
   }, []);
 
-  const handleFilterChange = useCallback((key: keyof T, value: any) => {
+  const handleFilterChange = useCallback((key: keyof T, value: FilterValue) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
@@ -98,6 +86,7 @@ export default function DynamicTable<T extends object>({
 
   const handleSort = useCallback((col: Column<T>) => {
     if (!col.sortable) return;
+
     setSortConfig((prev) => {
       if (prev?.key === col.key) {
         return {
@@ -105,7 +94,39 @@ export default function DynamicTable<T extends object>({
           direction: prev.direction === "asc" ? "desc" : "asc",
         };
       }
+
       return { key: col.key, direction: "asc" };
+    });
+  }, []);
+
+  const handleMobileSortChange = useCallback((value: string) => {
+    if (value === "__default__") {
+      setSortConfig(null);
+      return;
+    }
+
+    const nextKey = value as Column<T>["key"];
+
+    setSortConfig((prev) => {
+      if (prev?.key === nextKey) {
+        return prev;
+      }
+
+      return {
+        key: nextKey,
+        direction: "asc",
+      };
+    });
+  }, []);
+
+  const handleSortDirectionToggle = useCallback(() => {
+    setSortConfig((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        direction: prev.direction === "asc" ? "desc" : "asc",
+      };
     });
   }, []);
 
@@ -124,32 +145,30 @@ export default function DynamicTable<T extends object>({
     const hasSearch = searchTerm.trim().length > 0;
     const hasColumnFilters = Object.values(filters).some((val) => {
       if (typeof val === "object" && val !== null) {
-        return Object.values(val).some((v) => v !== "" && v !== undefined && v !== null);
+        return Object.values(val).some((value) => value !== "" && value !== undefined && value !== null);
       }
+
       return val !== "" && val !== undefined && val !== null;
     });
     const hasSort = sortConfig !== null;
+
     return hasSearch || hasColumnFilters || hasSort;
   }, [searchTerm, filters, sortConfig]);
 
-  // ─── Data Pipeline (Memoized) ──────────────────────────────────────────────
-
-  // 1. Filtered Data (Search + Columns)
   const filteredData = useMemo(() => {
     let result = [...data];
 
-    // Global Search
     const q = debouncedSearchTerm.trim().toLowerCase();
     if (q) {
-      const searchableKeys = columns
-        .filter((c) => c.searchable)
-        .map((c) => c.key);
+      const searchableKeys = columns.filter((column) => column.searchable).map((column) => column.key);
+
       if (searchableKeys.length > 0) {
         result = result.filter((row) =>
           searchableKeys.some((key) => {
-            const col = columns.find((c) => c.key === key);
-            if (!col) return false;
-            return String(resolveValue(row, col) ?? "")
+            const column = columns.find((item) => item.key === key);
+            if (!column) return false;
+
+            return String(resolveValue(row, column) ?? "")
               .toLowerCase()
               .includes(q);
           })
@@ -157,40 +176,38 @@ export default function DynamicTable<T extends object>({
       }
     }
 
-    // Column Filters
     Object.keys(filters).forEach((key) => {
-      const val = filters[key as keyof T];
-      const config = filtersConfig.find((f) => f.key === key);
-      const col = columns.find((c) => c.key === key);
-      if (!config) return;
+      const value = filters[key as keyof T];
+      const filterConfig = filtersConfig.find((filter) => filter.key === key);
+      const column = columns.find((item) => item.key === key);
+      if (!filterConfig) return;
 
-      if (config.type === "select" && val !== "") {
+      if (filterConfig.type === "select" && value !== "") {
         result = result.filter((row) => {
-          const rowVal = col ? resolveValue(row, col) : row[key as keyof T];
-          return String(rowVal) === String(val);
+          const rowValue = column ? resolveValue(row, column) : row[key as keyof T];
+          return String(rowValue) === String(value);
         });
-      } else if (config.type === "range") {
-        const range = val as { min?: number | string; max?: number | string };
+      } else if (filterConfig.type === "range") {
+        const range = value as RangeFilterValue;
         const hasMin = range?.min !== undefined && range?.min !== "";
         const hasMax = range?.max !== undefined && range?.max !== "";
-        
+
         if (!hasMin && !hasMax) return;
 
-        let minVal = hasMin ? Number(range.min) : -Infinity;
-        let maxVal = hasMax ? Number(range.max) : Infinity;
+        let minValue = hasMin ? Number(range.min) : -Infinity;
+        let maxValue = hasMax ? Number(range.max) : Infinity;
 
-        // Auto-swap if accidentally inverted
-        if (hasMin && hasMax && minVal > maxVal) {
-          const temp = minVal;
-          minVal = maxVal;
-          maxVal = temp;
+        if (hasMin && hasMax && minValue > maxValue) {
+          const temp = minValue;
+          minValue = maxValue;
+          maxValue = temp;
         }
 
         result = result.filter((row) => {
-          const rowVal = Number(col ? resolveValue(row, col) : row[key as keyof T]);
-          if (isNaN(rowVal)) return false;
-          if (hasMin && rowVal < minVal) return false;
-          if (hasMax && rowVal > maxVal) return false;
+          const rowValue = Number(column ? resolveValue(row, column) : row[key as keyof T]);
+          if (isNaN(rowValue)) return false;
+          if (hasMin && rowValue < minValue) return false;
+          if (hasMax && rowValue > maxValue) return false;
           return true;
         });
       }
@@ -199,71 +216,104 @@ export default function DynamicTable<T extends object>({
     return result;
   }, [data, debouncedSearchTerm, filters, filtersConfig, columns]);
 
-  // 2. Sorted Data
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
 
-    const col = columns.find((c) => c.key === sortConfig.key);
+    const column = columns.find((item) => item.key === sortConfig.key);
 
     return [...filteredData].sort((a, b) => {
-      const aVal = col
-        ? resolveSortValue(a, col)
+      const aValue = column
+        ? resolveSortValue(a, column)
         : (a as Record<string, unknown>)[String(sortConfig.key)];
-      const bVal = col
-        ? resolveSortValue(b, col)
+      const bValue = column
+        ? resolveSortValue(b, column)
         : (b as Record<string, unknown>)[String(sortConfig.key)];
 
-      if (typeof aVal === "number" && typeof bVal === "number") {
-        return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
       }
 
-      const aStr = String(aVal ?? "").toLowerCase();
-      const bStr = String(bVal ?? "").toLowerCase();
-      const cmp = aStr.localeCompare(bStr);
-      return sortConfig.direction === "asc" ? cmp : -cmp;
+      const aString = String(aValue ?? "").toLowerCase();
+      const bString = String(bValue ?? "").toLowerCase();
+      const comparison = aString.localeCompare(bString);
+
+      return sortConfig.direction === "asc" ? comparison : -comparison;
     });
   }, [filteredData, sortConfig, columns]);
 
-  // 3. Paginated Data
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return sortedData.slice(start, start + pageSize);
   }, [sortedData, currentPage, pageSize]);
 
-  const totalPages = isLoading ? 1 : Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const mobileSkeletonDetailCount = useMemo(() => {
+    const dataColumns = computedColumns.filter((column) => column.type !== "action-dropdown");
+    return Math.max(2, Math.min(4, Math.max(dataColumns.length - 1, 1)));
+  }, [computedColumns]);
+  const hasFilterPanel = filtersConfig.length > 0 || columns.some((column) => column.sortable);
 
-  // ─── Render ────────────────────────────────────────────────────────────────
+  const totalPages = isLoading ? 1 : Math.max(1, Math.ceil(sortedData.length / pageSize));
 
   return (
     <div ref={tableContainerRef} className="w-full">
-      {/* Top Controls: Search + Filters */}
       <div className="sticky top-16 z-30 rounded-t-[28px] border-b border-border bg-card/95 py-4 backdrop-blur-md">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex min-w-75 flex-1 items-center gap-4">
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            placeholder={searchPlaceholder}
-          />
-          </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <SearchBar
+              searchTerm={searchTerm}
+              onSearchChange={handleSearch}
+              placeholder={searchPlaceholder}
+              className="flex-1"
+            />
 
-          {/* Filters Panel - Now aligned to the right */}
-          {filtersConfig.length > 0 && (
-            <div className="flex items-center">
+            {hasFilterPanel ? (
               <FiltersPanel
+                columns={columns}
                 filtersConfig={filtersConfig}
                 filters={filters}
+                sortConfig={sortConfig}
                 onFilterChange={handleFilterChange}
+                onSortColumnChange={handleMobileSortChange}
+                onSortDirectionToggle={handleSortDirectionToggle}
                 hasActiveFilters={hasActiveFilters}
                 onReset={handleReset}
               />
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-4 lg:hidden">
+        <div className="rounded-[30px] border border-border/70 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_4%,transparent),transparent_32%),var(--color-card)] p-3 shadow-inner shadow-black/[0.03]">
+          {isLoading ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: pageSize }).map((_, index) => (
+                <MobileCardSkeleton
+                  key={`mobile-card-skeleton-${index}`}
+                  detailCount={mobileSkeletonDetailCount}
+                />
+              ))}
+            </div>
+          ) : paginatedData.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-border bg-muted/20 px-5 py-10 text-center font-main text-sm text-muted-foreground">
+              No data available matching your criteria
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {paginatedData.map((row, rowIndex) => (
+                <MobileCard
+                  key={resolveRowKey(row, (currentPage - 1) * pageSize + rowIndex)}
+                  row={row}
+                  columns={computedColumns}
+                  itemNumber={(currentPage - 1) * pageSize + rowIndex + 1}
+                />
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto lg:block">
         <table className="w-full text-left text-sm">
           <TableHeader
             columns={computedColumns}
@@ -280,7 +330,6 @@ export default function DynamicTable<T extends object>({
         </table>
       </div>
 
-      {/* Pagination Footer */}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

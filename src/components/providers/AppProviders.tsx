@@ -13,11 +13,11 @@ export default function AppProviders({ children }: { children: React.ReactNode }
     <Provider store={store}>
       {children}
       <ToastContainer
-        position="top-left"
+        position="bottom-right"
         autoClose={3000}
         limit={5}
         newestOnTop
-        className="mt-20"
+        className="mb-4 mr-4"
         toastClassName="!bg-card !text-foreground !font-main !rounded-xl !border !border-border !shadow-lg !shadow-black/5 !overflow-hidden !px-4 !pr-6 !py-4"
         toastStyle={{ fontSize: "0.8rem" }}
       />

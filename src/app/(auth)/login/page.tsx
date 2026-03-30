@@ -18,21 +18,17 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { loginSchema, loginSchemaType } from "@/schema/auth.schema";
-import { loginUser } from "@/services/auth.services";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-// import { toast } from "react-toastify";
 import { signIn } from "next-auth/react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter()
   const form = useForm<loginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -56,10 +52,7 @@ export default function Login() {
     })
 
     if(!response?.ok){
-      toast.error(response?.error ,{
-        position:"top-right",
-        duration:3000
-      })
+      toast.error(response?.error ?? "Login failed")
     }
   }
   

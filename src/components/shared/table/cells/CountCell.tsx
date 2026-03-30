@@ -1,17 +1,20 @@
 import React from "react";
 import { CellProps } from "./types";
 
-export default function CountCell({ resolvedValue }: CellProps) { // column
+export default function CountCell({ resolvedValue, displayMode = "table" }: CellProps) {
   return (
-    <div className="flex items-center justify-center gap-2">
-      <span className="flex h-7 w-7 items-center justify-center rounded-2xl border border-border bg-card font-main text-[10px] font-black text-primary shadow-md">
+    <div
+      className={`flex items-center gap-2 ${
+        displayMode === "card" ? "justify-start" : "justify-center"
+      }`}
+    >
+      <span
+        className={`flex items-center justify-center rounded-2xl border border-border bg-card font-main font-black text-primary shadow-md ${
+          displayMode === "card-compact" ? "h-6 w-6 text-[9px]" : "h-7 w-7 text-[10px]"
+        }`}
+      >
         {resolvedValue}
       </span>
-      {/* {column.config?.suffix && (
-        <span className="text-xs font-semibold text-gray-400 lowercase italic">
-          {column.config.suffix}
-        </span>
-      )} */}
     </div>
   );
 }

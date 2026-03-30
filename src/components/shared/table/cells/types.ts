@@ -1,5 +1,8 @@
-export interface CellProps<T = any> {
+export type CellDisplayMode = "table" | "card" | "card-compact";
+
+export interface CellProps<T = unknown> {
   row: T;
   column: import("../types").Column<T>;
-  resolvedValue: any;
+  resolvedValue: unknown;
+  displayMode?: CellDisplayMode;
 }
