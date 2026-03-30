@@ -1,116 +1,171 @@
 "use client";
 
-import React from "react";
-import { Filter as FilterIcon, RotateCcw } from "lucide-react";
-import { FilterConfig } from "./types";
+import React, { useEffect, useMemo, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
+import DesktopFiltersRow from "./filters-panel/DesktopFiltersRow";
+import MobileFiltersDrawer from "./filters-panel/MobileFiltersDrawer";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Column,
+  Filters,
+  FilterConfig,
+  FilterValue,
+  SortConfig,
+} from "./types";
+import { buildExpandedMap, getRangeFilterValue, isFilterActive } from "./filters-panel/utils";
 
 interface FiltersPanelProps<T> {
+  columns: Column<T>[];
   filtersConfig: FilterConfig<T>[];
-  filters: Partial<Record<keyof T, any>>;
-  onFilterChange: (key: keyof T, value: any) => void;
+  filters: Filters<T>;
+  sortConfig: SortConfig<T> | null;
+  onFilterChange: (key: keyof T, value: FilterValue) => void;
+  onSortColumnChange: (value: string) => void;
+  onSortDirectionToggle: () => void;
   hasActiveFilters?: boolean;
   onReset?: () => void;
 }
 
 const FiltersPanel = <T,>({
+  columns,
   filtersConfig,
   filters,
+  sortConfig,
   onFilterChange,
+  onSortColumnChange,
+  onSortDirectionToggle,
   hasActiveFilters = false,
   onReset,
 }: FiltersPanelProps<T>) => {
-  if (filtersConfig.length === 0) return null;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() =>
+    buildExpandedMap(filtersConfig, filters)
+  );
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    const desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
+    const handleDesktopChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setIsOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    desktopMediaQuery.addEventListener("change", handleDesktopChange);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      desktopMediaQuery.removeEventListener("change", handleDesktopChange);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    setExpandedSections((current) => {
+      if (Object.keys(current).length === filtersConfig.length + 1) {
+        return current;
+      }
+
+      return buildExpandedMap(filtersConfig, filters);
+    });
+  }, [filters, filtersConfig]);
+
+  const activeFiltersCount = useMemo(() => {
+    return filtersConfig.filter((config) => isFilterActive(config, filters)).length;
+  }, [filters, filtersConfig]);
+
+  const sortableColumns = useMemo(() => {
+    return columns.filter((column) => column.sortable);
+  }, [columns]);
+
+  if (filtersConfig.length === 0 && sortableColumns.length === 0) return null;
+
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections((current) => ({
+      ...current,
+      [sectionKey]: !current[sectionKey],
+    }));
+  };
 
   const handleRangeChange = (key: keyof T, field: "min" | "max", value: string) => {
+    const rangeValue = getRangeFilterValue(filters, key);
+
     if (value === "") {
-      onFilterChange(key, { ...filters[key], [field]: "" });
+      onFilterChange(key, { ...rangeValue, [field]: "" });
       return;
     }
 
-    const numVal = Number(value);
-    if (isNaN(numVal) || numVal < 0) return; // Disallow negative numbers
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue) || numericValue < 0) return;
 
-    onFilterChange(key, { ...filters[key], [field]: value });
+    onFilterChange(key, { ...rangeValue, [field]: value });
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <button
-        type="button"
-        onClick={hasActiveFilters ? onReset : undefined}
-        aria-label={hasActiveFilters ? "Reset filters" : "Filters"}
-        title={hasActiveFilters ? "Reset filters" : "Filters"}
-        className={`mr-2 flex items-center gap-2 transition-all ${
-          hasActiveFilters
-            ? "group cursor-pointer text-muted-foreground hover:text-primary"
-            : "cursor-default text-muted-foreground"
-        }`}
-      >
-        {hasActiveFilters ? (
-          <RotateCcw
-            size={16}
-            className="transition-transform duration-500 group-hover:-rotate-180"
-          />
-        ) : (
-          <FilterIcon size={16} />
-        )}
-      </button>
+    <>
+      <DesktopFiltersRow
+        filtersConfig={filtersConfig}
+        filters={filters}
+        hasActiveFilters={hasActiveFilters}
+        onFilterChange={onFilterChange}
+        onReset={onReset}
+        onRangeChange={handleRangeChange}
+      />
 
-      {filtersConfig.map((f) => (
-        <div key={String(f.key)} className="flex items-center gap-2">
-          {f.type === "select" ? (
-            <Select
-              value={filters[f.key] ? String(filters[f.key]) : "__all__"}
-              onValueChange={(value) =>
-                onFilterChange(f.key, value === "__all__" ? "" : value)
-              }
-            >
-              <SelectTrigger className="h-10 min-w-40 rounded-xl px-3 py-2 text-xs font-medium">
-                <SelectValue placeholder={`All ${f.label}`} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">All {f.label}</SelectItem>
-                {f.options?.map((opt) => (
-                  <SelectItem key={String(opt.value)} value={String(opt.value)}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : f.type === "range" ? (
-            <div className="flex items-center gap-1 rounded-xl border border-border bg-card px-2 py-1.5 shadow-sm">
-              <span className="font-header text-[10px] font-bold uppercase text-muted-foreground/70">
-                {f.label}:
-              </span>
-              <input
-                type="number"
-                min="0"
-                placeholder="Min"
-                value={filters[f.key]?.min || ""}
-                onChange={(e) => handleRangeChange(f.key, "min", e.target.value)}
-                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
-              />
-              <span className="text-muted-foreground/70">-</span>
-              <input
-                type="number"
-                min="0"
-                placeholder="Max"
-                value={filters[f.key]?.max || ""}
-                onChange={(e) => handleRangeChange(f.key, "max", e.target.value)}
-                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
-              />
-            </div>
+      <div className="lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label="Open filters"
+          title="Open filters"
+          className={cn(
+            "relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10",
+            activeFiltersCount > 0 && "border-primary/30 bg-primary/5 text-primary"
+          )}
+        >
+          <SlidersHorizontal size={18} />
+          {activeFiltersCount > 0 ? (
+            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-main text-[10px] font-bold text-primary-foreground shadow-md">
+              {activeFiltersCount}
+            </span>
           ) : null}
-        </div>
-      ))}
-    </div>
+        </button>
+
+        <MobileFiltersDrawer
+          isMounted={isMounted}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          sortableColumns={sortableColumns}
+          filtersConfig={filtersConfig}
+          filters={filters}
+          sortConfig={sortConfig}
+          activeFiltersCount={activeFiltersCount}
+          expandedSections={expandedSections}
+          onToggleSection={toggleSection}
+          onFilterChange={onFilterChange}
+          onSortColumnChange={onSortColumnChange}
+          onSortDirectionToggle={onSortDirectionToggle}
+          onRangeChange={handleRangeChange}
+          hasActiveFilters={hasActiveFilters}
+          onReset={onReset}
+        />
+      </div>
+    </>
   );
 };
 
