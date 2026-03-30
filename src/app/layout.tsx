@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { Comfortaa, Philosopher } from "next/font/google";
 
 import AppProviders from "@/components/providers/AppProviders";
-import Navbar from "@/components/shared/navbar/Navbar";
-import Sidebar from "@/components/shared/sidebar/Sidebar";
+
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -81,11 +80,7 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <AppProviders>
-            <Navbar user={null} />
-            <div className="flex min-h-screen w-full">
-              <Sidebar />
-              <main className="pt-16 w-full">{children}</main>
-            </div>
+            {children}
           </AppProviders>
         </AuthProvider>
       </body>
