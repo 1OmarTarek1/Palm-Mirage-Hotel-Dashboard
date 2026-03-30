@@ -24,6 +24,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Activity | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useImperativeHandle(ref, () => ({
     openAddModal: () => {
@@ -86,6 +87,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
     if (!deletingActivity) return;
 
     void (async () => {
+      setIsSaving(true);
       try {
         await deleteActivity(deletingActivity.id);
         setActivities((currentActivities) =>
@@ -104,6 +106,8 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         handleCloseDeleteModal();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to delete activity");
+      } finally {
+        setIsSaving(false);
       }
     })();
   };
@@ -131,6 +135,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
     if (!editingDraft) return;
 
     void (async () => {
+      setIsSaving(true);
       try {
         const updatedActivity = await updateActivity(editingDraft);
         setActivities((currentActivities) =>
@@ -142,6 +147,8 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         handleCloseEditModal();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to save activity");
+      } finally {
+        setIsSaving(false);
       }
     })();
   };
@@ -150,6 +157,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
     if (!creatingDraft) return;
 
     void (async () => {
+      setIsSaving(true);
       try {
         const refreshedActivities = await createActivity(creatingDraft);
         setActivities(refreshedActivities);
@@ -157,6 +165,8 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         handleCloseAddModal();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to create activity");
+      } finally {
+        setIsSaving(false);
       }
     })();
   };
@@ -179,6 +189,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         title="Add Activity"
         onSave={handleCreateActivity}
         saveLabel="Create Activity"
+        isSaving={isSaving}
       >
         {creatingDraft ? (
           <ActivityAddForm
@@ -202,6 +213,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         title={editingActivity ? `Edit ${editingActivity.title}` : "Edit Activity"}
         onSave={handleSaveActivity}
         saveLabel="Save Changes"
+        isSaving={isSaving}
       >
         {editingActivity && editingDraft ? (
           <ActivityEditForm
@@ -218,6 +230,7 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
         onSave={handleConfirmDeleteActivity}
         saveLabel="Delete Activity"
         saveVariant="danger"
+        isSaving={isSaving}
       >
         {deletingActivity ? <ActivityDeleteConfirm activity={deletingActivity} /> : null}
       </SharedModal>

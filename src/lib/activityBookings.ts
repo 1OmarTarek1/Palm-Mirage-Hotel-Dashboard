@@ -1,20 +1,31 @@
-import axios from "axios";
-import { getSession } from "next-auth/react";
 import type { ActivityBooking, ActivityBookingDraft } from "@/components/ActivityBookings/data";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
-async function getAccessToken() {
-  const session = await getSession();
-  return (session as any)?.token ?? null;
-}
-
-function getErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? error.message;
-  }
-
-  return error instanceof Error ? error.message : "Request failed";
+import { apiClient, getAuthHeaders, getErrorMessage, getAccessToken } from "@/lib/api-client";
+ 
+interface ApiBooking {
+  _id?: string;
+  id?: string;
+  activity?: {
+    title?: string;
+    label?: string;
+    image?: string | { secure_url?: string };
+  };
+  user?: {
+    userName?: string;
+    email?: string;
+  };
+  bookingDate?: string;
+  startTime?: string;
+  endTime?: string;
+  guests?: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  pricingType?: ActivityBooking["pricingType"];
+  status?: ActivityBooking["status"];
+  paymentStatus?: ActivityBooking["paymentStatus"];
+  contactPhone?: string;
+  notes?: string;
+  cancellationReason?: string;
+  createdAt?: string;
 }
 
 function resolveImage(image?: string | { secure_url?: string }) {
@@ -22,7 +33,7 @@ function resolveImage(image?: string | { secure_url?: string }) {
   return typeof image === "string" ? image : image.secure_url ?? "";
 }
 
-function mapApiBooking(booking: any): ActivityBooking {
+function mapApiBooking(booking: ApiBooking): ActivityBooking {
   return {
     id: booking._id ?? booking.id ?? "",
     activityTitle: booking.activity?.title ?? "",
@@ -49,18 +60,16 @@ function mapApiBooking(booking: any): ActivityBooking {
 export async function fetchActivityBookings() {
   try {
     const accessToken = await getAccessToken();
-    const { data } = await axios.get(`${API_BASE_URL}/activity-bookings`, {
-      headers: accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : undefined,
+    const { data } = await apiClient.get("/activity-bookings", {
+      headers: accessToken ? await getAuthHeaders() : undefined,
       params: {
         limit: 100,
       },
     });
 
-    return (data?.data?.bookings ?? []).map(mapApiBooking);
+    const bookings = data?.data?.bookings;
+
+    return Array.isArray(bookings) ? bookings.map(mapApiBooking) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -73,21 +82,24 @@ export async function updateActivityBooking(booking: ActivityBookingDraft) {
   }
 
   try {
-    const { data } = await axios.patch(
-      `${API_BASE_URL}/activity-bookings/${booking.id}/status`,
+    const { data } = await apiClient.patch(
+      `/activity-bookings/${booking.id}/status`,
       {
         status: booking.status,
         paymentStatus: booking.paymentStatus,
         cancellationReason: booking.cancellationReason,
       },
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthHeaders(),
       }
     );
 
-    return mapApiBooking(data?.data?.booking);
+    const updatedBooking = data?.data?.booking;
+    if (!updatedBooking) {
+      throw new Error("Booking data is missing from the server response.");
+    }
+
+    return mapApiBooking(updatedBooking);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

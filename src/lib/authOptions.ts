@@ -1,8 +1,18 @@
-import { userService } from "./../services/user.service";
-import { AsyncThunk } from "./../../node_modules/@reduxjs/toolkit/src/createAsyncThunk";
 import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { jwtDecode } from "jwt-decode";
+
+type AuthorizedUser = {
+  id: string;
+  user: {
+    name?: string;
+    email?: string;
+    role?: string;
+  };
+  token: string;
+};
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,7 +32,7 @@ export const authOptions: NextAuthOptions = {
         },
       },
       authorize: async (credentials) => {
-        const response = await fetch("http://localhost:5000/auth/login", {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           body: JSON.stringify({
             email: credentials?.email,
@@ -56,7 +66,9 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Broad search for the user object
-          const user = data.user || data.data?.user || data.data;
+          const user = {
+            ...(data.user || data.data?.user || data.data || {}),
+          };
 
           // Fallback user details from credentials if they are missing in the response
           if (!user.email && credentials?.email) user.email = credentials.email;
@@ -77,10 +89,9 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // If user object from authorize contains nested user info, use it.
-        // Otherwise, the 'user' object from authorize IS the user info.
-        token.user = (user as any).user || user;
-        token.token = (user as any).token;
+        const authorizedUser = user as AuthorizedUser;
+        token.user = authorizedUser.user;
+        token.accessToken = authorizedUser.token;
         token.id = user.id;
       }
       return token;
@@ -88,8 +99,8 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (token) {
-        session.user = token.user as any;
-        (session as any).token = token.token;
+        session.user = token.user;
+        session.accessToken = token.accessToken as string | undefined;
       }
       return session;
     },
@@ -97,5 +108,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: "26bee57a22b68f100a554fb62da66e91f4d90372cde7f8b9f6d569cf8645d86e",
+  secret: process.env.AUTH_SECRET,
 };

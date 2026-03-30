@@ -6,7 +6,7 @@ export async function getUserToken() {
   const myCookies = await cookies()
   const decodedToken = myCookies.get("next-auth.session-token")?.value || myCookies.get("__Secure-next-auth.session-token")?.value
   const token = await decode({ token: decodedToken, secret: process.env.AUTH_SECRET! })
-  return token?.token
+  return token?.accessToken
 }
 
 export async function getUserId() {
@@ -17,9 +17,9 @@ export async function getUserId() {
   if (token?.id) return token.id as string;
 
   // Fallback for existing sessions: decode the API token
-  if (token?.token && typeof token.token === 'string') {
+  if (token?.accessToken && typeof token.accessToken === 'string') {
     try {
-      const decoded: { id: string } = jwtDecode(token.token);
+      const decoded: { id: string } = jwtDecode(token.accessToken);
       return decoded.id;
     } catch (error) {
       console.error("Fallback decoding failed", error);

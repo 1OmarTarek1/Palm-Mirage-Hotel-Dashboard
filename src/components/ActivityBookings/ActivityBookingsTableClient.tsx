@@ -30,6 +30,7 @@ const ActivityBookingsTableClient = forwardRef<ActivityBookingsTableClientHandle
     const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
     const [editingDraft, setEditingDraft] = useState<ActivityBookingDraft | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const loadBookings = async () => {
       try {
@@ -87,6 +88,7 @@ const ActivityBookingsTableClient = forwardRef<ActivityBookingsTableClientHandle
       if (!editingDraft) return;
 
       void (async () => {
+        setIsSaving(true);
         try {
           const updatedBooking = await updateActivityBooking(editingDraft);
           setBookings((current) =>
@@ -98,6 +100,8 @@ const ActivityBookingsTableClient = forwardRef<ActivityBookingsTableClientHandle
           handleCloseEditModal();
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "Failed to update activity booking");
+        } finally {
+          setIsSaving(false);
         }
       })();
     };
@@ -128,6 +132,7 @@ const ActivityBookingsTableClient = forwardRef<ActivityBookingsTableClientHandle
           title={editingBooking ? `Update ${editingBooking.activityTitle}` : "Update Booking"}
           onSave={handleSaveBooking}
           saveLabel="Save Changes"
+          isSaving={isSaving}
         >
           {editingBooking && editingDraft ? (
             <ActivityBookingEditForm booking={editingDraft} onChange={setEditingDraft} />
