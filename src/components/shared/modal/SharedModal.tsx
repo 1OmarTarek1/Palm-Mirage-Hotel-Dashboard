@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 interface SharedModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface SharedModalProps {
   saveLabel?: string;
   cancelLabel?: string;
   saveVariant?: "primary" | "danger";
+  isSaving?: boolean;
 }
 
 export default function SharedModal({
@@ -26,6 +28,7 @@ export default function SharedModal({
   saveLabel = "Save Changes",
   cancelLabel = "Cancel",
   saveVariant = "primary",
+  isSaving = false,
 }: SharedModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -89,6 +92,7 @@ export default function SharedModal({
             size="sm"
             onClick={onClose}
             className="px-5 text-sm"
+            disabled={isSaving}
           >
             {cancelLabel}
           </Button>
@@ -100,8 +104,16 @@ export default function SharedModal({
               size="sm"
               onClick={onSave}
               className={saveVariant === "danger" ? "px-5 text-sm" : "px-5 text-sm"}
+              disabled={isSaving}
             >
-              {saveLabel}
+              {isSaving ? (
+                <>
+                  <Spinner className="size-4" />
+                  <span>{saveLabel}</span>
+                </>
+              ) : (
+                saveLabel
+              )}
             </Button>
           ) : null}
         </div>

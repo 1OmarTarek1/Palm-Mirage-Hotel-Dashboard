@@ -1,5 +1,3 @@
-import axios from "axios";
-import { getSession } from "next-auth/react";
 import type {
   Activity,
   ActivityCategory,
@@ -7,8 +5,7 @@ import type {
   ActivityPricingType,
   ActivityStat,
 } from "@/components/Activities/data";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+import { apiClient, getAuthHeaders, getErrorMessage } from "@/lib/api-client";
 
 interface ApiActivityImage {
   secure_url?: string;
@@ -34,11 +31,6 @@ interface ApiActivity {
   highlights?: string[];
   icon?: ActivityIcon;
   createdAt?: string;
-}
-
-async function getAccessToken() {
-  const session = await getSession();
-  return (session as any)?.token ?? null;
 }
 
 function mapApiActivity(activity: ApiActivity): Activity {
@@ -67,14 +59,6 @@ function mapApiActivity(activity: ApiActivity): Activity {
   };
 }
 
-function getErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? error.message;
-  }
-
-  return error instanceof Error ? error.message : "Request failed";
-}
-
 function buildActivityFormData(activity: Activity) {
   const formData = new FormData();
   formData.append("category", activity.category);
@@ -100,48 +84,40 @@ function buildActivityFormData(activity: Activity) {
 
 export async function fetchActivities() {
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/activity`);
+    const { data } = await apiClient.get("/activity");
+    const activities = data?.data?.activities;
 
-    return (data?.data?.activities ?? []).map(mapApiActivity);
+    return Array.isArray(activities) ? activities.map(mapApiActivity) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
 export async function updateActivity(activity: Activity) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    const { data } = await axios.patch(
-      `${API_BASE_URL}/activity/${activity.id}`,
+    const { data } = await apiClient.patch(
+      `/activity/${activity.id}`,
       buildActivityFormData(activity),
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthHeaders(),
       }
     );
 
-    return mapApiActivity(data?.data?.activity);
+    const updatedActivity = data?.data?.activity;
+    if (!updatedActivity) {
+      throw new Error("Activity data is missing from the server response.");
+    }
+
+    return mapApiActivity(updatedActivity);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
 export async function createActivity(activity: Activity) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    await axios.post(`${API_BASE_URL}/activity`, buildActivityFormData(activity), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    await apiClient.post("/activity", buildActivityFormData(activity), {
+      headers: await getAuthHeaders(),
     });
 
     return fetchActivities();
@@ -151,16 +127,9 @@ export async function createActivity(activity: Activity) {
 }
 
 export async function deleteActivity(activityId: string) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    await axios.delete(`${API_BASE_URL}/activity/${activityId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    await apiClient.delete(`/activity/${activityId}`, {
+      headers: await getAuthHeaders(),
     });
   } catch (error) {
     throw new Error(getErrorMessage(error));

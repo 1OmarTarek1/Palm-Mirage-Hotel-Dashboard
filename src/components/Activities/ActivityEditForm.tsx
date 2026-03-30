@@ -279,7 +279,7 @@ export default function ActivityEditForm({
           <div className="space-y-3">
             {formData.highlights.map((highlight, index) => (
               <div
-                key={`${index}-${highlight}`}
+                key={`highlight-${index}`}
                 className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_auto]"
               >
                 <input
@@ -323,7 +323,7 @@ export default function ActivityEditForm({
           <div className="space-y-3">
             {formData.stats.map((stat, index) => (
               <div
-                key={`${index}-${stat.label}`}
+                key={`stat-${index}`}
                 className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_1fr_auto]"
               >
                 <input

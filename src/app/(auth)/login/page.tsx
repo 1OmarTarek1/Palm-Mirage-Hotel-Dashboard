@@ -74,7 +74,7 @@ export default function Login() {
       </div>
 
       {/* Login Card */}
-      <Card className="relative z-10 w-full max-w-[500px] bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">        
+      <Card className="relative z-10 w-full max-w-125 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">        
         <CardHeader className="space-y-2 pt-10 text-center text-white">
           <CardTitle className="text-3xl font-bold tracking-tight">
             Welcome Back 👋
@@ -165,8 +165,8 @@ export default function Login() {
       </Card>
       
       {/* Dynamic Background Accents */}
-      <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-primary/20 rounded-full blur-[120px] -z-1" />
-      <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-blue-500/20 rounded-full blur-[120px] -z-1" />
+      <div className="absolute top-1/4 right-1/4 w-75 h-75 bg-primary/20 rounded-full blur-[120px] -z-1" />
+      <div className="absolute bottom-1/4 left-1/4 w-75 h-75 bg-blue-500/20 rounded-full blur-[120px] -z-1" />
     </div>
   );
 }

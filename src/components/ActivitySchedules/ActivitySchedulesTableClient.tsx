@@ -65,6 +65,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
     const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
     const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
     const [editingDraft, setEditingDraft] = useState<ActivityScheduleDraft | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     useImperativeHandle(ref, () => ({
       openAddModal: () => {
@@ -160,6 +161,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
       if (!creatingDraft) return;
 
       void (async () => {
+        setIsSaving(true);
         try {
           const createdSchedule = await createActivitySchedule(creatingDraft);
           setSchedules((current) => [createdSchedule, ...current]);
@@ -167,6 +169,8 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           handleCloseAddModal();
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "Failed to create activity schedule");
+        } finally {
+          setIsSaving(false);
         }
       })();
     };
@@ -175,6 +179,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
       if (!editingDraft) return;
 
       void (async () => {
+        setIsSaving(true);
         try {
           const updatedSchedule = await updateActivitySchedule(editingDraft);
           setSchedules((current) =>
@@ -186,6 +191,8 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           handleCloseEditModal();
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "Failed to update activity schedule");
+        } finally {
+          setIsSaving(false);
         }
       })();
     };
@@ -194,6 +201,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
       if (!deletingSchedule) return;
 
       void (async () => {
+        setIsSaving(true);
         try {
           await deleteActivitySchedule(deletingSchedule.id);
           setSchedules((current) =>
@@ -203,6 +211,8 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           handleCloseDeleteModal();
         } catch (error) {
           toast.error(error instanceof Error ? error.message : "Failed to delete activity schedule");
+        } finally {
+          setIsSaving(false);
         }
       })();
     };
@@ -225,6 +235,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           title="Add Activity Schedule"
           onSave={handleCreateSchedule}
           saveLabel="Create Schedule"
+          isSaving={isSaving}
         >
           {creatingDraft ? (
             <ActivityScheduleAddForm
@@ -249,6 +260,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           title={editingSchedule ? `Edit ${editingSchedule.activityTitle}` : "Edit Activity Schedule"}
           onSave={handleSaveSchedule}
           saveLabel="Save Changes"
+          isSaving={isSaving}
         >
           {editingSchedule && editingDraft ? (
             <ActivityScheduleEditForm
@@ -267,6 +279,7 @@ const ActivitySchedulesTableClient = forwardRef<ActivitySchedulesTableClientHand
           onSave={handleDeleteSchedule}
           saveLabel="Delete Schedule"
           saveVariant="danger"
+          isSaving={isSaving}
         >
           {deletingSchedule ? <ActivityScheduleDeleteConfirm schedule={deletingSchedule} /> : null}
         </SharedModal>

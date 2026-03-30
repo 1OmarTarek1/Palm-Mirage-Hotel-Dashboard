@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const token = await getToken({
     req: request,
-    secret: "26bee57a22b68f100a554fb62da66e91f4d90372cde7f8b9f6d569cf8645d86e",
+    secret: process.env.AUTH_SECRET,
   });
   const { pathname } = request.nextUrl;
 
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
+    "/login",
     "/dashboard/:path*",
-    
   ],
 };

@@ -1,13 +1,10 @@
-import axios from "axios";
-import { getSession } from "next-auth/react";
 import type { Activity } from "@/components/Activities/data";
 import type {
   ActivitySchedule,
   ActivityScheduleDraft,
   ActivityScheduleStatus,
 } from "@/components/ActivitySchedules/data";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+import { apiClient, getAccessToken, getAuthHeaders, getErrorMessage } from "@/lib/api-client";
 
 interface ApiActivitySummary {
   id?: string;
@@ -35,19 +32,6 @@ interface ApiActivitySchedule {
   status: ActivityScheduleStatus;
   notes?: string;
   createdAt?: string;
-}
-
-async function getAccessToken() {
-  const session = await getSession();
-  return (session as any)?.token ?? null;
-}
-
-function getErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? error.message;
-  }
-
-  return error instanceof Error ? error.message : "Request failed";
 }
 
 function resolveImage(image?: ApiActivitySummary["image"]) {
@@ -99,14 +83,16 @@ function buildPayload(schedule: ActivityScheduleDraft) {
 
 export async function fetchActivitySchedules() {
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/activity-schedules`, {
+    const { data } = await apiClient.get("/activity-schedules", {
       params: {
         limit: 100,
         sort: "date_asc",
       },
     });
 
-    return (data?.data?.schedules ?? []).map(mapApiSchedule);
+    const schedules = data?.data?.schedules;
+
+    return Array.isArray(schedules) ? schedules.map(mapApiSchedule) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -119,17 +105,20 @@ export async function createActivitySchedule(schedule: ActivityScheduleDraft) {
   }
 
   try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/activity/${schedule.activityId}/schedules`,
+    const { data } = await apiClient.post(
+      `/activity/${schedule.activityId}/schedules`,
       buildPayload(schedule),
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthHeaders(),
       }
     );
 
-    return mapApiSchedule(data?.data?.schedule);
+    const createdSchedule = data?.data?.schedule;
+    if (!createdSchedule) {
+      throw new Error("Schedule data is missing from the server response.");
+    }
+
+    return mapApiSchedule(createdSchedule);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -142,17 +131,20 @@ export async function updateActivitySchedule(schedule: ActivityScheduleDraft) {
   }
 
   try {
-    const { data } = await axios.patch(
-      `${API_BASE_URL}/activity-schedules/${schedule.id}`,
+    const { data } = await apiClient.patch(
+      `/activity-schedules/${schedule.id}`,
       buildPayload(schedule),
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthHeaders(),
       }
     );
 
-    return mapApiSchedule(data?.data?.schedule);
+    const updatedSchedule = data?.data?.schedule;
+    if (!updatedSchedule) {
+      throw new Error("Schedule data is missing from the server response.");
+    }
+
+    return mapApiSchedule(updatedSchedule);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -165,10 +157,8 @@ export async function deleteActivitySchedule(scheduleId: string) {
   }
 
   try {
-    await axios.delete(`${API_BASE_URL}/activity-schedules/${scheduleId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    await apiClient.delete(`/activity-schedules/${scheduleId}`, {
+      headers: await getAuthHeaders(),
     });
   } catch (error) {
     throw new Error(getErrorMessage(error));
