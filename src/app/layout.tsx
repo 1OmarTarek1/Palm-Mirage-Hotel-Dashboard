@@ -8,7 +8,6 @@ import Sidebar from "@/components/shared/sidebar/Sidebar";
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
-import { Toaster } from "sonner";
 import AuthProvider from "@/components/providers/Auth-Provider";
 
 const comfortaa = Comfortaa({
@@ -88,7 +87,6 @@ export default async function RootLayout({
               <main className="pt-16 w-full">{children}</main>
             </div>
           </AppProviders>
-          <Toaster richColors />
         </AuthProvider>
       </body>
     </html>
