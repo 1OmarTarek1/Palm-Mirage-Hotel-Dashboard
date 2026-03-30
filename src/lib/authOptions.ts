@@ -58,6 +58,10 @@ export const authOptions: NextAuthOptions = {
           // Broad search for the user object
           const user = data.user || data.data?.user || data.data;
 
+          // Fallback user details from credentials if they are missing in the response
+          if (!user.email && credentials?.email) user.email = credentials.email;
+          if (!user.name && user.email) user.name = (user.email as string).split("@")[0];
+
           const decodedToken: { id: string } = jwtDecode(token);
           return {
             id: decodedToken.id,
@@ -73,17 +77,24 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = user.user;
-        token.token = user.token;
+        // If user object from authorize contains nested user info, use it.
+        // Otherwise, the 'user' object from authorize IS the user info.
+        token.user = (user as any).user || user;
+        token.token = (user as any).token;
+        token.id = user.id;
       }
       return token;
     },
 
     async session({ session, token }) {
       if (token) {
-        session.user = token.user;
+        session.user = token.user as any;
       }
       return session;
     },
   },
+  session: {
+    strategy: "jwt",
+  },
+  secret: "26bee57a22b68f100a554fb62da66e91f4d90372cde7f8b9f6d569cf8645d86e",
 };

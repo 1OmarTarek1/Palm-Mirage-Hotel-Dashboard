@@ -3,15 +3,15 @@ import NextAuth from "next-auth"
 
 declare module "next-auth" {
     interface User {
-        id:String,
+        id:string,
         user:UserDataI,
-        token :String
+        token :string
     }
 
     interface UserDataI {
-        name:String,
-        email:String,
-        role:String
+        name:string,
+        email:string,
+        role:string
     }
 }
 

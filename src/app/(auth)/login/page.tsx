@@ -51,16 +51,11 @@ export default function Login() {
     const response = await signIn("credentials",{
       email:values.email,
       password:values.password,
-      redirect:false
+      callbackUrl: "/dashboard",
+      redirect: true
     })
 
-    if(response?.ok){
-      router.push('/')
-      toast.success("logged in success ✅",{
-        position:"top-right",
-        duration:3000
-      })
-    }else{
+    if(!response?.ok){
       toast.error(response?.error ,{
         position:"top-right",
         duration:3000
