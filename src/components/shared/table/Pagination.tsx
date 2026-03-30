@@ -39,8 +39,8 @@ const Pagination: React.FC<PaginationProps> = ({
   const endIndex = Math.min(currentPage * pageSize, totalEntries);
 
   return (
-    <div className="flex items-center justify-between rounded-b-[28px] border-t border-border pt-6 px-2">
-      <p className="font-main text-sm text-muted-foreground">
+    <div className="flex flex-col gap-4 rounded-b-[28px] border-t border-border px-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-center font-main text-sm text-muted-foreground sm:text-left">
         Showing{" "}
         <span className="font-medium text-foreground">
           {startIndex}-{endIndex}
@@ -49,7 +49,7 @@ const Pagination: React.FC<PaginationProps> = ({
         entries
       </p>
 
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-end">
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}

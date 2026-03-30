@@ -1,5 +1,3 @@
-import React from "react";
-
 export interface Column<T> {
   key: keyof T | string; // Allow arbitrary keys for custom accessors
   title: string;
@@ -11,7 +9,7 @@ export interface Column<T> {
   accessorKey?: string;
   type?: "text" | "image-card" | "badge" | "icon" | "count" | "date" | "action-dropdown";
   accessorType?: "text" | "join" | "count" | "date";
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 export interface FilterOption {
@@ -31,7 +29,20 @@ export interface SortConfig<T> {
   direction: "asc" | "desc";
 }
 
-export type Filters<T> = Partial<Record<keyof T, any>>;
+export interface RangeFilterValue {
+  min?: number | string;
+  max?: number | string;
+}
+
+export type FilterValue =
+  | string
+  | number
+  | boolean
+  | RangeFilterValue
+  | null
+  | undefined;
+
+export type Filters<T> = Partial<Record<keyof T, FilterValue>>;
 export type RowAction = "view" | "edit" | "delete";
 export interface RowActionConfig<T> {
   key: RowAction;
