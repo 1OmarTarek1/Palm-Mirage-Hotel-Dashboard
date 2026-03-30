@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 import type { Activity } from "@/components/Activities/data";
 import type {
   ActivitySchedule,
@@ -36,14 +37,9 @@ interface ApiActivitySchedule {
   createdAt?: string;
 }
 
-function getAccessTokenFromCookies() {
-  if (typeof document === "undefined") return null;
-
-  const tokenCookie = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith("accessToken="));
-
-  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
+async function getAccessToken() {
+  const session = await getSession();
+  return (session as any)?.token ?? null;
 }
 
 function getErrorMessage(error: unknown) {
@@ -117,7 +113,7 @@ export async function fetchActivitySchedules() {
 }
 
 export async function createActivitySchedule(schedule: ActivityScheduleDraft) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
@@ -140,7 +136,7 @@ export async function createActivitySchedule(schedule: ActivityScheduleDraft) {
 }
 
 export async function updateActivitySchedule(schedule: ActivityScheduleDraft) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
@@ -163,7 +159,7 @@ export async function updateActivitySchedule(schedule: ActivityScheduleDraft) {
 }
 
 export async function deleteActivitySchedule(scheduleId: string) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }

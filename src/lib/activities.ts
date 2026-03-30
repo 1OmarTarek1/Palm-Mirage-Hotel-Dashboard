@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 import type {
   Activity,
   ActivityCategory,
@@ -35,14 +36,9 @@ interface ApiActivity {
   createdAt?: string;
 }
 
-function getAccessTokenFromCookies() {
-  if (typeof document === "undefined") return null;
-
-  const tokenCookie = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith("accessToken="));
-
-  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
+async function getAccessToken() {
+  const session = await getSession();
+  return (session as any)?.token ?? null;
 }
 
 function mapApiActivity(activity: ApiActivity): Activity {
@@ -113,7 +109,7 @@ export async function fetchActivities() {
 }
 
 export async function updateActivity(activity: Activity) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
@@ -136,7 +132,7 @@ export async function updateActivity(activity: Activity) {
 }
 
 export async function createActivity(activity: Activity) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
@@ -155,7 +151,7 @@ export async function createActivity(activity: Activity) {
 }
 
 export async function deleteActivity(activityId: string) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }

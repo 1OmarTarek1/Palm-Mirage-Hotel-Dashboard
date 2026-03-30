@@ -1,16 +1,12 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 import type { ActivityBooking, ActivityBookingDraft } from "@/components/ActivityBookings/data";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
-function getAccessTokenFromCookies() {
-  if (typeof document === "undefined") return null;
-
-  const tokenCookie = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith("accessToken="));
-
-  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
+async function getAccessToken() {
+  const session = await getSession();
+  return (session as any)?.token ?? null;
 }
 
 function getErrorMessage(error: unknown) {
@@ -52,7 +48,7 @@ function mapApiBooking(booking: any): ActivityBooking {
 
 export async function fetchActivityBookings() {
   try {
-    const accessToken = getAccessTokenFromCookies();
+    const accessToken = await getAccessToken();
     const { data } = await axios.get(`${API_BASE_URL}/activity-bookings`, {
       headers: accessToken
         ? {
@@ -71,7 +67,7 @@ export async function fetchActivityBookings() {
 }
 
 export async function updateActivityBooking(booking: ActivityBookingDraft) {
-  const accessToken = getAccessTokenFromCookies();
+  const accessToken = await getAccessToken();
   if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
