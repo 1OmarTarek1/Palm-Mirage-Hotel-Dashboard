@@ -23,12 +23,14 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "react-toastify";
 
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
   const form = useForm<loginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -38,22 +40,22 @@ export default function Login() {
   });
 
   async function onlogin(values: loginSchemaType) {
-    // const data = await loginUser(values);
-    // console.log(data);
-    // if(data.message == "Done"){che
-    //   router.push("/table")
-    // }
-
-    const response = await signIn("credentials",{
-      email:values.email,
-      password:values.password,
+    const response = await signIn("credentials", {
+      email: values.email,
+      password: values.password,
       callbackUrl: "/dashboard",
-      redirect: true
-    })
+      redirect: false,
+    });
 
-    if(!response?.ok){
-      toast.error(response?.error ?? "Login failed")
+    if (!response?.ok) {
+      toast.error(response?.error ?? "Login failed");
+      return;
     }
+
+    toast.success("Logged in successfully.");
+    window.setTimeout(() => {
+      router.push(response.url ?? "/dashboard");
+    }, 500);
   }
   
 

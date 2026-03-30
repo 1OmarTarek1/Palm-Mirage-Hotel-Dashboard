@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleTheme } from "@/store/slices/themeSlice";
 import { useSession, signOut } from "next-auth/react";
+import { toast } from "react-toastify";
 
 export interface UserData {
   name: string;
@@ -23,6 +24,10 @@ interface NavbarProps {
   onSignOut?: () => void;
 }
 
+type ActiveUser = UserData & {
+  image?: string | null;
+};
+
 export default function Navbar({
   user: userProp,
   notificationCount = 0,
@@ -30,6 +35,7 @@ export default function Navbar({
 }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const isDarkMode = useAppSelector((state) => state.theme.isDark);
 
@@ -56,15 +62,30 @@ export default function Navbar({
   }, []);
 
   // Use session user if available, otherwise fall back to prop
-  const activeUser = session?.user || userProp;
+  const activeUser = (session?.user as ActiveUser | undefined) || userProp || null;
   const displayName = activeUser?.name || "Guest User";
   const displayEmail = activeUser?.email || "guest@example.com";
-  const displayAvatar = (activeUser as any)?.image || (activeUser as any)?.avatarUrl;
+  const displayAvatar = activeUser?.image || activeUser?.avatarUrl;
 
   const handleThemeToggle = () => {
     document.cookie = `theme=${isDarkMode ? "light" : "dark"}; path=/; max-age=31536000; samesite=lax`;
     window.dispatchEvent(new Event("theme-preference-saved"));
     dispatch(toggleTheme());
+  };
+
+  const handleSignOut = async () => {
+    setDropdownOpen(false);
+
+    if (onSignOut) {
+      onSignOut();
+      return;
+    }
+
+    await signOut({ redirect: false, callbackUrl: "/login" });
+    toast.success("Logged out successfully.");
+    window.setTimeout(() => {
+      router.push("/login");
+    }, 500);
   };
 
   return (
@@ -251,14 +272,7 @@ export default function Navbar({
                     <div className="my-1.5 border-t border-border" />
 
                     <button
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        if (onSignOut) {
-                          onSignOut();
-                        } else {
-                          signOut({ callbackUrl: "/login" });
-                        }
-                      }}
+                      onClick={handleSignOut}
                       className="font-main flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors duration-100 hover:bg-red-500/10"
                       type="button"
                     >
