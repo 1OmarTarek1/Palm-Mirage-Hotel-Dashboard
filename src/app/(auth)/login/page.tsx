@@ -101,7 +101,7 @@ export default function Login() {
                           id="email"
                           type="email"
                           placeholder="Enter Your Email"
-                          className="pl-10 mt-2 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
+                          className="pl-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
                         />
                       </div>
                     </FormControl>
@@ -123,7 +123,7 @@ export default function Login() {
                           id="password"
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="px-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
+                          className="px-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
                         />
                         <button
                           type="button"
