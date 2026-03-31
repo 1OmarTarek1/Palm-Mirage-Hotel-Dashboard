@@ -13,7 +13,12 @@ export async function fetchFacilities() {
     const data = await apiRequest<{ data?: Facility[] }>("/api/facilities");
     // Depending on backend, results might be in data.data or data itself
     const facilities = data?.data || (data as any) || [];
-    return Array.isArray(facilities) ? facilities : [];
+    if (!Array.isArray(facilities)) return [];
+    
+    return facilities.map((f: any) => ({
+      ...f,
+      _id: f._id || f.id || ""
+    })).filter(f => f._id);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

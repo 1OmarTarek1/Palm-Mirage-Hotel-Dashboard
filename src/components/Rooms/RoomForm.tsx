@@ -59,6 +59,8 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
   };
 
   const handleFacilityToggle = (facilityId: string) => {
+    if (!facilityId || facilityId === "undefined") return;
+    
     const current = formData.facilities || [];
     const updated = current.includes(facilityId)
       ? current.filter((id) => id !== facilityId)

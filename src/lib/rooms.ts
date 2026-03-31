@@ -37,7 +37,10 @@ function mapApiRoom(apiRoom: ApiRoom): Room {
     capacity: apiRoom.capacity,
     discount: apiRoom.discount,
     description: apiRoom.description,
-    facilities: apiRoom.facilities?.map((f: any) => typeof f === "object" ? f._id : f) || [],
+    facilities: apiRoom.facilities?.map((f: any) => {
+      if (typeof f === "object" && f !== null) return f._id || f.id;
+      return f;
+    }).filter(Boolean) || [],
     roomImages: apiRoom.roomImages || [],
     hasOffer: apiRoom.hasOffer,
     isAvailable: apiRoom.isAvailable,
@@ -69,7 +72,9 @@ function buildRoomFormData(room: RoomDraft) {
   formData.append("cancellationPolicy", room.cancellationPolicy || "");
 
   if (room.facilities?.length) {
-    room.facilities.forEach((id) => formData.append("facilities", id));
+    room.facilities
+      .filter((id) => id && id !== "undefined" && typeof id === "string")
+      .forEach((id) => formData.append("facilities", id));
   }
 
   if (room.imageFiles?.length) {
