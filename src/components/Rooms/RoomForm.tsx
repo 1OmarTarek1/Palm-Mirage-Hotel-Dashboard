@@ -54,6 +54,13 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
   };
 
   const handleNumberChange = <K extends keyof RoomDraft>(key: K, value: string) => {
+    if (value === "") {
+      handleChange(key, 0 as RoomDraft[K]);
+      return;
+    }
+    
+    // Convert to number, but if it starts with 0 and has more digits (like "05"), 
+    // it will be naturally converted to 5 by Number().
     const parsed = Number(value);
     handleChange(key, (Number.isNaN(parsed) ? 0 : parsed) as RoomDraft[K]);
   };
@@ -156,8 +163,9 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
           <span className="font-main text-sm font-semibold text-foreground">Room Number</span>
           <input
             type="number"
-            value={formData.roomNumber}
+            value={formData.roomNumber || ""}
             onChange={(e) => handleNumberChange("roomNumber", e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
@@ -183,8 +191,9 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
           <span className="font-main text-sm font-semibold text-foreground">Floor</span>
           <input
             type="number"
-            value={formData.floor}
+            value={formData.floor || ""}
             onChange={(e) => handleNumberChange("floor", e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
@@ -193,8 +202,9 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
           <span className="font-main text-sm font-semibold text-foreground">Base Price</span>
           <input
             type="number"
-            value={formData.price}
+            value={formData.price || ""}
             onChange={(e) => handleNumberChange("price", e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
@@ -205,8 +215,9 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
             type="number"
             min="0"
             max="100"
-            value={formData.discount}
+            value={formData.discount === 0 ? "0" : formData.discount || ""}
             onChange={(e) => handleNumberChange("discount", e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
@@ -216,8 +227,9 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
            <input
             type="number"
             min="1"
-            value={formData.capacity}
+            value={formData.capacity || ""}
             onChange={(e) => handleNumberChange("capacity", e.target.value)}
+            onFocus={(e) => e.target.select()}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
         </label>
