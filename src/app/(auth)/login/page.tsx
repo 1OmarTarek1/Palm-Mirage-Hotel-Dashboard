@@ -57,7 +57,7 @@ export default function Login() {
       router.push(response.url ?? "/dashboard");
     }, 500);
   }
-  
+
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4">
@@ -74,7 +74,7 @@ export default function Login() {
       </div>
 
       {/* Login Card */}
-      <Card className="relative z-10 w-full max-w-125 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">        
+      <Card className="relative z-10 w-full max-w-125 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
         <CardHeader className="space-y-2 pt-10 text-center text-white">
           <CardTitle className="text-3xl font-bold tracking-tight">
             Welcome Back 👋
@@ -101,7 +101,7 @@ export default function Login() {
                           id="email"
                           type="email"
                           placeholder="Enter Your Email"
-                          className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
+                          className="pl-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
                         />
                       </div>
                     </FormControl>
@@ -123,18 +123,23 @@ export default function Login() {
                           id="password"
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
+                          className="px-10 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onMouseUp={(e) => e.preventDefault()}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
                             <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
                           )}
+                          <span className="sr-only">
+                            {showPassword ? "Hide password" : "Show password"}
+                          </span>
                         </button>
                       </div>
                     </FormControl>
@@ -144,7 +149,7 @@ export default function Login() {
               />
             </CardContent>
 
-            <CardFooter className="px-8 pb-10">
+            <CardFooter className="px-8 pb-10 border-0 bg-transparent">
               <Button
                 type="submit"
                 className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-300 transform active:scale-[0.98]"
@@ -163,7 +168,7 @@ export default function Login() {
           </form>
         </Form>
       </Card>
-      
+
       {/* Dynamic Background Accents */}
       <div className="absolute top-1/4 right-1/4 w-75 h-75 bg-primary/20 rounded-full blur-[120px] -z-1" />
       <div className="absolute bottom-1/4 left-1/4 w-75 h-75 bg-blue-500/20 rounded-full blur-[120px] -z-1" />
