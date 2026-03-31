@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return proxyApiRequest(request, {
-    backendPath: "/rooms",
+    backendPath: "/rooms/create-room",
     requireAuth: true,
   });
 }
