@@ -42,3 +42,4 @@ export default async function ActivitiesPage({ searchParams }: ActivitiesPagePro
     </div>
   );
 }
+ 
