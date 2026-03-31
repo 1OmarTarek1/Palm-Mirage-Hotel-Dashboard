@@ -59,8 +59,6 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
       return;
     }
     
-    // Convert to number, but if it starts with 0 and has more digits (like "05"), 
-    // it will be naturally converted to 5 by Number().
     const parsed = Number(value);
     handleChange(key, (Number.isNaN(parsed) ? 0 : parsed) as RoomDraft[K]);
   };
