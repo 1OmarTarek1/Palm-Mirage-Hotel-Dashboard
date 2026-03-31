@@ -1,5 +1,6 @@
 import React from "react";
 import { CellProps } from "./types";
+import { DynamicIcon } from "@/components/shared/utils/icons";
 
 export default function ImageCardCell({
   row,
@@ -8,13 +9,17 @@ export default function ImageCardCell({
   displayMode = "table",
 }: CellProps) {
   const imageKey = column.config?.imageKey || "image";
+  const iconKey = column.config?.iconKey || "icon";
   const subtitleKey = column.config?.subtitleKey || "label";
   const record = row as Record<string, unknown>;
   const imageUrlValue =
     typeof imageKey === "string" ? record[imageKey] : undefined;
+  const iconNameValue =
+    typeof iconKey === "string" ? record[iconKey] : undefined;
   const subtitle =
     typeof subtitleKey === "string" ? record[subtitleKey] : undefined;
   const imageUrl = typeof imageUrlValue === "string" ? imageUrlValue : undefined;
+  const iconName = typeof iconNameValue === "string" ? iconNameValue : undefined;
   const isLeftAligned = displayMode === "card" || column.cellAlign === "left";
   const isRightAligned = column.cellAlign === "right";
 
@@ -27,7 +32,7 @@ export default function ImageCardCell({
       }`}
     >
       <div
-        className={`overflow-hidden rounded-2xl border border-border bg-muted shadow-sm ${
+        className={`flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/5 ${
           displayMode === "card" ? "h-12 w-16 rounded-[18px]" : "h-16 w-24"
         }`}
       >
@@ -38,7 +43,13 @@ export default function ImageCardCell({
             className="h-full w-full object-cover transition-transform duration-700 hover:scale-110"
           />
         ) : (
-          <div className="h-full w-full bg-gray-200" />
+          <div className="flex h-full w-full items-center justify-center text-primary/40 transition-colors group-hover:text-primary">
+            <DynamicIcon 
+              name={iconName || (resolvedValue as string)} 
+              size={displayMode === "card" ? 22 : 28} 
+              className="opacity-70 group-hover:opacity-100" 
+            />
+          </div>
         )}
       </div>
       <div
@@ -51,7 +62,7 @@ export default function ImageCardCell({
             displayMode === "card" ? "text-sm" : "text-sm"
           }`}
         >
-          {String(resolvedValue)}
+          {String(resolvedValue as any)}
         </span>
         {subtitle && (
           <span

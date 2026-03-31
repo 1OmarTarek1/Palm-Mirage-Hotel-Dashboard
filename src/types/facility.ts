@@ -1,7 +1,7 @@
 export type FacilityStatus = "Available" | "Maintenance" | "Busy" | "Closed";
 
 export interface Facility {
-  id: string;
+  _id: string;
   name: string;
   category: string;
   description: string;
@@ -13,4 +13,5 @@ export interface Facility {
   operatingHours?: string;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 }

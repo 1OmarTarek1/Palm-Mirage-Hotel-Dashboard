@@ -12,7 +12,7 @@ export const facilityPreset = createTablePreset<Facility>(
       searchable: true,
       sortable: true,
       type: "image-card",
-      config: { imageKey: "image", subtitleKey: "category" }
+      config: { imageKey: "image", iconKey: "icon", subtitleKey: "category" }
     },
     {
       key: "category",
@@ -46,7 +46,8 @@ export const facilityPreset = createTablePreset<Facility>(
       key: "operatingHours",
       title: "Hours",
       sortable: true,
-      type: "text"
+      type: "text",
+      accessorKey: "operatingHours"
     }
   ],
   [
