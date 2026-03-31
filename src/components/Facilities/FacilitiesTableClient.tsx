@@ -165,6 +165,7 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
             <FacilityForm
               facility={creatingDraft}
               onChange={(updated) => setCreatingDraft(updated)}
+              usedIcons={facilities.map((f) => f.icon).filter(Boolean) as string[]}
             />
           </div>
         )}
@@ -229,6 +230,10 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
             <FacilityForm
               facility={editingDraft}
               onChange={(updated) => setEditingDraft(updated)}
+              usedIcons={facilities
+                .filter((f) => f._id !== editingFacility._id)
+                .map((f) => f.icon)
+                .filter(Boolean) as string[]}
             />
           </div>
         )}
