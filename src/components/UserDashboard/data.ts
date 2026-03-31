@@ -6,6 +6,8 @@ export interface User {
   gender: "male" | "female";
   country: string;
   phoneNumber?: string;
+  password?: string;
+  confirmPassword?: string;
   isConfirmed: boolean;
   image?: string;
   createdAt?: string;
@@ -17,9 +19,12 @@ export function createEmptyUserDraft(): User {
     id: "",
     userName: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     role: "user",
     gender: "male",
     country: "",
+    phoneNumber: "",
     isConfirmed: false,
   };
 }

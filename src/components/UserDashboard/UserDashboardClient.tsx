@@ -15,8 +15,6 @@ export default function UserDashboardPageClient() {
         <SubHeader
           title="User Management"
           description="Manage your hotel's staff and registered users. Control roles and access permissions."
-          actionLabel="Add User"
-          onAction={() => tableRef.current?.openAddModal()}
         />
 
         <div className="space-y-6">
