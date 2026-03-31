@@ -4,7 +4,7 @@ import type {
   ActivityScheduleDraft,
   ActivityScheduleStatus,
 } from "@/components/ActivitySchedules/data";
-import { apiClient, getAccessToken, getAuthHeaders, getErrorMessage } from "@/lib/api-client";
+import { apiRequest, getErrorMessage } from "@/lib/api-client";
 
 interface ApiActivitySummary {
   id?: string;
@@ -83,7 +83,7 @@ function buildPayload(schedule: ActivityScheduleDraft) {
 
 export async function fetchActivitySchedules() {
   try {
-    const { data } = await apiClient.get("/activity-schedules", {
+    const data = await apiRequest<{ data?: { schedules?: ApiActivitySchedule[] } }>("/api/activity-schedules", {
       params: {
         limit: 100,
         sort: "date_asc",
@@ -99,17 +99,12 @@ export async function fetchActivitySchedules() {
 }
 
 export async function createActivitySchedule(schedule: ActivityScheduleDraft) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    const { data } = await apiClient.post(
-      `/activity/${schedule.activityId}/schedules`,
-      buildPayload(schedule),
+    const data = await apiRequest<{ data?: { schedule?: ApiActivitySchedule } }>(
+      `/api/activity/${schedule.activityId}/schedules`,
       {
-        headers: await getAuthHeaders(),
+        method: "POST",
+        body: buildPayload(schedule),
       }
     );
 
@@ -125,17 +120,12 @@ export async function createActivitySchedule(schedule: ActivityScheduleDraft) {
 }
 
 export async function updateActivitySchedule(schedule: ActivityScheduleDraft) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    const { data } = await apiClient.patch(
-      `/activity-schedules/${schedule.id}`,
-      buildPayload(schedule),
+    const data = await apiRequest<{ data?: { schedule?: ApiActivitySchedule } }>(
+      `/api/activity-schedules/${schedule.id}`,
       {
-        headers: await getAuthHeaders(),
+        method: "PATCH",
+        body: buildPayload(schedule),
       }
     );
 
@@ -151,14 +141,9 @@ export async function updateActivitySchedule(schedule: ActivityScheduleDraft) {
 }
 
 export async function deleteActivitySchedule(scheduleId: string) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    await apiClient.delete(`/activity-schedules/${scheduleId}`, {
-      headers: await getAuthHeaders(),
+    await apiRequest(`/api/activity-schedules/${scheduleId}`, {
+      method: "DELETE",
     });
   } catch (error) {
     throw new Error(getErrorMessage(error));

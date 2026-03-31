@@ -2,29 +2,45 @@ import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
 import { jwtDecode } from "jwt-decode";
 
-export async function getUserToken() {
-  const myCookies = await cookies()
-  const decodedToken = myCookies.get("next-auth.session-token")?.value || myCookies.get("__Secure-next-auth.session-token")?.value
-  const token = await decode({ token: decodedToken, secret: process.env.AUTH_SECRET! })
-  return token?.accessToken
+export interface ServerAuthSession {
+  accessToken: string | null;
+  role: string | null;
+  userId: string | null;
 }
 
-export async function getUserId() {
+async function decodeSessionToken() {
   const myCookies = await cookies()
   const decodedToken = myCookies.get("next-auth.session-token")?.value || myCookies.get("__Secure-next-auth.session-token")?.value
-  const token = await decode({ token: decodedToken, secret: process.env.AUTH_SECRET! })
+  return decode({ token: decodedToken, secret: process.env.AUTH_SECRET! })
+}
 
-  if (token?.id) return token.id as string;
+export async function getServerAuthSession(): Promise<ServerAuthSession> {
+  const token = await decodeSessionToken()
 
-  // Fallback for existing sessions: decode the API token
-  if (token?.accessToken && typeof token.accessToken === 'string') {
+  let userId = token?.id ? String(token.id) : null
+
+  if (!userId && token?.accessToken && typeof token.accessToken === "string") {
     try {
       const decoded: { id: string } = jwtDecode(token.accessToken);
-      return decoded.id;
+      userId = decoded.id;
     } catch (error) {
       console.error("Fallback decoding failed", error);
     }
   }
 
-  return null
+  return {
+    accessToken: typeof token?.accessToken === "string" ? token.accessToken : null,
+    role: typeof token?.user?.role === "string" ? token.user.role : null,
+    userId,
+  }
+}
+
+export async function getUserToken() {
+  const session = await getServerAuthSession()
+  return session.accessToken
+}
+
+export async function getUserId() {
+  const session = await getServerAuthSession()
+  return session.userId
 }

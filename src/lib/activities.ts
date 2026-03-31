@@ -5,7 +5,7 @@ import type {
   ActivityPricingType,
   ActivityStat,
 } from "@/components/Activities/data";
-import { apiClient, getAuthHeaders, getErrorMessage } from "@/lib/api-client";
+import { apiRequest, getErrorMessage } from "@/lib/api-client";
 
 interface ApiActivityImage {
   secure_url?: string;
@@ -84,7 +84,7 @@ function buildActivityFormData(activity: Activity) {
 
 export async function fetchActivities() {
   try {
-    const { data } = await apiClient.get("/activity");
+    const data = await apiRequest<{ data?: { activities?: ApiActivity[] } }>("/api/activity");
     const activities = data?.data?.activities;
 
     return Array.isArray(activities) ? activities.map(mapApiActivity) : [];
@@ -95,13 +95,10 @@ export async function fetchActivities() {
 
 export async function updateActivity(activity: Activity) {
   try {
-    const { data } = await apiClient.patch(
-      `/activity/${activity.id}`,
-      buildActivityFormData(activity),
-      {
-        headers: await getAuthHeaders(),
-      }
-    );
+    const data = await apiRequest<{ data?: { activity?: ApiActivity } }>(`/api/activity/${activity.id}`, {
+      method: "PATCH",
+      body: buildActivityFormData(activity),
+    });
 
     const updatedActivity = data?.data?.activity;
     if (!updatedActivity) {
@@ -116,8 +113,9 @@ export async function updateActivity(activity: Activity) {
 
 export async function createActivity(activity: Activity) {
   try {
-    await apiClient.post("/activity", buildActivityFormData(activity), {
-      headers: await getAuthHeaders(),
+    await apiRequest("/api/activity", {
+      method: "POST",
+      body: buildActivityFormData(activity),
     });
 
     return fetchActivities();
@@ -128,8 +126,8 @@ export async function createActivity(activity: Activity) {
 
 export async function deleteActivity(activityId: string) {
   try {
-    await apiClient.delete(`/activity/${activityId}`, {
-      headers: await getAuthHeaders(),
+    await apiRequest(`/api/activity/${activityId}`, {
+      method: "DELETE",
     });
   } catch (error) {
     throw new Error(getErrorMessage(error));
