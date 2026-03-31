@@ -10,8 +10,8 @@ export const userPreset = createTablePreset<User>(
       headerAlign: "left",
       searchable: true,
       sortable: true,
-      type: "image-card", // This usually handles display of image + main text + sub text
-      config: { imageKey: "image", subtitleKey: "email" }
+      type: "image-card",
+      config: { imageKey: "image", subtitleKey: "email" },
     },
     {
       key: "role",
@@ -19,21 +19,21 @@ export const userPreset = createTablePreset<User>(
       sortable: true,
       searchable: true,
       filterable: true,
-      type: "badge"
+      type: "badge",
     },
     {
       key: "country",
       title: "Country",
       sortable: true,
       searchable: true,
-      type: "text"
+      type: "text",
     },
     {
       key: "gender",
       title: "Gender",
       sortable: true,
       filterable: true,
-      type: "badge"
+      type: "badge",
     },
     {
       key: "isConfirmed",
@@ -41,8 +41,7 @@ export const userPreset = createTablePreset<User>(
       sortable: true,
       filterable: true,
       type: "badge",
-      // Assuming the badge component handles boolean/formatting via config or value
-    }
+    },
   ],
   [
     {
@@ -62,7 +61,7 @@ export const userPreset = createTablePreset<User>(
         { label: "Male", value: "male" },
         { label: "Female", value: "female" },
       ],
-    }
+    },
   ]
 );
 
