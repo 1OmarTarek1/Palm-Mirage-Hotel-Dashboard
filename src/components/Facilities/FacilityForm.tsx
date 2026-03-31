@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/select";
 import { Facility } from "@/types/facility";
 import { facilityCategoryOptions, facilityStatusOptions, facilityIconOptions } from "./data";
+import { DynamicIcon } from "@/components/shared/utils/icons";
 
 interface FacilityFormProps {
   facility: Facility;
   onChange: (facility: Facility) => void;
+  usedIcons?: string[];
 }
 
-export default function FacilityForm({ facility, onChange }: FacilityFormProps) {
+export default function FacilityForm({ facility, onChange, usedIcons = [] }: FacilityFormProps) {
   const [formData, setFormData] = useState<Facility>(facility);
 
   useEffect(() => {
@@ -86,21 +88,33 @@ export default function FacilityForm({ facility, onChange }: FacilityFormProps) 
         {/* Icon */}
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Icon</span>
-          <Select
-            value={formData.icon}
-            onValueChange={(value) => handleChange("icon", value)}
-          >
-            <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35 border-border">
-              <SelectValue placeholder="Select icon" />
-            </SelectTrigger>
-            <SelectContent>
-              {facilityIconOptions.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            {formData.icon && (
+              <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl border border-border bg-primary/5 text-primary">
+                <DynamicIcon name={formData.icon} size={22} />
+              </div>
+            )}
+            <Select
+              value={formData.icon}
+              onValueChange={(value) => handleChange("icon", value)}
+            >
+              <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35 border-border">
+                <SelectValue placeholder="Select icon" />
+              </SelectTrigger>
+              <SelectContent>
+                {facilityIconOptions
+                  .filter((opt) => opt === formData.icon || !usedIcons.includes(opt))
+                  .map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      <span className="flex items-center gap-2">
+                        <DynamicIcon name={opt} size={15} />
+                        {opt}
+                      </span>
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </label>
 
         {/* Location */}
