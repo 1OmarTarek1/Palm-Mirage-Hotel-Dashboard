@@ -28,15 +28,20 @@ interface ApiBooking {
 }
 
 function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
+  if (!apiBooking) return {} as RoomBooking;
+  
+  const userObj = apiBooking.user as any;
+  const roomObj = apiBooking.room as any;
+
   return {
     id: apiBooking._id,
-    user: typeof apiBooking.user === "object" ? (apiBooking.user as any)._id : apiBooking.user || "",
-    userName: apiBooking.user?.userName || "Guest",
-    room: typeof apiBooking.room === "object" ? (apiBooking.room as any)._id : apiBooking.room || "",
-    roomName: apiBooking.room?.roomName || "Room",
-    roomNumber: apiBooking.room?.roomNumber || 0,
-    roomType: apiBooking.room?.roomType || "single",
-    roomImage: (apiBooking.room as any)?.roomImages?.[0]?.secure_url || "",
+    user: typeof userObj === "object" && userObj ? userObj._id : userObj || "",
+    userName: userObj?.userName || "Guest",
+    room: typeof roomObj === "object" && roomObj ? roomObj._id : roomObj || "",
+    roomName: roomObj?.roomName || "Room",
+    roomNumber: roomObj?.roomNumber || 0,
+    roomType: roomObj?.roomType || "single",
+    roomImage: roomObj?.roomImages?.[0]?.secure_url || "",
     checkInDate: apiBooking.checkInDate?.slice(0, 10) || "",
     checkOutDate: apiBooking.checkOutDate?.slice(0, 10) || "",
     nights: apiBooking.nights || 0,
@@ -54,9 +59,8 @@ function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
 
 export async function fetchRoomBookings() {
   try {
-    const response = await apiRequest<{ data: { data: ApiBooking[] } }>("/api/reservations");
-    // Depending on backend, results might be in response.data.data
-    const data = response?.data?.data || (response?.data as any) || [];
+    const response = await apiRequest<{ data: { reservations: ApiBooking[] } }>("/api/reservations");
+    const data = response?.data?.reservations || [];
     return Array.isArray(data) ? data.map(mapApiBooking) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));

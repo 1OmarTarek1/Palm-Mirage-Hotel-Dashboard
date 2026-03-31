@@ -33,6 +33,7 @@ function RoomBookingsTableClient() {
       const data = await fetchRoomBookings();
       setBookings(data);
     } catch (error) {
+      console.error("RoomBookings load error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to load room bookings");
     } finally {
       setIsLoading(false);
