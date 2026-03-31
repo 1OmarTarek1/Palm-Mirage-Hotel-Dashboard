@@ -17,31 +17,18 @@ export const facilityStatusOptions: FacilityStatus[] = [
 ];
 
 export const facilityIconOptions = [
-  "Waves",         // Pool/Spa
-  "Utensils",      // Dining
-  "Dumbbell",      // Gym
-  "Wifi",          // Internet
-  "Music",         // Entertainment
-  "Coffee",        // Cafe
-  "ParkingCircle", // Parking
-  "Briefcase",     // Business Center
-  "Sparkles",      // Spa/Cleaning
-  "Bed",           // Rooms
-  "Bath",          // Bathroom
-  "ChefHat",       // Kitchen
-  "Wine",          // Bar
-  "TreePine",      // Garden
-  "Umbrella",      // Beach
-  "Trophy",        // Sports
-  "Gamepad2",      // Kids/Games
-  "Bike",          // Cycling
-  "BookOpen",      // Library
-  "Scissors",      // Salon
-  "Star",          // Premium
-  "Heart",         // Wellness
-  "Sun",           // Solarium
-  "Flame",         // Fireplace/BBQ
-  "Globe",         // Tours
+  "Wifi",
+  "Fitness",
+  "Housekeeping",
+  "Parking",
+  "Waves",
+  "Dumbbell",
+  "Utensils",
+  "Coffee",
+  "Music",
+  "Briefcase",
+  "Sparkles",
+  "ParkingCircle",
 ];
 
 export function createEmptyFacilityDraft(): Facility {
