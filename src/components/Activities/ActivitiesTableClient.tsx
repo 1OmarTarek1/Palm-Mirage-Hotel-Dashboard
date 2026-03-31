@@ -1,6 +1,7 @@
 "use client";
 
-import React, { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
@@ -12,11 +13,11 @@ import ActivityDeleteConfirm from "./ActivityDeleteConfirm";
 import ActivityDetailsView from "./ActivityDetailsView";
 import ActivityEditForm from "./ActivityEditForm";
 
-export interface ActivitiesTableClientHandle {
-  openAddModal: () => void;
+interface ActivitiesTableClientProps {
+  initialOpenAddModal?: boolean;
 }
 
-const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function ActivitiesTableClient(_, ref) {
+function ActivitiesTableClient({ initialOpenAddModal = false }: ActivitiesTableClientProps) {
   const [activities, setActivities] = React.useState<Activity[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [creatingDraft, setCreatingDraft] = useState<Activity | null>(null);
@@ -25,14 +26,12 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Activity | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasOpenedInitialModal = useRef(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  useImperativeHandle(ref, () => ({
-    openAddModal: () => {
-      setCreatingDraft(createEmptyActivityDraft());
-    },
-  }));
-
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     const loadActivities = async () => {
@@ -60,6 +59,26 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
     };
   }, []);
 
+  useEffect(() => {
+    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+
+    hasOpenedInitialModal.current = true;
+    setCreatingDraft(createEmptyActivityDraft());
+  }, [initialOpenAddModal]);
+
+  const syncAddModalQueryParam = (isOpen: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (isOpen) {
+      params.set("modal", "add");
+    } else if (params.get("modal") === "add") {
+      params.delete("modal");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
   const viewingActivity = useMemo(
     () => activities.find((activity) => activity.id === viewingActivityId) ?? null,
     [activities, viewingActivityId]
@@ -76,7 +95,10 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
   );
 
   const handleCloseViewModal = () => setViewingActivityId(null);
-  const handleCloseAddModal = () => setCreatingDraft(null);
+  const handleCloseAddModal = () => {
+    setCreatingDraft(null);
+    syncAddModalQueryParam(false);
+  };
   const handleCloseEditModal = () => {
     setEditingActivityId(null);
     setEditingDraft(null);
@@ -236,6 +258,6 @@ const ActivitiesTableClient = forwardRef<ActivitiesTableClientHandle>(function A
       </SharedModal>
     </>
   );
-});
+}
 
 export default ActivitiesTableClient;

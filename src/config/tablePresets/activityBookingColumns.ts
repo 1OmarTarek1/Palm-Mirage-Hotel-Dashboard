@@ -21,17 +21,17 @@ export const activityBookingPreset = createTablePreset<ActivityBooking>(
       type: "text",
     },
     {
+      key: "guests",
+      title: "Guests",
+      sortable: true,
+      type: "count",
+    },
+    {
       key: "bookingDate",
       title: "Date",
       sortable: true,
       type: "date",
       accessorType: "date",
-    },
-    {
-      key: "guests",
-      title: "Guests",
-      sortable: true,
-      type: "text",
     },
     {
       key: "totalPrice",
