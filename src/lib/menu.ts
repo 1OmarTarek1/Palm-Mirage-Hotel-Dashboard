@@ -1,7 +1,5 @@
-import axios from "axios";
 import type { MenuItem, MenuCategory, MenuIcon } from "@/components/Menu/data";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+import { apiRequest, getErrorMessage } from "@/lib/api-client";
 
 interface ApiMenuItem {
   _id?: string;
@@ -16,16 +14,6 @@ interface ApiMenuItem {
   categoryHeroImg?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-function getAccessTokenFromCookies() {
-  if (typeof document === "undefined") return null;
-
-  const tokenCookie = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith("accessToken="));
-
-  return tokenCookie ? decodeURIComponent(tokenCookie.split("=")[1]) : null;
 }
 
 function mapApiMenuItem(item: ApiMenuItem): MenuItem {
@@ -44,14 +32,6 @@ function mapApiMenuItem(item: ApiMenuItem): MenuItem {
   };
 }
 
-function getErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? error.message;
-  }
-
-  return error instanceof Error ? error.message : "Request failed";
-}
-
 function buildMenuFormData(item: MenuItem) {
   const formData = new FormData();
   formData.append("name", item.name);
@@ -64,6 +44,7 @@ function buildMenuFormData(item: MenuItem) {
   if (item.imageFile) {
     formData.append("image", item.imageFile);
   }
+
   if (item.categoryHeroImgFile) {
     formData.append("categoryHeroImg", item.categoryHeroImgFile);
   }
@@ -73,25 +54,28 @@ function buildMenuFormData(item: MenuItem) {
 
 export async function fetchMenuItems() {
   try {
-    const { data } = await axios.get(`${API_BASE_URL}/menu`);
-    // Adjusting based on common API response structure seen in activities
-    return (data?.data?.menuItems || data?.data || []).map(mapApiMenuItem);
+    const data = await apiRequest<{
+      data?: {
+        items?: ApiMenuItem[];
+        menuItems?: ApiMenuItem[];
+      } | ApiMenuItem[];
+    }>("/api/menu");
+
+    const items = Array.isArray(data?.data)
+      ? data.data
+      : data?.data?.items ?? data?.data?.menuItems ?? [];
+
+    return Array.isArray(items) ? items.map(mapApiMenuItem) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
 export async function createMenuItem(item: MenuItem) {
-  const accessToken = getAccessTokenFromCookies();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    await axios.post(`${API_BASE_URL}/menu`, buildMenuFormData(item), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    await apiRequest("/api/menu", {
+      method: "POST",
+      body: buildMenuFormData(item),
     });
 
     return fetchMenuItems();
@@ -101,39 +85,42 @@ export async function createMenuItem(item: MenuItem) {
 }
 
 export async function updateMenuItem(item: MenuItem) {
-  const accessToken = getAccessTokenFromCookies();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    const { data } = await axios.patch(
-      `${API_BASE_URL}/menu/${item.id}`,
-      buildMenuFormData(item),
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const data = await apiRequest<{
+      data?: {
+        item?: ApiMenuItem;
+        menuItem?: ApiMenuItem;
+      } | ApiMenuItem;
+    }>(`/api/menu/${item.id}`, {
+      method: "PATCH",
+      body: buildMenuFormData(item),
+    });
 
-    return mapApiMenuItem(data?.data?.menuItem || data?.data);
+    const resolvedItem = Array.isArray(data?.data)
+      ? data.data[0]
+      : (data?.data as { item?: ApiMenuItem; menuItem?: ApiMenuItem } | ApiMenuItem | undefined);
+
+    const apiItem =
+      resolvedItem && "item" in resolvedItem
+        ? resolvedItem.item
+        : resolvedItem && "menuItem" in resolvedItem
+          ? resolvedItem.menuItem
+          : (resolvedItem as ApiMenuItem | undefined);
+
+    if (!apiItem) {
+      throw new Error("Menu item data is missing from the server response.");
+    }
+
+    return mapApiMenuItem(apiItem);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
 export async function deleteMenuItem(itemId: string) {
-  const accessToken = getAccessTokenFromCookies();
-  if (!accessToken) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
-
   try {
-    await axios.delete(`${API_BASE_URL}/menu/${itemId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    await apiRequest(`/api/menu/${itemId}`, {
+      method: "DELETE",
     });
   } catch (error) {
     throw new Error(getErrorMessage(error));

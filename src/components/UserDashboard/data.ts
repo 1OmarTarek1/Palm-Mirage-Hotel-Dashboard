@@ -2,12 +2,11 @@ export interface User {
   id: string;
   userName: string;
   email: string;
+  password?: string;
   role: "admin" | "user";
   gender: "male" | "female";
   country: string;
   phoneNumber?: string;
-  password?: string;
-  confirmPassword?: string;
   isConfirmed: boolean;
   image?: string;
   createdAt?: string;
@@ -20,11 +19,9 @@ export function createEmptyUserDraft(): User {
     userName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     role: "user",
     gender: "male",
     country: "",
-    phoneNumber: "",
     isConfirmed: false,
   };
 }

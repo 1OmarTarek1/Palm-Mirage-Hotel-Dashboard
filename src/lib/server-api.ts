@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerAuthSession } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
@@ -46,13 +46,20 @@ async function getProxyHeaders(request: NextRequest, requireAuth: boolean) {
     return headers;
   }
 
-  const session = await getServerAuthSession();
-  if (!session.accessToken) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET,
+  });
+
+  const accessToken = typeof token?.accessToken === "string" ? token.accessToken : null;
+  const role = typeof token?.user?.role === "string" ? token.user.role : null;
+
+  if (!accessToken) {
     throw new Error("Your session has expired. Please sign in again.");
   }
 
-  const authScheme = session.role === "admin" ? "System" : "Bearer";
-  headers.set("Authorization", `${authScheme} ${session.accessToken}`);
+  const authScheme = role === "admin" ? "System" : "Bearer";
+  headers.set("Authorization", `${authScheme} ${accessToken}`);
 
   return headers;
 }

@@ -1,20 +1,22 @@
 "use client";
 
-import React, { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import Image from "next/image";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
-import { facilityService } from "@/services/facility.service";
+import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
 import { createEmptyFacilityDraft } from "./data";
 import { Facility } from "@/types/facility";
 import FacilityForm from "./FacilityForm";
 
-export interface FacilitiesTableClientHandle {
-  openAddModal: () => void;
+interface FacilitiesTableClientProps {
+  initialOpenAddModal?: boolean;
 }
 
-const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function FacilitiesTableClient(_, ref) {
+function FacilitiesTableClient({ initialOpenAddModal = false }: FacilitiesTableClientProps) {
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
@@ -22,20 +24,18 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
   const [editingDraft, setEditingDraft] = useState<Facility | null>(null);
   const [deletingFacilityId, setDeletingFacilityId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasOpenedInitialModal = useRef(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  useImperativeHandle(ref, () => ({
-    openAddModal: () => {
-      setCreatingDraft(createEmptyFacilityDraft());
-    },
-  }));
-
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     const loadFacilities = async () => {
       try {
         setIsLoading(true);
-        const data = await facilityService.fetchFacilities();
+        const data = await fetchFacilities();
         if (isMounted) {
           setFacilities(data);
         }
@@ -57,6 +57,26 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
     };
   }, []);
 
+  useEffect(() => {
+    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+
+    hasOpenedInitialModal.current = true;
+    setCreatingDraft(createEmptyFacilityDraft());
+  }, [initialOpenAddModal]);
+
+  const syncAddModalQueryParam = (isOpen: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (isOpen) {
+      params.set("modal", "add");
+    } else if (params.get("modal") === "add") {
+      params.delete("modal");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
   const viewingFacility = useMemo(
     () => facilities.find((f) => f._id === viewingFacilityId) ?? null,
     [facilities, viewingFacilityId]
@@ -70,7 +90,10 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
   );
 
   const handleCloseViewModal = () => setViewingFacilityId(null);
-  const handleCloseAddModal = () => setCreatingDraft(null);
+  const handleCloseAddModal = () => {
+    setCreatingDraft(null);
+    syncAddModalQueryParam(false);
+  };
   const handleCloseEditModal = () => setEditingDraft(null);
   const handleCloseDeleteModal = () => setDeletingFacilityId(null);
 
@@ -78,7 +101,7 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
     if (!creatingDraft) return;
     setIsSaving(true);
     try {
-      const newFacility = await facilityService.createFacility(creatingDraft);
+      const newFacility = await createFacility(creatingDraft);
       setFacilities((current) => [...current, newFacility]);
       toast.success("Facility added successfully.");
       handleCloseAddModal();
@@ -93,7 +116,7 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
     if (!editingFacility) return;
     setIsSaving(true);
     try {
-      const updated = await facilityService.updateFacility(editingFacility._id, editingFacility);
+      const updated = await updateFacility(editingFacility._id, editingFacility);
       setFacilities((current) =>
         current.map((f) => (f._id === updated._id ? updated : f))
       );
@@ -112,7 +135,7 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
     void (async () => {
       setIsSaving(true);
       try {
-        await facilityService.deleteFacility(deletingFacility._id);
+        await deleteFacility(deletingFacility._id);
         setFacilities((current) => current.filter((f) => f._id !== deletingFacility._id));
         toast.success("Facility deleted successfully.");
         handleCloseDeleteModal();
@@ -180,7 +203,17 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
           <div className="space-y-4">
             <div className="flex justify-center">
               <div className="h-24 w-24 rounded-lg overflow-hidden border-2 border-palmPrimary bg-muted flex items-center justify-center text-3xl font-bold">
-                {viewingFacility.image ? <img src={viewingFacility.image} alt={viewingFacility.name} className="h-full w-full object-cover" /> : viewingFacility.name.charAt(0).toUpperCase()}
+                {viewingFacility.image ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={viewingFacility.image}
+                      alt={viewingFacility.name}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                    />
+                  </div>
+                ) : viewingFacility.name.charAt(0).toUpperCase()}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -256,6 +289,6 @@ const FacilitiesTableClient = forwardRef<FacilitiesTableClientHandle>(function F
       </SharedModal>
     </>
   );
-});
+}
 
 export default FacilitiesTableClient;

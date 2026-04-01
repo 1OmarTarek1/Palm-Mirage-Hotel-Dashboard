@@ -1,6 +1,7 @@
 "use client";
 
-import React, { forwardRef, useImperativeHandle, useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
@@ -12,25 +13,23 @@ import MenuEditForm from "./MenuEditForm";
 import MenuDetailsView from "./MenuDetailsView";
 import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
-export interface MenuTableClientHandle {
-  openAddModal: () => void;
+interface MenuTableClientProps {
+  initialOpenAddModal?: boolean;
 }
 
-const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClient(_, ref) {
+function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [isSaving, setIsSaving] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState<MenuItem | null>(null);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<MenuItem | null>(null);
-
-  useImperativeHandle(ref, () => ({
-    openAddModal: () => {
-      setCreatingDraft(createEmptyMenuDraft());
-    },
-  }));
+  const hasOpenedInitialModal = useRef(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     let isMounted = true;
@@ -60,6 +59,26 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
     };
   }, []);
 
+  useEffect(() => {
+    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+
+    hasOpenedInitialModal.current = true;
+    setCreatingDraft(createEmptyMenuDraft());
+  }, [initialOpenAddModal]);
+
+  const syncAddModalQueryParam = (isOpen: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (isOpen) {
+      params.set("modal", "add");
+    } else if (params.get("modal") === "add") {
+      params.delete("modal");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
   const viewingItem = useMemo(
     () => menuItems.find((item) => item.id === viewingItemId) ?? null,
     [menuItems, viewingItemId]
@@ -76,7 +95,10 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
   );
 
   const handleCloseViewModal = () => setViewingItemId(null);
-  const handleCloseAddModal = () => setCreatingDraft(null);
+  const handleCloseAddModal = () => {
+    setCreatingDraft(null);
+    syncAddModalQueryParam(false);
+  };
   const handleCloseEditModal = () => {
     setEditingItemId(null);
     setEditingDraft(null);
@@ -87,12 +109,15 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
     if (!deletingItem) return;
 
     try {
+      setIsSaving(true);
       await deleteMenuItem(deletingItem.id);
       setMenuItems((prev) => prev.filter((item) => item.id !== deletingItem.id));
       toast.success("Item deleted successfully.");
       handleCloseDeleteModal();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete item");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -100,6 +125,7 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
     if (!editingDraft) return;
 
     try {
+      setIsSaving(true);
       const updatedItem = await updateMenuItem(editingDraft);
       setMenuItems((prev) =>
         prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
@@ -108,6 +134,8 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
       handleCloseEditModal();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update item");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -115,12 +143,15 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
     if (!creatingDraft) return;
 
     try {
+      setIsSaving(true);
       const refreshedMenu = await createMenuItem(creatingDraft);
       setMenuItems(refreshedMenu);
       toast.success("Item created successfully.");
       handleCloseAddModal();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create item");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -162,6 +193,7 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
         title="Add Menu Product"
         onSave={handleCreateItem}
         saveLabel="Create Product"
+        isSaving={isSaving}
       >
         {creatingDraft ? (
           <MenuAddForm
@@ -187,6 +219,7 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
         title={editingItem ? `Edit ${editingItem.name}` : "Edit Product"}
         onSave={handleSaveItem}
         saveLabel="Save Changes"
+        isSaving={isSaving}
       >
         {editingItem && editingDraft ? (
           <MenuEditForm
@@ -204,11 +237,12 @@ const MenuTableClient = forwardRef<MenuTableClientHandle>(function MenuTableClie
         onSave={handleConfirmDelete}
         saveLabel="Delete Product"
         saveVariant="danger"
+        isSaving={isSaving}
       >
         {deletingItem ? <MenuDeleteConfirm item={deletingItem} /> : null}
       </SharedModal>
     </>
   );
-});
+}
 
 export default MenuTableClient;

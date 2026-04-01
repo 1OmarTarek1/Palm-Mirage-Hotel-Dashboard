@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,182 +9,152 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type User } from "./data";
+import type { User } from "./data";
 
 interface UserFormProps {
   user: User;
+  isEditing?: boolean;
   onChange: (user: User) => void;
-  /** When true, shows the password field (used during creation) */
-  isCreateMode?: boolean;
 }
 
-export default function UserForm({ user, onChange, isCreateMode = false }: UserFormProps) {
+export default function UserForm({ user, isEditing = false, onChange }: UserFormProps) {
   const [formData, setFormData] = useState<User>(user);
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setFormData(user);
   }, [user]);
 
-  const handleChange = <K extends keyof User>(key: K, value: User[K]) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
-    onChange(updated);
+  const updateField = <K extends keyof User>(key: K, value: User[K]) => {
+    const nextValue = { ...formData, [key]: value };
+    setFormData(nextValue);
+    onChange(nextValue);
   };
 
-  const inputClass =
-    "font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card";
-
   return (
-    <div className="space-y-6">
-      <div className="grid gap-5 md:grid-cols-2">
-        {/* ── Username ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">User Name</span>
-          <input
-            id="user-form-username"
-            value={formData.userName}
-            onChange={(event) => handleChange("userName", event.target.value)}
-            className={inputClass}
-            placeholder="Enter username"
-          />
+    <div className="grid gap-5 py-2 md:grid-cols-2">
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Username
         </label>
+        <Input
+          variant="palm"
+          value={formData.userName}
+          onChange={(event) => updateField("userName", event.target.value)}
+          placeholder="Enter username"
+        />
+      </div>
 
-        {/* ── Email ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Email</span>
-          <input
-            id="user-form-email"
-            type="email"
-            value={formData.email}
-            onChange={(event) => handleChange("email", event.target.value)}
-            className={inputClass}
-            placeholder="Enter email"
-          />
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Email
         </label>
+        <Input
+          variant="palm"
+          type="email"
+          value={formData.email}
+          onChange={(event) => updateField("email", event.target.value)}
+          placeholder="Enter email"
+        />
+      </div>
 
-        {/* ── Password (create mode only) ── */}
-        {isCreateMode ? (
-          <>
-            <label className="space-y-2">
-              <span className="font-main text-sm font-semibold text-foreground">Password</span>
-              <div className="relative">
-                <input
-                  id="user-form-password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password ?? ""}
-                  onChange={(event) => handleChange("password", event.target.value)}
-                  className={`${inputClass} pr-12`}
-                  placeholder="Enter password"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </label>
-
-            <label className="space-y-2">
-              <span className="font-main text-sm font-semibold text-foreground">Confirm Password</span>
-              <div className="relative">
-                <input
-                  id="user-form-confirm-password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.confirmPassword ?? ""}
-                  onChange={(event) => handleChange("confirmPassword", event.target.value)}
-                  className={`${inputClass} pr-12`}
-                  placeholder="Confirm password"
-                  autoComplete="new-password"
-                />
-              </div>
-            </label>
-          </>
-        ) : null}
-
-        {/* ── Role ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Role</span>
-          <Select
-            value={formData.role}
-            onValueChange={(value) => handleChange("role", value as User["role"])}
-          >
-            <SelectTrigger id="user-form-role" className="h-[50px] rounded-2xl bg-muted/35">
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="user">User</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Password
         </label>
+        <Input
+          variant="palm"
+          type="password"
+          value={formData.password ?? ""}
+          onChange={(event) => updateField("password", event.target.value)}
+          placeholder={isEditing ? "Leave blank to keep current password" : "Enter password"}
+        />
+      </div>
 
-        {/* ── Gender ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Gender</span>
-          <Select
-            value={formData.gender}
-            onValueChange={(value) => handleChange("gender", value as User["gender"])}
-          >
-            <SelectTrigger id="user-form-gender" className="h-[50px] rounded-2xl bg-muted/35">
-              <SelectValue placeholder="Select gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Phone Number
         </label>
+        <Input
+          variant="palm"
+          value={formData.phoneNumber ?? ""}
+          onChange={(event) => updateField("phoneNumber", event.target.value)}
+          placeholder="Enter phone number"
+        />
+      </div>
 
-        {/* ── Country ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Country</span>
-          <input
-            id="user-form-country"
-            value={formData.country}
-            onChange={(event) => handleChange("country", event.target.value)}
-            className={inputClass}
-            placeholder="Enter country"
-          />
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Country
         </label>
+        <Input
+          variant="palm"
+          value={formData.country}
+          onChange={(event) => updateField("country", event.target.value)}
+          placeholder="Enter country"
+        />
+      </div>
 
-        {/* ── Phone Number ── */}
-        <label className="space-y-2">
-          <span className="font-main text-sm font-semibold text-foreground">Phone Number</span>
-          <input
-            id="user-form-phone"
-            value={formData.phoneNumber || ""}
-            onChange={(event) => handleChange("phoneNumber", event.target.value)}
-            className={inputClass}
-            placeholder="Enter phone number"
-          />
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Image URL
         </label>
+        <Input
+          variant="palm"
+          value={formData.image ?? ""}
+          onChange={(event) => updateField("image", event.target.value)}
+          placeholder="https://..."
+        />
+      </div>
 
-        {/* ── Status Toggle ── */}
-        <label className="space-y-3 rounded-[24px] border border-border bg-muted/35 p-4 md:col-span-2">
-          <span className="font-main text-sm font-semibold text-foreground">Status</span>
-          <button
-            id="user-form-status-toggle"
-            type="button"
-            onClick={() => handleChange("isConfirmed", !formData.isConfirmed)}
-            className={`flex w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm transition ${
-              formData.isConfirmed
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground"
-            }`}
-          >
-            <span className="font-main font-semibold">
-              {formData.isConfirmed ? "Confirmed User" : "Pending Confirmation"}
-            </span>
-            <span className="font-main text-xs uppercase tracking-[0.2em]">
-              {formData.isConfirmed ? "Confirmed" : "Pending"}
-            </span>
-          </button>
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Role
         </label>
+        <Select value={formData.role} onValueChange={(value) => updateField("role", value as User["role"])}>
+          <SelectTrigger className="h-12 rounded-md border-border bg-transparent">
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="user">User</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Gender
+        </label>
+        <Select
+          value={formData.gender}
+          onValueChange={(value) => updateField("gender", value as User["gender"])}
+        >
+          <SelectTrigger className="h-12 rounded-md border-border bg-transparent">
+            <SelectValue placeholder="Select gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="male">Male</SelectItem>
+            <SelectItem value="female">Female</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2 md:col-span-2">
+        <label className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Account Status
+        </label>
+        <Select
+          value={formData.isConfirmed ? "confirmed" : "pending"}
+          onValueChange={(value) => updateField("isConfirmed", value === "confirmed")}
+        >
+          <SelectTrigger className="h-12 rounded-md border-border bg-transparent">
+            <SelectValue placeholder="Select account status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
