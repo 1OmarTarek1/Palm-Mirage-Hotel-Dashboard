@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -26,7 +26,6 @@ function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) 
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<MenuItem | null>(null);
-  const hasOpenedInitialModal = useRef(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,11 +59,14 @@ function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) 
   }, []);
 
   useEffect(() => {
-    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
+    if (shouldOpenAddModal) {
+      setCreatingDraft((current) => current ?? createEmptyMenuDraft());
+      return;
+    }
 
-    hasOpenedInitialModal.current = true;
-    setCreatingDraft(createEmptyMenuDraft());
-  }, [initialOpenAddModal]);
+    setCreatingDraft(null);
+  }, [initialOpenAddModal, searchParams]);
 
   const syncAddModalQueryParam = (isOpen: boolean) => {
     const params = new URLSearchParams(searchParams.toString());

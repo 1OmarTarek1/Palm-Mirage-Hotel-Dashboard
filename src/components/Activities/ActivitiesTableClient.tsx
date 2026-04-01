@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -26,7 +26,6 @@ function ActivitiesTableClient({ initialOpenAddModal = false }: ActivitiesTableC
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Activity | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const hasOpenedInitialModal = useRef(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,11 +59,14 @@ function ActivitiesTableClient({ initialOpenAddModal = false }: ActivitiesTableC
   }, []);
 
   useEffect(() => {
-    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
+    if (shouldOpenAddModal) {
+      setCreatingDraft((current) => current ?? createEmptyActivityDraft());
+      return;
+    }
 
-    hasOpenedInitialModal.current = true;
-    setCreatingDraft(createEmptyActivityDraft());
-  }, [initialOpenAddModal]);
+    setCreatingDraft(null);
+  }, [initialOpenAddModal, searchParams]);
 
   const syncAddModalQueryParam = (isOpen: boolean) => {
     const params = new URLSearchParams(searchParams.toString());

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -27,7 +27,6 @@ function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps
   const [editingDraft, setEditingDraft] = useState<RoomDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
-  const hasOpenedInitialModal = useRef(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,10 +48,14 @@ function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps
   }, []);
 
   useEffect(() => {
-    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
-    hasOpenedInitialModal.current = true;
-    setCreatingDraft(createEmptyRoomDraft());
-  }, [initialOpenAddModal]);
+    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
+    if (shouldOpenAddModal) {
+      setCreatingDraft((current) => current ?? createEmptyRoomDraft());
+      return;
+    }
+
+    setCreatingDraft(null);
+  }, [initialOpenAddModal, searchParams]);
 
   const syncAddModalQueryParam = (isOpen: boolean) => {
     const params = new URLSearchParams(searchParams.toString());

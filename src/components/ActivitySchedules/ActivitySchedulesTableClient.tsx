@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -68,7 +68,6 @@ function ActivitySchedulesTableClient({
   const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const hasOpenedInitialModal = useRef(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -107,7 +106,11 @@ function ActivitySchedulesTableClient({
   }, []);
 
   useEffect(() => {
-    if (!initialOpenAddModal || hasOpenedInitialModal.current || isLoading) return;
+    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
+    if (!shouldOpenAddModal || isLoading) {
+      setCreatingDraft(null);
+      return;
+    }
 
     const defaultDraft = createEmptyActivityScheduleDraft();
     const firstActivity = activities[0];
@@ -118,9 +121,8 @@ function ActivitySchedulesTableClient({
       defaultDraft.availableSeats = firstActivity.defaultCapacity;
     }
 
-    hasOpenedInitialModal.current = true;
-    setCreatingDraft(defaultDraft);
-  }, [activities, initialOpenAddModal, isLoading]);
+    setCreatingDraft((current) => current ?? defaultDraft);
+  }, [activities, initialOpenAddModal, isLoading, searchParams]);
 
   const syncAddModalQueryParam = (isOpen: boolean) => {
     const params = new URLSearchParams(searchParams.toString());

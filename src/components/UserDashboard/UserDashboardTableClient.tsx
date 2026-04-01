@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -24,7 +24,6 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const hasOpenedInitialModal = useRef(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,11 +57,14 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
   }, []);
 
   useEffect(() => {
-    if (!initialOpenAddModal || hasOpenedInitialModal.current) return;
+    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
+    if (shouldOpenAddModal) {
+      setCreatingDraft((current) => current ?? createEmptyUserDraft());
+      return;
+    }
 
-    hasOpenedInitialModal.current = true;
-    setCreatingDraft(createEmptyUserDraft());
-  }, [initialOpenAddModal]);
+    setCreatingDraft(null);
+  }, [initialOpenAddModal, searchParams]);
 
   const syncAddModalQueryParam = (isOpen: boolean) => {
     const params = new URLSearchParams(searchParams.toString());
