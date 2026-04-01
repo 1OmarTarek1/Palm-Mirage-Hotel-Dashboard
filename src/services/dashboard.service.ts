@@ -1,6 +1,6 @@
 import { fetchUsers } from "@/lib/users";
 import { fetchRooms } from "@/lib/rooms";
-import { fetchFacilities } from "@/services/facility.service";
+import { fetchFacilities } from "@/lib/facilities";
 import { fetchActivities } from "@/lib/activities";
 
 export const getDashboardData = async () => {
