@@ -90,7 +90,7 @@ export default function Navbar({
 
   return (
     <header
-      className="sticky top-0 z-30 h-16 border-b border-border/80 bg-card/95 shadow-sm backdrop-blur-md transition-colors duration-300"
+      className="sticky top-0 z-30 h-16 border-b border-sidebar-border/60 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,var(--background)_32%,var(--background)_100%)] shadow-[inset_0_-1px_0_rgba(198,169,105,0.08)] backdrop-blur-md transition-colors duration-300"
       style={{ paddingRight: "var(--removed-body-scroll-bar-size, 0px)" }}
     >
       <div className="flex h-full items-center justify-between gap-3 px-4 md:justify-end md:px-6 lg:px-8">
