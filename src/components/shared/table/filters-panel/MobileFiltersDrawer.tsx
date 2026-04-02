@@ -76,7 +76,7 @@ export default function MobileFiltersDrawer<T>({
           size="sm"
           onClick={onReset}
           disabled={!hasActiveFilters}
-          className="h-10 flex-1 rounded-xl"
+          className="h-10 flex-1 rounded-xl border-sidebar-border bg-sidebar text-sidebar-foreground hover:border-primary/12 hover:bg-primary/7 hover:text-sidebar-foreground disabled:opacity-40"
         >
           <RotateCcw className="size-4" />
           Reset
@@ -87,7 +87,7 @@ export default function MobileFiltersDrawer<T>({
           variant="palmPrimary"
           size="sm"
           onClick={() => setIsOpen(false)}
-          className="h-10 flex-1 rounded-xl"
+          className="h-10 flex-1 rounded-xl border border-primary/20 bg-primary/8 text-sidebar-foreground hover:bg-primary/12 hover:text-sidebar-foreground"
         >
           Done
         </Button>

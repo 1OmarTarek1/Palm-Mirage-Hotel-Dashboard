@@ -90,32 +90,31 @@ export default function Navbar({
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-border/80 bg-card/95 shadow-sm backdrop-blur-md transition-colors duration-300"
+      className="sticky top-0 z-30 h-16 border-b border-border/80 bg-card/95 shadow-sm backdrop-blur-md transition-colors duration-300"
       style={{ paddingRight: "var(--removed-body-scroll-bar-size, 0px)" }}
     >
-      <div className="mx-auto flex h-full max-w-screen-2xl items-center justify-between gap-2 px-4 md:px-8 lg:px-12">
-        <>
-          <Link href="/dashboard" className="group flex shrink-0 items-center gap-2">
-            <div className="relative h-11 w-11 overflow-hidden rounded-full border border-primary/30 bg-card shadow-md transition-shadow duration-300">
-              <Image
-                src="/logo.png"
-                alt="Palm Mirage Logo"
-                fill
-                sizes="44px"
-                className="object-contain p-1"
-              />
-            </div>
-            <div className="leading-tight">
-              <span className="font-header block whitespace-nowrap text-[15px] font-semibold tracking-tight text-primary transition-colors sm:text-[16px]">
-                Palm Mirage
-              </span>
-              <span className="font-main block text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                Luxury Hotel
-              </span>
-            </div>
-          </Link>
+      <div className="flex h-full items-center justify-between gap-3 px-4 md:justify-end md:px-6 lg:px-8">
+        <Link href="/dashboard" className="flex items-center gap-3 md:hidden">
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-sm">
+            <Image
+              src="/logo.png"
+              alt="Palm Mirage Logo"
+              fill
+              sizes="40px"
+              className="object-contain p-1.5"
+            />
+          </div>
+          <div className="leading-tight">
+            <span className="font-header block text-sm font-semibold tracking-tight text-primary">
+              Palm Mirage
+            </span>
+            <span className="font-main block text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+              Luxury Hotel
+            </span>
+          </div>
+        </Link>
 
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <div className="relative hidden sm:block" ref={langDropdownRef}>
               <button
                 onClick={() => setLangDropdownOpen((value) => !value)}
@@ -282,8 +281,7 @@ export default function Navbar({
                 </div>
               ) : null}
             </div>
-          </div>
-        </>
+        </div>
       </div>
     </header>
   );

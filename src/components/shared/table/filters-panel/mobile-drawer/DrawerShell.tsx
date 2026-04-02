@@ -38,7 +38,7 @@ export default function DrawerShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 flex h-screen w-[88vw] max-w-[320px] flex-col border-l border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 sm:w-[76vw] sm:max-w-[350px] md:w-[68vw] md:max-w-[380px]",
+          "fixed inset-y-0 right-0 flex h-screen w-[88vw] max-w-[320px] flex-col border-l border-sidebar-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_12%,var(--background))_0%,var(--background)_22%,var(--background)_100%)] text-sidebar-foreground shadow-2xl transition-transform duration-300 sm:w-[76vw] sm:max-w-[350px] md:w-[68vw] md:max-w-[380px]",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >

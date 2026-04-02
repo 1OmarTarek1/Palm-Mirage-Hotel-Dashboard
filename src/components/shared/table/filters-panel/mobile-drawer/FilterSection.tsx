@@ -28,11 +28,11 @@ export default function FilterSection<T>({
   const summary = getFilterSummary(config, filters);
 
   return (
-    <section className="overflow-hidden rounded-[20px] border border-sidebar-border bg-sidebar-accent/55">
+    <section className="overflow-hidden rounded-[20px] border border-sidebar-border bg-primary/6">
       <button
         type="button"
         onClick={() => onToggleSection(sectionKey)}
-        className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3.5 text-left transition-colors hover:bg-sidebar-accent"
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3.5 text-left transition-colors hover:bg-primary/7"
       >
         <div className="min-w-0">
           <span className="block font-header text-[11px] font-black uppercase tracking-[0.18em] text-sidebar-foreground">
@@ -52,8 +52,14 @@ export default function FilterSection<T>({
         />
       </button>
 
-      {isExpanded ? (
-        <div className="border-t border-sidebar-border/70 px-3.5 py-3.5">
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+          isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-sidebar-border/70 px-3.5 py-3.5">
           {config.type === "select" ? (
             <div className="space-y-1.5">
               <button
@@ -62,8 +68,8 @@ export default function FilterSection<T>({
                 className={cn(
                   "flex w-full cursor-pointer items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
                   !isFilterActive(config, filters)
-                    ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "border-sidebar-border bg-sidebar text-sidebar-foreground hover:border-sidebar-primary/40"
+                    ? "border-primary/20 bg-primary/8 text-sidebar-foreground"
+                    : "border-sidebar-border bg-sidebar text-sidebar-foreground/75 hover:border-primary/12 hover:bg-primary/7 hover:text-sidebar-foreground/85"
                 )}
               >
                 <span className="font-main text-sm font-semibold">
@@ -88,8 +94,8 @@ export default function FilterSection<T>({
                     className={cn(
                       "flex w-full cursor-pointer items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
                       isSelected
-                        ? "border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "border-sidebar-border bg-sidebar text-sidebar-foreground hover:border-sidebar-primary/40"
+                        ? "border-primary/20 bg-primary/8 text-sidebar-foreground"
+                        : "border-sidebar-border bg-sidebar text-sidebar-foreground/75 hover:border-primary/12 hover:bg-primary/7 hover:text-sidebar-foreground/85"
                     )}
                   >
                     <span className="font-main text-sm font-semibold">
@@ -140,7 +146,8 @@ export default function FilterSection<T>({
             </div>
           )}
         </div>
-      ) : null}
+        </div>
+      </div>
     </section>
   );
 }
