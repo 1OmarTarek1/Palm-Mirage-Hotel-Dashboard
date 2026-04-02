@@ -18,7 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("relative w-full lg:max-w-md xl:max-w-lg", className)}>
+    <div className={cn("relative w-full lg:max-w-md xl:max-w-sm", className)}>
       <Search
         size={18}
         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"

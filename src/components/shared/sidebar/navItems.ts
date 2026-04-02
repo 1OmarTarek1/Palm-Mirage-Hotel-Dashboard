@@ -42,9 +42,9 @@ export const NAV_ITEMS: NavItem[] = [
     icon: createElement(Menu, { size: 18 }),
     path: "/dashboard/menu",
   },
-  {
-    label: "Restaurant",
-    icon: createElement(Utensils, { size: 18 }),
-    path: "/dashboard/restaurant",
-  },
+  // {
+  //   label: "Restaurant",
+  //   icon: createElement(Utensils, { size: 18 }),
+  //   path: "/dashboard/restaurant",
+  // },
 ];

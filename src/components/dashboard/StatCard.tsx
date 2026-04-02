@@ -30,32 +30,35 @@ export default function StatCard({
   const selectedColor = colorMap[color] || colorMap.primary;
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br p-6 transition-all hover:shadow-lg hover:-translate-y-1 ${selectedColor}`}>
+    <div
+      className={`relative overflow-hidden rounded-xl border bg-gradient-to-br p-6 transition-all hover:shadow-lg hover:-translate-y-1 ${selectedColor}`}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground opacity-80">{title}</p>
-          <h3 className="mt-1 text-3xl font-bold tracking-tight">{value}</h3>
-          
+          <p className="font-main text-sm font-medium text-muted-foreground opacity-80">{title}</p>
+          <h3 className="font-header mt-1 text-3xl font-bold tracking-tight">{value}</h3>
+
           {trend && (
             <div className="mt-2 flex items-center gap-1">
-              <span className={`text-xs font-semibold ${trend.isUp ? "text-emerald-500" : "text-rose-500"}`}>
+              <span
+                className={`font-main text-xs font-semibold ${trend.isUp ? "text-emerald-500" : "text-rose-500"}`}
+              >
                 {trend.isUp ? "↑" : "↓"} {trend.value}
               </span>
-              <span className="text-xs text-muted-foreground">vs last month</span>
+              <span className="font-main text-xs text-muted-foreground">vs last month</span>
             </div>
           )}
-          
+
           {description && !trend && (
-            <p className="mt-2 text-xs text-muted-foreground">{description}</p>
+            <p className="font-main mt-2 text-xs text-muted-foreground">{description}</p>
           )}
         </div>
-        
+
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50 backdrop-blur-sm shadow-sm ring-1 ring-border">
           <Icon className="h-6 w-6" />
         </div>
       </div>
-      
-      {/* Decorative background element */}
+
       <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-current opacity-5 blur-2xl" />
     </div>
   );

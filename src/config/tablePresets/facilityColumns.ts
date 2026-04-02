@@ -23,13 +23,6 @@ export const facilityPreset = createTablePreset<Facility>(
       type: "badge"
     },
     {
-      key: "location",
-      title: "Location",
-      sortable: true,
-      searchable: true,
-      type: "text"
-    },
-    {
       key: "capacity",
       title: "Capacity",
       sortable: true,
@@ -43,11 +36,10 @@ export const facilityPreset = createTablePreset<Facility>(
       type: "badge"
     },
     {
-      key: "operatingHours",
-      title: "Hours",
+      key: "updatedAt",
+      title: "Updated",
       sortable: true,
-      type: "text",
-      accessorKey: "operatingHours"
+      type: "date"
     }
   ],
   [

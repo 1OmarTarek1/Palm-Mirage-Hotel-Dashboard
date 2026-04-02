@@ -7,7 +7,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Navbar user={null} />
       <div className="flex min-h-screen w-full">
         <Sidebar />
-        <main className="pt-16 w-full">{children}</main>
+        <main className="w-full flex-1 px-4 pb-28 pt-20 md:px-6 md:pb-8 lg:px-8">
+          {children}
+        </main>
       </div>
     </>
   );

@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Chart, registerables } from "chart.js";
+import { Chart, registerables, type ChartData } from "chart.js";
 
 Chart.register(...registerables);
 
-interface ChartProps {
-  data: any;
-  title: string;
-}
-
-export default function DashboardCharts({ occupancyData, userData, trendData }: {
-  occupancyData: any;
-  userData: any;
-  trendData: any;
+export default function DashboardCharts({
+  occupancyData,
+  userData,
+  trendData,
+}: {
+  occupancyData: ChartData<"doughnut", number[], string>;
+  userData: ChartData<"bar", number[], string>;
+  trendData: ChartData<"line", number[], string>;
 }) {
   const occupancyRef = useRef<HTMLCanvasElement>(null);
   const userRef = useRef<HTMLCanvasElement>(null);
@@ -24,6 +23,9 @@ export default function DashboardCharts({ occupancyData, userData, trendData }: 
     let userChart: Chart | null = null;
     let trendChart: Chart | null = null;
 
+    const rootStyles = getComputedStyle(document.documentElement);
+    const mainFont = rootStyles.getPropertyValue("--font-main").trim() || "sans-serif";
+
     const commonOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -32,7 +34,7 @@ export default function DashboardCharts({ occupancyData, userData, trendData }: 
           position: "bottom" as const,
           labels: {
             color: "rgba(156, 163, 175, 0.8)",
-            font: { size: 12 },
+            font: { size: 12, family: mainFont },
             usePointStyle: true,
             padding: 20,
           },
@@ -65,11 +67,11 @@ export default function DashboardCharts({ occupancyData, userData, trendData }: 
             y: {
               beginAtZero: true,
               grid: { color: "rgba(156, 163, 175, 0.1)" },
-              ticks: { color: "rgba(156, 163, 175, 0.8)" },
+              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
             },
             x: {
               grid: { display: false },
-              ticks: { color: "rgba(156, 163, 175, 0.8)" },
+              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
             },
           },
         },
@@ -90,11 +92,11 @@ export default function DashboardCharts({ occupancyData, userData, trendData }: 
             y: {
               beginAtZero: true,
               grid: { color: "rgba(156, 163, 175, 0.1)" },
-              ticks: { color: "rgba(156, 163, 175, 0.8)" },
+              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
             },
             x: {
               grid: { display: false },
-              ticks: { color: "rgba(156, 163, 175, 0.8)" },
+              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
             },
           },
         },
@@ -109,27 +111,24 @@ export default function DashboardCharts({ occupancyData, userData, trendData }: 
   }, [occupancyData, userData, trendData]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-      {/* Occupancy Chart */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <h4 className="text-lg font-semibold mb-6">Room Occupancy</h4>
-        <div className="h-[300px] relative">
+    <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h4 className="mb-6 font-header text-lg font-semibold">Room Occupancy</h4>
+        <div className="relative h-[300px]">
           <canvas ref={occupancyRef} />
         </div>
       </div>
 
-      {/* User Roles Chart */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm lg:col-span-1">
-        <h4 className="text-lg font-semibold mb-6">User Roles Distribution</h4>
-        <div className="h-[300px] relative">
+      <div className="rounded-xl border bg-card p-6 shadow-sm lg:col-span-1">
+        <h4 className="mb-6 font-header text-lg font-semibold">User Roles Distribution</h4>
+        <div className="relative h-[300px]">
           <canvas ref={userRef} />
         </div>
       </div>
 
-      {/* Activity Trends Chart */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm lg:col-span-1">
-        <h4 className="text-lg font-semibold mb-6">Weekly Activity Trends</h4>
-        <div className="h-[300px] relative">
+      <div className="rounded-xl border bg-card p-6 shadow-sm lg:col-span-1">
+        <h4 className="mb-6 font-header text-lg font-semibold">Weekly Activity Trends</h4>
+        <div className="relative h-[300px]">
           <canvas ref={trendRef} />
         </div>
       </div>
