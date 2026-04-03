@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityScheduleColumns, activityScheduleFilters } from "@/config/tablePresets/activityScheduleColumns";
 import { fetchActivities } from "@/lib/activities";
+import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import {
   createActivitySchedule,
   deleteActivitySchedule,
@@ -52,13 +52,7 @@ function mapScheduleToDraft(schedule: ActivitySchedule): ActivityScheduleDraft {
   };
 }
 
-interface ActivitySchedulesTableClientProps {
-  initialOpenAddModal?: boolean;
-}
-
-function ActivitySchedulesTableClient({
-  initialOpenAddModal = false,
-}: ActivitySchedulesTableClientProps) {
+function ActivitySchedulesTableClient() {
   const [activities, setActivities] = useState<ActivityOption[]>([]);
   const [schedules, setSchedules] = useState<ActivitySchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,9 +62,7 @@ function ActivitySchedulesTableClient({
   const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const [shouldOpenAddModal, setShouldOpenAddModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -106,7 +98,6 @@ function ActivitySchedulesTableClient({
   }, []);
 
   useEffect(() => {
-    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
     if (!shouldOpenAddModal || isLoading) {
       setCreatingDraft(null);
       return;
@@ -122,20 +113,19 @@ function ActivitySchedulesTableClient({
     }
 
     setCreatingDraft((current) => current ?? defaultDraft);
-  }, [activities, initialOpenAddModal, isLoading, searchParams]);
+  }, [activities, isLoading, shouldOpenAddModal]);
 
-  const syncAddModalQueryParam = (isOpen: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
+  useEffect(() => {
+    const openAddModal = () => {
+      setShouldOpenAddModal(true);
+    };
 
-    if (isOpen) {
-      params.set("modal", "add");
-    } else if (params.get("modal") === "add") {
-      params.delete("modal");
-    }
+    window.addEventListener(DASHBOARD_MODAL_EVENTS.activitySchedulesAdd, openAddModal);
 
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+    return () => {
+      window.removeEventListener(DASHBOARD_MODAL_EVENTS.activitySchedulesAdd, openAddModal);
+    };
+  }, []);
 
   const viewingSchedule = useMemo(
     () => schedules.find((schedule) => schedule.id === viewingScheduleId) ?? null,
@@ -154,8 +144,8 @@ function ActivitySchedulesTableClient({
 
   const handleCloseViewModal = () => setViewingScheduleId(null);
   const handleCloseAddModal = () => {
+    setShouldOpenAddModal(false);
     setCreatingDraft(null);
-    syncAddModalQueryParam(false);
   };
   const handleCloseEditModal = () => {
     setEditingScheduleId(null);

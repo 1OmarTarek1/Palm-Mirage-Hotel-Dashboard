@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,7 +13,26 @@ export default function TabletSidebar() {
 
   return (
     <aside className="sticky top-16 z-50 hidden h-[calc(100vh-4rem)] w-20 shrink-0 border-r border-sidebar-border/70 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,var(--background)_22%,var(--background)_100%)] px-3 py-5 text-sidebar-foreground md:flex lg:hidden">
-      <nav className="flex-1 overflow-visible">
+      <div className="flex flex-1 flex-col overflow-visible">
+        <div className="mb-4 border-b border-sidebar-border/70 pb-4">
+          <Link
+            href="/dashboard"
+            className="flex justify-center rounded-2xl border border-primary/20 bg-primary/8 px-0 py-3 shadow-sm transition hover:border-primary/30 hover:bg-primary/10"
+            aria-label="Palm Mirage Dashboard"
+          >
+            <div className="relative h-10 w-10 overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm">
+              <Image
+                src="/logo.png"
+                alt="Palm Mirage Logo"
+                fill
+                sizes="40px"
+                className="object-contain p-1.5"
+              />
+            </div>
+          </Link>
+        </div>
+
+        <nav className="flex-1 overflow-visible">
         <ul className="space-y-2">
           {NAV_ITEMS.map((item) => {
             const active = isItemActive(pathname, item.path) || hasActiveChild(pathname, item);
@@ -35,7 +55,8 @@ export default function TabletSidebar() {
             );
           })}
         </ul>
-      </nav>
+        </nav>
+      </div>
     </aside>
   );
 }

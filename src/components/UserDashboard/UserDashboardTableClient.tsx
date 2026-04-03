@@ -2,20 +2,16 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { userColumns, userFilters } from "@/config/tablePresets/userColumns";
 import { createUser, deleteUser, fetchUsers, updateUser } from "@/lib/users";
+import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { createEmptyUserDraft, type User } from "./data";
 import UserForm from "./UserForm";
 
-interface UserDashboardTableClientProps {
-  initialOpenAddModal?: boolean;
-}
-
-function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboardTableClientProps) {
+function UserDashboardTableClient() {
   const [users, setUsers] = React.useState<User[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [creatingDraft, setCreatingDraft] = useState<User | null>(null);
@@ -24,10 +20,6 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     let isMounted = true;
 
@@ -57,27 +49,16 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
   }, []);
 
   useEffect(() => {
-    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
-    if (shouldOpenAddModal) {
+    const openAddModal = () => {
       setCreatingDraft((current) => current ?? createEmptyUserDraft());
-      return;
-    }
+    };
 
-    setCreatingDraft(null);
-  }, [initialOpenAddModal, searchParams]);
+    window.addEventListener(DASHBOARD_MODAL_EVENTS.usersAdd, openAddModal);
 
-  const syncAddModalQueryParam = (isOpen: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (isOpen) {
-      params.set("modal", "add");
-    } else if (params.get("modal") === "add") {
-      params.delete("modal");
-    }
-
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+    return () => {
+      window.removeEventListener(DASHBOARD_MODAL_EVENTS.usersAdd, openAddModal);
+    };
+  }, []);
 
   const viewingUser = useMemo(
     () => users.find((user) => user.id === viewingUserId) ?? null,
@@ -97,7 +78,6 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
   const handleCloseViewModal = () => setViewingUserId(null);
   const handleCloseAddModal = () => {
     setCreatingDraft(null);
-    syncAddModalQueryParam(false);
   };
   const handleCloseEditModal = () => {
     setEditingUserId(null);
@@ -191,7 +171,7 @@ function UserDashboardTableClient({ initialOpenAddModal = false }: UserDashboard
         data={users}
         isLoading={isLoading}
         filtersConfig={userFilters}
-        pageSize={5}
+        pageSize={8}
         searchPlaceholder="Search users..."
         actions={actions}
       />

@@ -53,12 +53,12 @@ export default function SharedModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 px-4 py-8 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-background/70 px-4 py-8 backdrop-blur-[2px]"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className={`relative flex max-h-[90vh] w-full flex-col ${maxWidthClassName} overflow-hidden rounded-4xl border border-border bg-card shadow-2xl shadow-black/10`}
+        className={`relative z-[221] flex max-h-[90vh] w-full flex-col ${maxWidthClassName} overflow-hidden rounded-4xl border border-border bg-card shadow-2xl shadow-black/10`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

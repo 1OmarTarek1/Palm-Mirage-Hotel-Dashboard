@@ -1,23 +1,19 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
 import { fetchRooms, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
+import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { createEmptyRoomDraft, type Room, type RoomDraft } from "./data";
 import RoomAddForm from "./RoomAddForm";
 import RoomEditForm from "./RoomEditForm";
 import RoomDetailsView from "./RoomDetailsView";
 import RoomDeleteConfirm from "./RoomDeleteConfirm";
 
-interface RoomsTableClientProps {
-  initialOpenAddModal?: boolean;
-}
-
-function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps) {
+function RoomsTableClient() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [creatingDraft, setCreatingDraft] = useState<RoomDraft | null>(null);
@@ -26,11 +22,6 @@ function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   const loadRooms = async () => {
     try {
       setIsLoading(true);
@@ -48,25 +39,16 @@ function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps
   }, []);
 
   useEffect(() => {
-    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
-    if (shouldOpenAddModal) {
+    const openAddModal = () => {
       setCreatingDraft((current) => current ?? createEmptyRoomDraft());
-      return;
-    }
+    };
 
-    setCreatingDraft(null);
-  }, [initialOpenAddModal, searchParams]);
+    window.addEventListener(DASHBOARD_MODAL_EVENTS.roomsAdd, openAddModal);
 
-  const syncAddModalQueryParam = (isOpen: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (isOpen) {
-      params.set("modal", "add");
-    } else if (params.get("modal") === "add") {
-      params.delete("modal");
-    }
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+    return () => {
+      window.removeEventListener(DASHBOARD_MODAL_EVENTS.roomsAdd, openAddModal);
+    };
+  }, []);
 
   const viewingRoom = useMemo(
     () => rooms.find((r) => r.id === viewingRoomId) ?? null,
@@ -86,7 +68,6 @@ function RoomsTableClient({ initialOpenAddModal = false }: RoomsTableClientProps
   const handleCloseViewModal = () => setViewingRoomId(null);
   const handleCloseAddModal = () => {
     setCreatingDraft(null);
-    syncAddModalQueryParam(false);
   };
   const handleCloseEditModal = () => {
     setEditingRoomId(null);

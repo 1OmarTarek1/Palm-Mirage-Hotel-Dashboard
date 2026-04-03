@@ -46,6 +46,13 @@ function buildUserPayload(user: User) {
   };
 }
 
+function buildUserUpdatePayload(user: User) {
+  return {
+    role: user.role,
+    isConfirmed: user.isConfirmed,
+  };
+}
+
 export async function fetchUsers(): Promise<User[]> {
   try {
     const data = await apiRequest<{ data?: { users?: ApiUser[] } }>("/api/users");
@@ -72,7 +79,7 @@ export async function updateUser(user: User): Promise<User> {
   try {
     const data = await apiRequest<{ data?: { user?: ApiUser } }>(`/api/users/${user.id}`, {
       method: "PATCH",
-      body: buildUserPayload(user),
+      body: buildUserUpdatePayload(user),
     });
 
     const updatedUser = data?.data?.user;

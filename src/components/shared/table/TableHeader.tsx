@@ -56,8 +56,8 @@ export default function TableHeader<T>({
   };
 
   return (
-    <thead>
-      <tr className="border-b border-border bg-card/80">
+    <thead className="sticky top-0 z-20">
+      <tr className="border-b border-border bg-card/95 backdrop-blur-md">
         {columns.map((col) => (
           <th
             key={String(col.key)}

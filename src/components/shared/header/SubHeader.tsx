@@ -14,6 +14,7 @@ interface PageHeaderProps {
   actionLabel?: string;
   onAction?: () => void;
   actionHref?: string;
+  actionEvent?: string;
   actionIcon?: LucideIcon;
 }
 
@@ -40,6 +41,7 @@ export default function SubHeader({
   actionLabel,
   onAction,
   actionHref,
+  actionEvent,
   actionIcon: ActionIcon = Plus, 
 }: PageHeaderProps) {
   const pathname = usePathname();
@@ -68,6 +70,15 @@ export default function SubHeader({
                 {ActionIcon ? <ActionIcon className="h-5 w-5 text-white" /> : null}
                 <span className="tracking-tight">{actionLabel}</span>
               </Link>
+            </Button>
+          ) : actionEvent ? (
+            <Button
+              variant="palmPrimary"
+              onClick={() => window.dispatchEvent(new Event(actionEvent))}
+              className="group"
+            >
+              {ActionIcon ? <ActionIcon className="h-5 w-5 text-white" /> : null}
+              <span className="tracking-tight">{actionLabel}</span>
             </Button>
           ) : (
             <Button

@@ -2,6 +2,7 @@ import {
   Bed,
   Building2,
   Calendar,
+  House,
   Menu,
   Users,
 } from "lucide-react";
@@ -10,6 +11,11 @@ import { createElement } from "react";
 import { NavItem } from "@/types/sidebar.types";
 
 export const NAV_ITEMS: NavItem[] = [
+  {
+    label: "Home",
+    icon: createElement(House, { size: 18 }),
+    path: "/dashboard",
+  },
   {
     label: "Users",
     icon: createElement(Users, { size: 18 }),

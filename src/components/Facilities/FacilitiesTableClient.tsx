@@ -2,21 +2,17 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
 import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
+import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { createEmptyFacilityDraft } from "./data";
 import { Facility } from "@/types/facility";
 import FacilityForm from "./FacilityForm";
 
-interface FacilitiesTableClientProps {
-  initialOpenAddModal?: boolean;
-}
-
-function FacilitiesTableClient({ initialOpenAddModal = false }: FacilitiesTableClientProps) {
+function FacilitiesTableClient() {
   const [facilities, setFacilities] = React.useState<Facility[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
@@ -24,10 +20,6 @@ function FacilitiesTableClient({ initialOpenAddModal = false }: FacilitiesTableC
   const [editingDraft, setEditingDraft] = useState<Facility | null>(null);
   const [deletingFacilityId, setDeletingFacilityId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     let isMounted = true;
 
@@ -57,27 +49,16 @@ function FacilitiesTableClient({ initialOpenAddModal = false }: FacilitiesTableC
   }, []);
 
   useEffect(() => {
-    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
-    if (shouldOpenAddModal) {
+    const openAddModal = () => {
       setCreatingDraft((current) => current ?? createEmptyFacilityDraft());
-      return;
-    }
+    };
 
-    setCreatingDraft(null);
-  }, [initialOpenAddModal, searchParams]);
+    window.addEventListener(DASHBOARD_MODAL_EVENTS.facilitiesAdd, openAddModal);
 
-  const syncAddModalQueryParam = (isOpen: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (isOpen) {
-      params.set("modal", "add");
-    } else if (params.get("modal") === "add") {
-      params.delete("modal");
-    }
-
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+    return () => {
+      window.removeEventListener(DASHBOARD_MODAL_EVENTS.facilitiesAdd, openAddModal);
+    };
+  }, []);
 
   const viewingFacility = useMemo(
     () => facilities.find((f) => f._id === viewingFacilityId) ?? null,
@@ -94,7 +75,6 @@ function FacilitiesTableClient({ initialOpenAddModal = false }: FacilitiesTableC
   const handleCloseViewModal = () => setViewingFacilityId(null);
   const handleCloseAddModal = () => {
     setCreatingDraft(null);
-    syncAddModalQueryParam(false);
   };
   const handleCloseEditModal = () => setEditingDraft(null);
   const handleCloseDeleteModal = () => setDeletingFacilityId(null);

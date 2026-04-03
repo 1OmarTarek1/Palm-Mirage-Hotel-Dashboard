@@ -46,7 +46,6 @@ export default function DynamicTable<T extends object>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(initialPageSize);
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const previousPageRef = useRef(currentPage);
 
   const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
 
@@ -64,14 +63,6 @@ export default function DynamicTable<T extends object>({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, filterKey]);
-
-  useEffect(() => {
-    if (previousPageRef.current !== currentPage) {
-      tableContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    previousPageRef.current = currentPage;
-  }, [currentPage]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
@@ -313,7 +304,7 @@ export default function DynamicTable<T extends object>({
         </div>
       </div>
 
-      <div className="hidden overflow-x-auto lg:block">
+      <div className="hidden max-h-[36rem] overflow-auto rounded-b-[30px] bg-card/30 lg:block">
         <table className="w-full text-left text-sm">
           <TableHeader
             columns={computedColumns}

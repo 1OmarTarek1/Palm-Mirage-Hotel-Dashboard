@@ -19,6 +19,10 @@ const Pagination: React.FC<PaginationProps> = ({
   totalEntries,
 }) => {
   if (totalPages <= 1) return null;
+  const goToPage = (page: number) => {
+    onPageChange(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const getPageNumbers = (): (number | "...")[] => {
     const delta = 2;
@@ -49,11 +53,11 @@ const Pagination: React.FC<PaginationProps> = ({
         entries
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-end">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
         <button
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          onClick={() => goToPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-card px-3 text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft size={16} />
         </button>
@@ -62,18 +66,18 @@ const Pagination: React.FC<PaginationProps> = ({
           page === "..." ? (
             <span
               key={`ellipsis-${i}`}
-              className="flex h-8 w-8 items-center justify-center font-main text-sm text-muted-foreground"
+              className="flex h-10 min-w-10 items-center justify-center px-2 font-main text-sm text-muted-foreground"
             >
               ...
             </span>
           ) : (
             <button
               key={page}
-              onClick={() => onPageChange(page as number)}
-              className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border font-main text-sm font-medium transition-colors ${
+              onClick={() => goToPage(page as number)}
+              className={`flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-xl border px-3 font-main text-sm font-semibold shadow-sm transition-colors ${
                 currentPage === page
-                  ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                  : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted hover:text-foreground"
               }`}
             >
               {page}
@@ -82,9 +86,9 @@ const Pagination: React.FC<PaginationProps> = ({
         )}
 
         <button
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-card px-3 text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight size={16} />
         </button>

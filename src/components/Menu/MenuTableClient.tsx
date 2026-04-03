@@ -1,23 +1,19 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
 import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
+import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { createEmptyMenuDraft, type MenuItem } from "./data";
 import MenuAddForm from "./MenuAddForm";
 import MenuEditForm from "./MenuEditForm";
 import MenuDetailsView from "./MenuDetailsView";
 import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
-interface MenuTableClientProps {
-  initialOpenAddModal?: boolean;
-}
-
-function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) {
+function MenuTableClient() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -26,10 +22,6 @@ function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) 
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<MenuItem | null>(null);
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     let isMounted = true;
 
@@ -59,27 +51,16 @@ function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) 
   }, []);
 
   useEffect(() => {
-    const shouldOpenAddModal = initialOpenAddModal || searchParams.get("modal") === "add";
-    if (shouldOpenAddModal) {
+    const openAddModal = () => {
       setCreatingDraft((current) => current ?? createEmptyMenuDraft());
-      return;
-    }
+    };
 
-    setCreatingDraft(null);
-  }, [initialOpenAddModal, searchParams]);
+    window.addEventListener(DASHBOARD_MODAL_EVENTS.menuAdd, openAddModal);
 
-  const syncAddModalQueryParam = (isOpen: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (isOpen) {
-      params.set("modal", "add");
-    } else if (params.get("modal") === "add") {
-      params.delete("modal");
-    }
-
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+    return () => {
+      window.removeEventListener(DASHBOARD_MODAL_EVENTS.menuAdd, openAddModal);
+    };
+  }, []);
 
   const viewingItem = useMemo(
     () => menuItems.find((item) => item.id === viewingItemId) ?? null,
@@ -99,7 +80,6 @@ function MenuTableClient({ initialOpenAddModal = false }: MenuTableClientProps) 
   const handleCloseViewModal = () => setViewingItemId(null);
   const handleCloseAddModal = () => {
     setCreatingDraft(null);
-    syncAddModalQueryParam(false);
   };
   const handleCloseEditModal = () => {
     setEditingItemId(null);

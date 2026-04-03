@@ -27,15 +27,20 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "react-toastify";
 
+const DEV_LOGIN = {
+  email: "admin.local@palmhotel.com",
+  password: "Admin123!",
+};
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const isDevelopment = process.env.NODE_ENV !== "production";
   const form = useForm<loginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: isDevelopment ? DEV_LOGIN.email : "",
+      password: isDevelopment ? DEV_LOGIN.password : "",
     },
   });
 
