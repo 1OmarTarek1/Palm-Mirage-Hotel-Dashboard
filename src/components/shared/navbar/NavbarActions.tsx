@@ -1,8 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
+
+import {
+  NavbarDropdown,
+  NavbarDropdownDivider,
+  NavbarDropdownHeader,
+  NavbarDropdownItems,
+  NavbarDropdownSection,
+} from "./NavbarDropdown";
 
 interface NavbarActionsProps {
   pathname: string;
@@ -33,11 +41,17 @@ export default function NavbarActions({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
       }
 
-      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+      if (
+        langDropdownRef.current &&
+        !langDropdownRef.current.contains(event.target as Node)
+      ) {
         setLangDropdownOpen(false);
       }
     };
@@ -46,57 +60,59 @@ export default function NavbarActions({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const userMenuItems = [
+    {
+      href: "/profile",
+      label: "My Profile",
+      icon: <User className="h-4 w-4" />,
+      isActive: pathname === "/profile",
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      icon: <Settings className="h-4 w-4" />,
+      isActive: pathname === "/settings",
+    },
+  ];
+
+  const languageItems = [
+    {
+      label: "English",
+      isActive: language === "en",
+      onClick: () => setLanguage("en"),
+    },
+    {
+      label: "العربية",
+      isActive: language === "ar",
+      onClick: () => setLanguage("ar"),
+      className: "font-main",
+    },
+  ];
+
   return (
     <div className="flex items-center gap-2">
       <div className="relative z-[120] hidden sm:block" ref={langDropdownRef}>
         <button
           onClick={() => setLangDropdownOpen((value) => !value)}
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-primary/10 hover:text-primary"
           type="button"
         >
           <Globe className="h-5 w-5" />
         </button>
 
-        {langDropdownOpen ? (
-          <div className="absolute right-0 top-[calc(100%+8px)] z-[130] w-28 overflow-hidden rounded-xl border border-border bg-card shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="flex flex-col py-1.5">
-              <button
-                onClick={() => {
-                  setLanguage("en");
-                  setLangDropdownOpen(false);
-                }}
-                className={`font-main cursor-pointer px-4 py-2 text-left text-sm transition-colors ${
-                  language === "en"
-                    ? "bg-muted text-primary"
-                    : "text-foreground hover:bg-muted hover:text-primary"
-                }`}
-                type="button"
-              >
-                English
-              </button>
-              <button
-                onClick={() => {
-                  setLanguage("ar");
-                  setLangDropdownOpen(false);
-                }}
-                className={`font-main cursor-pointer px-4 py-2 text-left text-sm transition-colors ${
-                  language === "ar"
-                    ? "bg-muted text-primary"
-                    : "text-foreground hover:bg-muted hover:text-primary"
-                }`}
-                style={{ fontFamily: "Arial, sans-serif" }}
-                type="button"
-              >
-                العربية
-              </button>
-            </div>
-          </div>
-        ) : null}
+        <NavbarDropdown isOpen={langDropdownOpen} className="z-[130] w-56">
+          <NavbarDropdownSection>
+            <NavbarDropdownItems
+              items={languageItems}
+              onItemClick={() => setLangDropdownOpen(false)}
+            />
+          </NavbarDropdownSection>
+        </NavbarDropdown>
       </div>
 
       <button
         onClick={onThemeToggle}
-        className="hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary sm:flex"
+        className="hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-primary/10 hover:text-primary sm:flex"
         aria-label="Toggle theme"
         type="button"
       >
@@ -104,8 +120,9 @@ export default function NavbarActions({
       </button>
 
       <button
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary"
+        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-primary/10 hover:text-primary"
         type="button"
+        aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
         {notificationCount > 0 ? (
@@ -123,12 +140,14 @@ export default function NavbarActions({
           className="flex cursor-pointer items-center rounded-full transition-all duration-150 focus:outline-none"
           type="button"
         >
-          <div className="relative h-10 w-10 rounded-full border border-border bg-card transition-all duration-200 hover:border-primary">
+          <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border bg-card transition-all duration-200 hover:border-primary hover:bg-primary/10">
             {displayAvatar ? (
-              <img
+              <Image
                 src={displayAvatar}
                 alt="Avatar"
-                className="h-full w-full rounded-full object-cover"
+                width={40}
+                height={40}
+                className="h-full w-full cursor-pointer rounded-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-full border border-border/70 text-muted-foreground">
@@ -139,113 +158,106 @@ export default function NavbarActions({
           </div>
         </button>
 
-        {dropdownOpen ? (
-          <div className="absolute right-0 top-[calc(100%+8px)] z-[130] w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="border-b border-border px-4 py-3">
-              <p className="font-header truncate text-sm font-semibold text-foreground">
-                {displayName}
-              </p>
-              <p className="font-main truncate text-xs text-muted-foreground">
-                {displayEmail}
-              </p>
-            </div>
+        <NavbarDropdown isOpen={dropdownOpen} className="z-[130] w-64">
+          <NavbarDropdownHeader>
+            <p className="font-header truncate text-sm font-semibold text-foreground">
+              {displayName}
+            </p>
+            <p className="font-main truncate text-xs text-muted-foreground">
+              {displayEmail}
+            </p>
+          </NavbarDropdownHeader>
 
-            <div className="py-1.5">
-              <Link
-                href="/profile"
-                onClick={() => setDropdownOpen(false)}
-                className={`font-main flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-100 ${
-                  pathname === "/profile"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <User className="h-4 w-4" /> My Profile
-              </Link>
-              <Link
-                href="/settings"
-                onClick={() => setDropdownOpen(false)}
-                className={`font-main flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-100 ${
-                  pathname === "/settings"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <Settings className="h-4 w-4" /> Settings
-              </Link>
+          <NavbarDropdownSection>
+            <NavbarDropdownItems
+              items={userMenuItems}
+              onItemClick={() => setDropdownOpen(false)}
+            />
+          </NavbarDropdownSection>
 
-              <div className="block sm:hidden">
-                <div className="my-1.5 border-t border-border" />
+          <div className="block sm:hidden">
+            <NavbarDropdownDivider />
 
-                <div className="flex items-center justify-between px-4 py-2">
-                  <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
-                    <Globe className="h-4 w-4" />
-                    <span>{language === "ar" ? "العربية" : "English"}</span>
-                  </div>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setLanguage((current) => (current === "en" ? "ar" : "en"));
-                    }}
-                    className={`relative h-6 w-13 cursor-pointer rounded-full text-[8px] font-bold uppercase tracking-[0.08em] transition-colors duration-300 focus:outline-none ${
-                      language === "ar" ? "bg-primary text-white" : "bg-border text-muted-foreground"
-                    }`}
-                    type="button"
-                    aria-label="Toggle language"
-                  >
-                    <span
-                      className={`absolute top-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-                        language === "ar" ? "right-1.5 opacity-100" : "left-1.5 opacity-100"
-                      }`}
-                    >
-                      {language === "ar" ? "AR" : "EN"}
-                    </span>
-                    <span
-                      className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                        language === "ar"
-                          ? "left-1 translate-x-0"
-                          : "left-1 translate-x-7"
-                      }`}
-                    />
-                  </button>
+            <NavbarDropdownSection className="space-y-1.5">
+              <div className="flex items-center justify-between rounded-xl px-2 py-1.5">
+                <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
+                  <Globe className="h-4 w-4" />
+                  <span>{language === "ar" ? "العربية" : "English"}</span>
                 </div>
-
-                <div className="flex items-center justify-between px-4 py-2">
-                  <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
-                    {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
-                  </div>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onThemeToggle();
-                    }}
-                    className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors duration-300 focus:outline-none ${
-                      isDarkMode ? "bg-primary" : "bg-border"
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setLanguage((current) => (current === "en" ? "ar" : "en"));
+                  }}
+                  className={`relative h-6 w-13 cursor-pointer rounded-full text-[8px] font-bold uppercase tracking-[0.08em] transition-colors duration-300 focus:outline-none ${
+                    language === "ar"
+                      ? "bg-primary text-white"
+                      : "bg-border text-muted-foreground"
+                  }`}
+                  type="button"
+                  aria-label="Toggle language"
+                >
+                  <span
+                    className={`absolute top-1/2 -translate-y-1/2 transition-opacity duration-300 ${
+                      language === "ar"
+                        ? "right-1.5 opacity-100"
+                        : "left-1.5 opacity-100"
                     }`}
-                    type="button"
                   >
-                    <span
-                      className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                        isDarkMode ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
+                    {language === "ar" ? "AR" : "EN"}
+                  </span>
+                  <span
+                    className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                      language === "ar"
+                        ? "left-1 translate-x-0"
+                        : "left-1 translate-x-7"
+                    }`}
+                  />
+                </button>
               </div>
 
-              <div className="my-1.5 border-t border-border" />
-
-              <button
-                onClick={onSignOut}
-                className="font-main flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors duration-100 hover:bg-red-500/10"
-                type="button"
-              >
-                <LogOut className="h-4 w-4" /> Sign out
-              </button>
-            </div>
+              <div className="flex items-center justify-between rounded-xl px-2 py-1.5">
+                <div className="font-main flex items-center gap-3 text-sm text-muted-foreground">
+                  {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+                </div>
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onThemeToggle();
+                  }}
+                  className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors duration-300 focus:outline-none ${
+                    isDarkMode ? "bg-primary" : "bg-border"
+                  }`}
+                  type="button"
+                >
+                  <span
+                    className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                      isDarkMode ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            </NavbarDropdownSection>
           </div>
-        ) : null}
+
+          <NavbarDropdownDivider />
+
+          <NavbarDropdownSection>
+            <NavbarDropdownItems
+              items={[
+                {
+                  label: "Sign out",
+                  icon: <LogOut className="h-4 w-4" />,
+                  onClick: onSignOut,
+                  className:
+                    "text-red-500/80 hover:bg-red-500/10 hover:text-red-500",
+                },
+              ]}
+              onItemClick={() => setDropdownOpen(false)}
+            />
+          </NavbarDropdownSection>
+        </NavbarDropdown>
       </div>
     </div>
   );

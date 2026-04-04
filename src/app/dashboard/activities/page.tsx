@@ -2,6 +2,7 @@ import ActivitiesTableClient from "@/components/Activities/ActivitiesTableClient
 import SubHeader from "@/components/shared/header/SubHeader";
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { CalendarRange, Ticket } from "lucide-react";
 import Link from "next/link";
 
 export default function ActivitiesPage() {
@@ -14,13 +15,19 @@ export default function ActivitiesPage() {
           actionEvent={DASHBOARD_MODAL_EVENTS.activitiesAdd}
         />
 
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-start">
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/activities/schedules">Manage Activity Schedules</Link>
+              <Link href="/dashboard/activities/schedules">
+                <CalendarRange className="h-4 w-4" />
+                Schedules
+              </Link>
             </Button>
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/activities/bookings">Manage Activity Bookings</Link>
+              <Link href="/dashboard/activities/bookings">
+                <Ticket className="h-4 w-4" />
+                Bookings
+              </Link>
             </Button>
           </div>
         </div>
