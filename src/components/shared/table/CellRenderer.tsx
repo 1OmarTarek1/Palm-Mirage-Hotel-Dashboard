@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { type ReactNode } from "react";
 import { Column } from "./types";
 import { CellDisplayMode, CellProps } from "./cells/types";
 
@@ -26,7 +26,7 @@ const CellMap: Record<string, React.FC<CellProps>> = {
 interface CellRendererProps<T> {
   row: T;
   column: Column<T>;
-  resolvedValue: unknown;
+  resolvedValue: ReactNode;
   displayMode?: CellDisplayMode;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -8,6 +8,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomBookingColumns, roomBookingFilters } from "@/config/tablePresets/roomBookingColumns";
 import { fetchRoomBookings, updateRoomBooking } from "@/lib/room-bookings";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import type { RoomBooking, RoomBookingDraft } from "./data";
 import { buildRoomBookingAlerts } from "./RoomBookingsAlerts";
 import RoomBookingDetailsView from "./RoomBookingDetailsView";
@@ -25,28 +26,78 @@ function mapBookingToDraft(booking: RoomBooking): RoomBookingDraft {
 
 function RoomBookingsTableClient() {
   const [bookings, setBookings] = useState<RoomBooking[]>([]);
+  const [highlightedBookingIds, setHighlightedBookingIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomBookingDraft | null>(null);
   const [isSaving, setIsLoadingSaving] = useState(false);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousBookingIdsRef = useRef<string[]>([]);
 
-  const loadBookings = async () => {
+  const loadBookings = async ({ silent = false }: { silent?: boolean } = {}) => {
     try {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       const data = await fetchRoomBookings();
       setBookings(data);
+
+      const nextIds = data.map((booking) => booking.id);
+      const previousIds = previousBookingIdsRef.current;
+
+      if (silent && previousIds.length > 0) {
+        const newIds = nextIds.filter((id) => !previousIds.includes(id));
+
+        if (newIds.length > 0) {
+          setHighlightedBookingIds(newIds);
+
+          if (highlightTimeoutRef.current) {
+            clearTimeout(highlightTimeoutRef.current);
+          }
+
+          highlightTimeoutRef.current = setTimeout(() => {
+            setHighlightedBookingIds([]);
+          }, 4000);
+        }
+      }
+
+      previousBookingIdsRef.current = nextIds;
     } catch (error) {
       console.error("RoomBookings load error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to load room bookings");
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     void loadBookings();
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
   }, []);
+
+  useDashboardRealtime({
+    enabled: true,
+    onPaymentUpdate: () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = setTimeout(() => {
+        void loadBookings({ silent: true });
+      }, 250);
+    },
+  });
 
   const viewingBooking = useMemo(
     () => bookings.find((b) => b.id === viewingBookingId) ?? null,
@@ -162,6 +213,7 @@ function RoomBookingsTableClient() {
             pageSize={6}
             searchPlaceholder="Search room bookings..."
             actions={actions}
+            highlightedRowKeys={highlightedBookingIds}
           />
         </DashboardSectionCard>
       </div>

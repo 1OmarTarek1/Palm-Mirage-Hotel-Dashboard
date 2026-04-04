@@ -9,6 +9,7 @@ interface TableBodyProps<T> {
   startIndex: number;
   isLoading?: boolean;
   skeletonRowCount?: number;
+  highlightedRowKeys?: string[];
 }
 
 export default function TableBody<T extends object>({
@@ -17,6 +18,7 @@ export default function TableBody<T extends object>({
   startIndex,
   isLoading = false,
   skeletonRowCount = 5,
+  highlightedRowKeys = [],
 }: TableBodyProps<T>) {
   const getCellAlignmentClass = (align?: Column<T>["cellAlign"]) => {
     if (align === "left") return "text-left";
@@ -62,9 +64,18 @@ export default function TableBody<T extends object>({
         </tr>
       ) : (
         data.map((row, rowIndex) => (
+          (() => {
+            const rowKey = resolveRowKey(row, startIndex + rowIndex);
+            const isHighlighted = highlightedRowKeys.includes(rowKey);
+
+            return (
           <tr
-            key={resolveRowKey(row, startIndex + rowIndex)}
-            className="group transition-colors hover:bg-muted/35"
+            key={rowKey}
+            className={`group transition-all duration-700 hover:bg-muted/35 ${
+              isHighlighted
+                ? "bg-primary/10 shadow-[inset_4px_0_0_0_color-mix(in_srgb,var(--primary)_72%,transparent)] animate-[pulse_1.6s_ease-in-out_2]"
+                : ""
+            }`}
           >
             {columns.map((col) => (
               <td key={String(col.key)} className={`px-6 py-4 font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}>
@@ -76,6 +87,8 @@ export default function TableBody<T extends object>({
               </td>
             ))}
           </tr>
+            );
+          })()
         ))
       )}
     </tbody>

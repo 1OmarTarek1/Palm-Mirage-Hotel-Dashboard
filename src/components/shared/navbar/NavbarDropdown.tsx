@@ -24,6 +24,10 @@ type DropdownLinkItem = DropdownItemBase & {
 
 export type NavbarDropdownItem = DropdownButtonItem | DropdownLinkItem;
 
+function isDropdownLinkItem(item: NavbarDropdownItem): item is DropdownLinkItem {
+  return typeof (item as DropdownLinkItem).href === "string";
+}
+
 interface NavbarDropdownProps {
   isOpen: boolean;
   className?: string;
@@ -97,11 +101,13 @@ export function NavbarDropdownItems({
           item.className,
         );
 
-        if ("href" in item) {
+        if (isDropdownLinkItem(item)) {
+          const href = item.href;
+
           return (
             <Link
-              key={`${item.label}-${item.href}`}
-              href={item.href}
+              key={`${item.label}-${href}`}
+              href={href}
               onClick={onItemClick}
               className={itemClassName}
             >

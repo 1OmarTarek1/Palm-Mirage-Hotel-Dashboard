@@ -99,8 +99,12 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (token) {
-        session.user = token.user;
+        session.user = {
+          ...session.user,
+          ...(token.user ?? {}),
+        };
         session.accessToken = token.accessToken as string | undefined;
+        session.userId = typeof token.id === "string" ? token.id : undefined;
       }
       return session;
     },

@@ -59,4 +59,5 @@ export interface DynamicTableProps<T> {
   searchPlaceholder?: string;
   filtersConfig?: FilterConfig<T>[];
   actions?: RowActionConfig<T>[];
+  highlightedRowKeys?: string[];
 }

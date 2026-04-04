@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Chart, registerables, type ChartData } from "chart.js";
+import { Chart, registerables, type ChartData, type ChartOptions } from "chart.js";
 
 Chart.register(...registerables);
 
@@ -42,18 +42,54 @@ export default function DashboardCharts({
       },
     };
 
+    const occupancyOptions: ChartOptions<"doughnut"> = {
+      ...commonOptions,
+      cutout: "70%",
+      plugins: {
+        ...commonOptions.plugins,
+        title: { display: false },
+      },
+    };
+
+    const bookingStatusOptions: ChartOptions<"bar"> = {
+      ...commonOptions,
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(156, 163, 175, 0.1)" },
+          ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
+        },
+      },
+    };
+
+    const trendOptions: ChartOptions<"line"> = {
+      ...commonOptions,
+      elements: {
+        line: { tension: 0.4 },
+        point: { radius: 4, hoverRadius: 6 },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(156, 163, 175, 0.1)" },
+          ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
+        },
+      },
+    };
+
     if (occupancyRef.current) {
       occupancyChart = new Chart(occupancyRef.current, {
         type: "doughnut",
         data: occupancyData,
-        options: {
-          ...commonOptions,
-          cutout: "70%",
-          plugins: {
-            ...commonOptions.plugins,
-            title: { display: false },
-          },
-        },
+        options: occupancyOptions,
       });
     }
 
@@ -61,20 +97,7 @@ export default function DashboardCharts({
       bookingStatusChart = new Chart(bookingStatusRef.current, {
         type: "bar",
         data: bookingStatusData,
-        options: {
-          ...commonOptions,
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(156, 163, 175, 0.1)" },
-              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
-            },
-            x: {
-              grid: { display: false },
-              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
-            },
-          },
-        },
+        options: bookingStatusOptions,
       });
     }
 
@@ -82,24 +105,7 @@ export default function DashboardCharts({
       trendChart = new Chart(trendRef.current, {
         type: "line",
         data: trendData,
-        options: {
-          ...commonOptions,
-          elements: {
-            line: { tension: 0.4 },
-            point: { radius: 4, hoverRadius: 6 },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(156, 163, 175, 0.1)" },
-              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
-            },
-            x: {
-              grid: { display: false },
-              ticks: { color: "rgba(156, 163, 175, 0.8)", font: { family: mainFont } },
-            },
-          },
-        },
+        options: trendOptions,
       });
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Bed, Building2, Calendar, ClipboardList, CreditCard, Users, type LucideIcon } from "lucide-react";
 
@@ -15,6 +15,7 @@ import type { DashboardData } from "./types";
 import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/services/dashboard.service";
 import { DashboardHomeSkeleton } from "@/components/shared/loading/DashboardSkeleton";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Bed,
@@ -29,27 +30,56 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loadDashboardData = async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) {
+      setLoading(true);
+    }
+
+    try {
+      const response = await getDashboardData();
+      setData(response);
+      setError(null);
+    } catch (err) {
+      console.error("Dashboard failed to load:", err);
+      setError("Failed to load dashboard data. Please try again later.");
+    } finally {
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
 
-    getDashboardData()
-      .then((res) => {
-        if (isMounted) {
-          setData(res);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          console.error("Dashboard failed to load:", err);
-          setError("Failed to load dashboard data. Please try again later.");
-          setLoading(false);
-        }
-      });
+    loadDashboardData()
+      .catch(() => null);
 
     return () => {
       isMounted = false;
+    };
+  }, []);
+
+  useDashboardRealtime({
+    enabled: true,
+    onPaymentUpdate: () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = setTimeout(() => {
+        void loadDashboardData({ silent: true });
+      }, 250);
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
     };
   }, []);
 

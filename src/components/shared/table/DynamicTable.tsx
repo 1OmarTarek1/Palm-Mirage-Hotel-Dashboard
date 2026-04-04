@@ -19,6 +19,7 @@ export default function DynamicTable<T extends object>({
   searchPlaceholder = "Search...",
   filtersConfig = [],
   actions,
+  highlightedRowKeys = [],
 }: DynamicTableProps<T>) {
   const enabledActions = useMemo(() => {
     if (!actions || actions.length === 0) return [];
@@ -335,12 +336,18 @@ export default function DynamicTable<T extends object>({
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {paginatedData.map((row, rowIndex) => (
+                (() => {
+                  const rowKey = resolveRowKey(row, (currentPage - 1) * pageSize + rowIndex);
+                  return (
                 <MobileCard
-                  key={resolveRowKey(row, (currentPage - 1) * pageSize + rowIndex)}
+                  key={rowKey}
                   row={row}
                   columns={computedColumns}
                   itemNumber={(currentPage - 1) * pageSize + rowIndex + 1}
+                  isHighlighted={highlightedRowKeys.includes(rowKey)}
                 />
+                  );
+                })()
               ))}
             </div>
           )}
@@ -360,6 +367,7 @@ export default function DynamicTable<T extends object>({
             startIndex={(currentPage - 1) * pageSize}
             isLoading={isLoading}
             skeletonRowCount={pageSize}
+            highlightedRowKeys={highlightedRowKeys}
           />
         </table>
       </div>

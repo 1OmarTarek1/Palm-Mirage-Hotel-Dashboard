@@ -20,6 +20,10 @@ export default function ImageCardCell({
     typeof subtitleKey === "string" ? record[subtitleKey] : undefined;
   const imageUrl = typeof imageUrlValue === "string" ? imageUrlValue : undefined;
   const iconName = typeof iconNameValue === "string" ? iconNameValue : undefined;
+  const subtitleText =
+    typeof subtitle === "string" || typeof subtitle === "number"
+      ? String(subtitle)
+      : null;
   const isLeftAligned = displayMode === "card" || column.cellAlign === "left";
   const isRightAligned = column.cellAlign === "right";
 
@@ -64,13 +68,13 @@ export default function ImageCardCell({
         >
           {String(resolvedValue as any)}
         </span>
-        {subtitle && (
+        {subtitleText && (
           <span
             className={`font-main font-black uppercase tracking-widest text-primary/85 ${
               displayMode === "card" ? "text-[9px]" : "text-[10px]"
             }`}
           >
-            {String(subtitle)}
+            {subtitleText}
           </span>
         )}
       </div>

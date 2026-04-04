@@ -1,26 +1,31 @@
+import { DefaultSession, DefaultUser } from "next-auth";
+
+type SessionUserData = {
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+};
+
 declare module "next-auth" {
-    interface User {
-        id:string,
-        user:UserDataI,
-        token :string
-    }
+  interface User extends DefaultUser {
+    id: string;
+    user?: SessionUserData;
+    token?: string;
+  }
 
-    interface UserDataI {
-        name:string,
-        email:string,
-        role:string
-    }
-
-    interface Session {
-        accessToken?: string
-    }
+  interface Session extends DefaultSession {
+    accessToken?: string;
+    userId?: string;
+    user: DefaultSession["user"] & SessionUserData;
+  }
 }
 
 declare module "next-auth/jwt" {
-  /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
   interface JWT {
-    user: UserDataI
-    accessToken?: string
-    id?: string
+    user?: SessionUserData;
+    accessToken?: string;
+    id?: string;
   }
 }
+
+export {};

@@ -39,6 +39,10 @@ function mapRoomType(roomType: string): RoomType {
   return validRoomTypes.includes(roomType as RoomType) ? (roomType as RoomType) : "single";
 }
 
+function isDefinedString(value: string | undefined): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
 function mapApiRoom(apiRoom: ApiRoom): Room {
   const populatedAmenities = (apiRoom.amenities ?? apiRoom.facilities ?? [])
     .map((amenity: ApiRoomAmenity): RoomAmenityPreview | null => {
@@ -64,10 +68,13 @@ function mapApiRoom(apiRoom: ApiRoom): Room {
     capacity: apiRoom.capacity,
     discount: apiRoom.discount,
     description: apiRoom.description,
-    amenities: (apiRoom.amenities ?? apiRoom.facilities)?.map((f: ApiRoomAmenity) => {
-      if (typeof f === "object" && f !== null) return f._id || f.id;
-      return f;
-    }).filter(Boolean) || [],
+    amenities:
+      (apiRoom.amenities ?? apiRoom.facilities)
+        ?.map((f: ApiRoomAmenity) => {
+          if (typeof f === "object" && f !== null) return f._id || f.id;
+          return undefined;
+        })
+        .filter(isDefinedString) || [],
     amenityDetails: populatedAmenities,
     roomImages: apiRoom.roomImages || [],
     hasOffer: apiRoom.hasOffer,

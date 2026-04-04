@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Column } from "./types";
 
 function getRawValue<T extends object>(row: T, column: Column<T>): unknown {
@@ -19,7 +20,7 @@ function getRawValue<T extends object>(row: T, column: Column<T>): unknown {
   return value;
 }
 
-export function resolveValue<T extends object>(row: T, column: Column<T>): unknown {
+export function resolveValue<T extends object>(row: T, column: Column<T>): ReactNode {
   if (!row) return "";
 
   const value = getRawValue(row, column);

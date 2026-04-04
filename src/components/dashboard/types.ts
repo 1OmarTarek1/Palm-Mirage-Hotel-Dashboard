@@ -1,3 +1,5 @@
+import type { ChartData } from "chart.js";
+
 export interface DashboardStat {
   title: string;
   value: string | number;
@@ -40,9 +42,9 @@ export interface DashboardActivityListItem {
 export interface DashboardData {
   stats: DashboardStat[];
   charts: {
-    occupancy: unknown;
-    bookingStatus: unknown;
-    trends: unknown;
+    occupancy: ChartData<"doughnut", number[], string>;
+    bookingStatus: ChartData<"bar", number[], string>;
+    trends: ChartData<"line", number[], string>;
   };
   operations: DashboardOperationItem[];
   alerts: DashboardAlert[];

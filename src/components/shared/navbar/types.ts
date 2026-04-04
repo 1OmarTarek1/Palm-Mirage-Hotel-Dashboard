@@ -3,6 +3,7 @@ export interface UserData {
   email: string;
   role?: string;
   avatarUrl?: string;
+  image?: string | null;
 }
 
 export interface NavbarProps {
@@ -13,6 +14,4 @@ export interface NavbarProps {
   onAlertsPanelToggle?: () => void;
 }
 
-export type ActiveUser = UserData & {
-  image?: string | null;
-};
+export type ActiveUser = UserData;

@@ -89,7 +89,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Username
             </label>
             <Input
-              variant="palm"
               value={formData.userName}
               onChange={(event) => updateField("userName", event.target.value)}
               placeholder="Enter username"
@@ -101,7 +100,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Email
             </label>
             <Input
-              variant="palm"
               type="email"
               value={formData.email}
               onChange={(event) => updateField("email", event.target.value)}
@@ -114,7 +112,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Password
             </label>
             <Input
-              variant="palm"
               type="password"
               value={formData.password ?? ""}
               onChange={(event) => updateField("password", event.target.value)}
@@ -127,7 +124,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Phone Number
             </label>
             <Input
-              variant="palm"
               value={formData.phoneNumber ?? ""}
               onChange={(event) => updateField("phoneNumber", event.target.value)}
               placeholder="Enter phone number"
@@ -139,7 +135,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Country
             </label>
             <Input
-              variant="palm"
               value={formData.country}
               onChange={(event) => updateField("country", event.target.value)}
               placeholder="Enter country"
@@ -151,7 +146,6 @@ export default function UserForm({ user, isEditing = false, onChange }: UserForm
               Image URL
             </label>
             <Input
-              variant="palm"
               value={formData.image ?? ""}
               onChange={(event) => updateField("image", event.target.value)}
               placeholder="https://..."

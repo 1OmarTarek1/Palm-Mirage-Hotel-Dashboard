@@ -74,19 +74,27 @@ interface MobileCardProps<T> {
   row: T;
   columns: Column<T>[];
   itemNumber: number;
+  isHighlighted?: boolean;
 }
 
 export default function MobileCard<T extends object>({
   row,
   columns,
   itemNumber,
+  isHighlighted = false,
 }: MobileCardProps<T>) {
   const { actionColumn, primaryColumn, badgeColumns, metricColumns } =
     splitColumnsForMobile(columns);
   const itemLabel = String(itemNumber).padStart(2, "0");
 
   return (
-    <Card className="relative gap-0 overflow-hidden rounded-[26px] border border-border/70 bg-card/98 shadow-lg shadow-black/[0.035]">
+    <Card
+      className={`relative gap-0 overflow-hidden rounded-[26px] border border-border/70 bg-card/98 shadow-lg shadow-black/[0.035] transition-all duration-700 ${
+        isHighlighted
+          ? "border-primary/45 bg-primary/[0.045] shadow-[0_18px_40px_-22px_color-mix(in_srgb,var(--primary)_35%,transparent)] animate-[pulse_1.6s_ease-in-out_2]"
+          : ""
+      }`}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_12%,transparent),transparent_70%)]" />
 
       <CardHeader className="relative pb-3">
