@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import DashboardAlertsRail from "@/components/shared/alerts/DashboardAlertsRail";
 import { DashboardAlertsProvider } from "@/components/shared/alerts/dashboard-alerts-context";
@@ -8,7 +8,28 @@ import Navbar from "@/components/shared/navbar/Navbar";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(true);
+  const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+
+    const syncAlertsPanelState = (event?: MediaQueryList | MediaQueryListEvent) => {
+      const matches = "matches" in (event ?? mediaQuery) ? (event ?? mediaQuery).matches : mediaQuery.matches;
+      setIsAlertsPanelOpen((current) => (matches ? current : false));
+    };
+
+    setIsAlertsPanelOpen(mediaQuery.matches);
+    syncAlertsPanelState();
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      syncAlertsPanelState(event);
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
 
   return (
     <DashboardAlertsProvider>

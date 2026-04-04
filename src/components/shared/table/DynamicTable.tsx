@@ -47,6 +47,7 @@ export default function DynamicTable<T extends object>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(initialPageSize);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const desktopScrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollOffset = 96;
 
   const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
@@ -129,6 +130,14 @@ export default function DynamicTable<T extends object>({
     setCurrentPage(page);
 
     window.requestAnimationFrame(() => {
+      const desktopContainer = desktopScrollContainerRef.current;
+      if (desktopContainer) {
+        desktopContainer.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
       const container = tableContainerRef.current;
       if (!container) return;
 
@@ -338,7 +347,7 @@ export default function DynamicTable<T extends object>({
         </div>
       </div>
 
-      <div className="hidden max-h-[36rem] overflow-auto bg-card/30 lg:block">
+      <div ref={desktopScrollContainerRef} className="hidden max-h-[36rem] overflow-auto bg-card/30 lg:block">
         <table className="w-full text-left text-sm">
           <TableHeader
             columns={computedColumns}

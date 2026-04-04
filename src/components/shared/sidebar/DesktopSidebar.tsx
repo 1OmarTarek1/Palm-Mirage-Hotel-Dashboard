@@ -1,14 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { NAV_ITEMS } from "./navItems";
 import SidebarCornerAccent from "./SidebarCornerAccent";
 import DesktopSidebarItem from "./DesktopSidebarItem";
 import SidebarBrand from "./SidebarBrand";
 import SidebarCollapseButton from "./SidebarCollapseButton";
-import { getInitialExpandedGroups, hasActiveChild } from "./utils";
+import { getInitialExpandedGroups } from "./utils";
 
 export default function DesktopSidebar({
   forceCollapsed = false,
@@ -20,9 +20,11 @@ export default function DesktopSidebar({
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLabels, setShowLabels] = useState(!forceCollapsed);
+  const [hasScroll, setHasScroll] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
     getInitialExpandedGroups(pathname)
   );
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const collapsed = forceCollapsed || isCollapsed;
 
   useEffect(() => {
@@ -39,18 +41,34 @@ export default function DesktopSidebar({
   }, [collapsed]);
 
   useEffect(() => {
-    setExpandedGroups((current) => {
-      const next = { ...current };
-
-      NAV_ITEMS.forEach((item) => {
-        if (item.children?.length && hasActiveChild(pathname, item)) {
-          next[item.label] = true;
-        }
-      });
-
-      return next;
-    });
+    setExpandedGroups(getInitialExpandedGroups(pathname));
   }, [pathname]);
+
+  useEffect(() => {
+    if (collapsed) {
+      setHasScroll(false);
+      return;
+    }
+
+    const element = scrollContainerRef.current;
+    if (!element) return;
+
+    const updateScrollState = () => {
+      setHasScroll(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    updateScrollState();
+
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(element);
+
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [collapsed, expandedGroups, showLabels, scrollContainerRef]);
 
   const handleToggleGroup = (label: string) => {
     setExpandedGroups((current) => {
@@ -75,18 +93,19 @@ export default function DesktopSidebar({
     >
       <SidebarCornerAccent />
 
-      <div className="flex h-full w-full flex-col px-3 pb-5 pt-3">
+      <div className="flex h-full w-full flex-col pl-1 pr-3 pb-5 pt-3">
         <SidebarBrand collapsed={collapsed} showLabels={showLabels} />
 
         <nav className={`relative flex-1 ${collapsed ? "overflow-visible" : "overflow-hidden"}`}>
           <div
+            ref={scrollContainerRef}
             className={`h-full ${
               collapsed
                 ? "overflow-visible"
-                : "overflow-y-auto overflow-x-hidden pr-1 [scrollbar-gutter:stable]"
+                : "overflow-y-auto overflow-x-hidden [direction:rtl]"
             }`}
           >
-            <ul className="space-y-2">
+            <ul className={`space-y-2 [direction:ltr] ${hasScroll ? "pl-1" : "pl-2"}`}>
               {NAV_ITEMS.map((item) => (
                 <DesktopSidebarItem
                   key={item.label}
