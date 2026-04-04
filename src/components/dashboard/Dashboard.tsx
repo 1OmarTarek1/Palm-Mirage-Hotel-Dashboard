@@ -86,13 +86,13 @@ export default function Dashboard() {
 
   return (
     <div className="animate-in fade-in duration-700">
-      <DashboardPageShell className="space-y-5 md:space-y-6">
+      <DashboardPageShell className="space-y-4 md:space-y-5">
         <DashboardHero
           lastUpdated={data.lastUpdated}
           paymentsFocus={data.highlights.payments}
         />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {data.stats.map((stat, index: number) => (
             <StatCard
               key={index}
@@ -121,7 +121,7 @@ export default function Dashboard() {
           }}
         />
 
-        <section className="grid gap-4 xl:grid-cols-2">
+        <section className="grid gap-3 xl:grid-cols-2">
           <DashboardListPanel
             variant="bookings"
             title="Latest Room Bookings"
@@ -142,10 +142,10 @@ export default function Dashboard() {
           />
         </section>
 
-        <div className="flex flex-col items-center justify-between gap-4 rounded-[24px] border border-primary/20 bg-primary/5 p-5 md:flex-row md:p-6">
-          <div className="space-y-1.5 text-center md:text-left">
-            <h3 className="font-header text-lg font-semibold text-primary">Dive into operations</h3>
-            <p className="max-w-xl font-main text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-between gap-3 rounded-[22px] border border-primary/20 bg-primary/5 p-4 md:flex-row md:p-5">
+          <div className="space-y-1 text-center md:text-left">
+            <h3 className="font-header text-base font-semibold text-primary md:text-lg">Dive into operations</h3>
+            <p className="max-w-xl font-main text-xs text-muted-foreground md:text-sm">
               From here, the next strongest upgrade is turning each management page into a summary
               view plus a table, not just a table alone.
             </p>

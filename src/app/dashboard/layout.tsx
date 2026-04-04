@@ -41,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             isAlertsPanelOpen={isAlertsPanelOpen}
             onAlertsPanelToggle={() => setIsAlertsPanelOpen((current) => !current)}
           />
-          <div className="w-full flex-1 px-4 pb-28 pt-4 md:px-6 md:pb-8 md:pt-5 lg:px-8 lg:pt-6">
+          <div className="w-full flex-1 px-4 pb-28 pt-4 md:px-6 md:pb-8 md:pt-6 lg:px-8 lg:pt-8">
             <div
               className="mx-auto w-full max-w-[1720px] xl:grid"
               style={{

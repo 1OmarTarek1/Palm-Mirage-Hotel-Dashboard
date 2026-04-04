@@ -111,33 +111,33 @@ export default function DashboardCharts({
   }, [occupancyData, bookingStatusData, trendData]);
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
-        <h4 className="mb-1.5 font-header text-base font-semibold">Room Occupancy</h4>
-        <p className="mb-4 font-main text-xs text-muted-foreground md:text-sm">
+    <div className="flex flex-wrap gap-3">
+      <div className="min-w-[350px] flex-1 rounded-xl border bg-card p-3.5 shadow-sm md:p-4">
+        <h4 className="mb-1 font-header text-sm font-semibold md:text-base">Room Occupancy</h4>
+        <p className="mb-3 font-main text-[11px] text-muted-foreground md:text-xs">
           Current split between occupied inventory and ready-to-sell rooms.
         </p>
-        <div className="relative h-[240px] md:h-[260px]">
+        <div className="relative h-[210px] md:h-[230px]">
           <canvas ref={occupancyRef} />
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card p-4 shadow-sm lg:col-span-1 md:p-5">
-        <h4 className="mb-1.5 font-header text-base font-semibold">Reservation Status Mix</h4>
-        <p className="mb-4 font-main text-xs text-muted-foreground md:text-sm">
+      <div className="min-w-[350px] flex-1 rounded-xl border bg-card p-3.5 shadow-sm md:p-4">
+        <h4 className="mb-1 font-header text-sm font-semibold md:text-base">Reservation Status Mix</h4>
+        <p className="mb-3 font-main text-[11px] text-muted-foreground md:text-xs">
           See where the reservations pipeline is getting stuck or flowing well.
         </p>
-        <div className="relative h-[240px] md:h-[260px]">
+        <div className="relative h-[210px] md:h-[230px]">
           <canvas ref={bookingStatusRef} />
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card p-4 shadow-sm lg:col-span-1 md:p-5">
-        <h4 className="mb-1.5 font-header text-base font-semibold">Weekly Revenue Trend</h4>
-        <p className="mb-4 font-main text-xs text-muted-foreground md:text-sm">
+      <div className="min-w-[350px] flex-1 rounded-xl border bg-card p-3.5 shadow-sm md:p-4">
+        <h4 className="mb-1 font-header text-sm font-semibold md:text-base">Weekly Revenue Trend</h4>
+        <p className="mb-3 font-main text-[11px] text-muted-foreground md:text-xs">
           Combined room and activity booking value over the last 7 days.
         </p>
-        <div className="relative h-[240px] md:h-[260px]">
+        <div className="relative h-[210px] md:h-[230px]">
           <canvas ref={trendRef} />
         </div>
       </div>

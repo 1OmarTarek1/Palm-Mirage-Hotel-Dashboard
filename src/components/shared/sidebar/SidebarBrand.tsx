@@ -13,7 +13,7 @@ export default function SidebarBrand({
 }: SidebarBrandProps) {
   return (
     <div className="relative mb-4 pb-3 flex h-[3.75rem] items-center after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-[linear-gradient(90deg,color-mix(in_srgb,var(--border)_92%,transparent)_0%,color-mix(in_srgb,var(--border)_72%,transparent)_68%,transparent_100%)] after:content-['']">
-      <div className={`flex w-full ${collapsed ? "justify-center" : "items-center gap-3"}`}>
+      <div className={`flex w-full ${collapsed ? "justify-center" : "items-center gap-3 pl-6"}`}>
         <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-card/70 shadow-sm">
           <Image
             src="/logo.png"
