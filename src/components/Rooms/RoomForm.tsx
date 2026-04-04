@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { RoomDraft, RoomType } from "./data";
-import { fetchFacilities, type Facility } from "@/lib/facilities";
+import { fetchRoomAmenities } from "@/lib/room-amenities";
+import type { RoomAmenity } from "@/types/room-amenity";
 import Image from "next/image";
 
 interface RoomFormProps {
@@ -28,7 +29,7 @@ const roomTypeOptions: { label: string; value: RoomType }[] = [
 
 export default function RoomForm({ draft, onChange }: RoomFormProps) {
   const [formData, setFormData] = useState<RoomDraft>(draft);
-  const [allFacilities, setAllFacilities] = useState<Facility[]>([]);
+  const [allAmenities, setAllAmenities] = useState<RoomAmenity[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
@@ -36,15 +37,15 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
   }, [draft]);
 
   useEffect(() => {
-    const loadFacilities = async () => {
+    const loadAmenities = async () => {
       try {
-        const data = await fetchFacilities();
-        setAllFacilities(data);
+        const data = await fetchRoomAmenities();
+        setAllAmenities(data);
       } catch (error) {
-        console.error("Failed to load facilities:", error);
+        console.error("Failed to load room amenities:", error);
       }
     };
-    void loadFacilities();
+    void loadAmenities();
   }, []);
 
   const handleChange = <K extends keyof RoomDraft>(key: K, value: RoomDraft[K]) => {
@@ -63,14 +64,14 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
     handleChange(key, (Number.isNaN(parsed) ? 0 : parsed) as RoomDraft[K]);
   };
 
-  const handleFacilityToggle = (facilityId: string) => {
-    if (!facilityId || facilityId === "undefined") return;
+  const handleAmenityToggle = (amenityId: string) => {
+    if (!amenityId || amenityId === "undefined") return;
     
-    const current = formData.facilities || [];
-    const updated = current.includes(facilityId)
-      ? current.filter((id) => id !== facilityId)
-      : [...current, facilityId];
-    handleChange("facilities", updated);
+    const current = formData.amenities || [];
+    const updated = current.includes(amenityId)
+      ? current.filter((id) => id !== amenityId)
+      : [...current, amenityId];
+    handleChange("amenities", updated);
   };
 
   const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,20 +251,20 @@ export default function RoomForm({ draft, onChange }: RoomFormProps) {
         </div>
 
         <div className="space-y-3 md:col-span-2">
-          <span className="font-main text-sm font-semibold text-foreground">Facilities</span>
+          <span className="font-main text-sm font-semibold text-foreground">Room Amenities</span>
           <div className="flex flex-wrap gap-2">
-            {allFacilities.map((f) => (
+            {allAmenities.map((amenity) => (
               <button
-                key={f._id}
+                key={amenity._id}
                 type="button"
-                onClick={() => handleFacilityToggle(f._id)}
+                onClick={() => handleAmenityToggle(amenity._id)}
                 className={`font-main rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                  formData.facilities?.includes(f._id)
+                  formData.amenities?.includes(amenity._id)
                     ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
                     : "border-border bg-muted/35 text-muted-foreground hover:bg-muted"
                 }`}
               >
-                {f.name}
+                {amenity.name}
               </button>
             ))}
           </div>

@@ -4,14 +4,20 @@ import type { RoomBooking, RoomBookingDraft } from "@/components/RoomBookings/da
 interface ApiBooking {
   _id: string;
   user?: {
+    _id?: string;
     userName?: string;
     email?: string;
   };
   room?: {
+    _id?: string;
     roomName?: string;
     roomNumber?: number;
     roomType?: string;
     price?: number;
+    roomImages?: Array<{
+      secure_url?: string;
+      public_id?: string;
+    }>;
   };
   checkInDate: string;
   checkOutDate: string;
@@ -27,17 +33,51 @@ interface ApiBooking {
   createdAt: string;
 }
 
+function isApiBookingRecord(value: unknown): value is Record<string, ApiBooking> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.keys(value).every((key) => /^\d+$/.test(key));
+}
+
+function normalizeBookingCollection(
+  payload?: ApiBooking[] | { bookings?: ApiBooking[]; reservations?: ApiBooking[] } | Record<string, ApiBooking>
+) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  if (Array.isArray(payload.bookings)) {
+    return payload.bookings;
+  }
+
+  if (Array.isArray(payload.reservations)) {
+    return payload.reservations;
+  }
+
+  if (isApiBookingRecord(payload)) {
+    return Object.values(payload);
+  }
+
+  return [];
+}
+
 function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
   if (!apiBooking) return {} as RoomBooking;
-  
-  const userObj = apiBooking.user as any;
-  const roomObj = apiBooking.room as any;
+
+  const userObj = apiBooking.user;
+  const roomObj = apiBooking.room;
 
   return {
     id: apiBooking._id,
-    user: typeof userObj === "object" && userObj ? userObj._id : userObj || "",
+    user: userObj?._id || "",
     userName: userObj?.userName || "Guest",
-    room: typeof roomObj === "object" && roomObj ? roomObj._id : roomObj || "",
+    room: roomObj?._id || "",
     roomName: roomObj?.roomName || "Room",
     roomNumber: roomObj?.roomNumber || 0,
     roomType: roomObj?.roomType || "single",
@@ -45,9 +85,9 @@ function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
     checkInDate: apiBooking.checkInDate?.slice(0, 10) || "",
     checkOutDate: apiBooking.checkOutDate?.slice(0, 10) || "",
     nights: apiBooking.nights || 0,
-    status: apiBooking.status as any,
-    paymentStatus: apiBooking.paymentStatus as any,
-    paymentMethod: apiBooking.paymentMethod as any,
+    status: apiBooking.status as RoomBooking["status"],
+    paymentStatus: apiBooking.paymentStatus as RoomBooking["paymentStatus"],
+    paymentMethod: apiBooking.paymentMethod as RoomBooking["paymentMethod"],
     guests: apiBooking.guests || 0,
     totalPrice: apiBooking.totalPrice || 0,
     pricePerNight: apiBooking.pricePerNight || 0,
@@ -59,8 +99,10 @@ function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
 
 export async function fetchRoomBookings() {
   try {
-    const response = await apiRequest<{ data: { reservations: ApiBooking[] } }>("/api/reservations");
-    const data = response?.data?.reservations || [];
+    const response = await apiRequest<{
+      data?: ApiBooking[] | { bookings?: ApiBooking[]; reservations?: ApiBooking[] } | Record<string, ApiBooking>;
+    }>("/api/reservations");
+    const data = normalizeBookingCollection(response?.data);
     return Array.isArray(data) ? data.map(mapApiBooking) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -69,15 +111,20 @@ export async function fetchRoomBookings() {
 
 export async function updateRoomBooking(draft: RoomBookingDraft) {
   try {
-    const response = await apiRequest<{ data: ApiBooking }>(`/api/reservations/${draft.id}`, {
+    const response = await apiRequest<{ data?: ApiBooking | { booking?: ApiBooking } }>(
+      `/api/reservations/${draft.id}`,
+      {
       method: "PATCH",
       body: {
         status: draft.status,
         paymentStatus: draft.paymentStatus,
         cancellationReason: draft.cancellationReason,
       },
-    });
-    return mapApiBooking(response?.data);
+      }
+    );
+    const payload =
+      response?.data && "booking" in response.data ? response.data.booking : response?.data;
+    return mapApiBooking(payload as ApiBooking);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

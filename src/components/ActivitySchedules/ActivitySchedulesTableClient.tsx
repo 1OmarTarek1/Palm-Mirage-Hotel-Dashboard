@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { CalendarClock, CircleDollarSign, Clock3, Users } from "lucide-react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityScheduleColumns, activityScheduleFilters } from "@/config/tablePresets/activityScheduleColumns";
 import { fetchActivities } from "@/lib/activities";
@@ -142,6 +145,47 @@ function ActivitySchedulesTableClient() {
     [schedules, deletingScheduleId]
   );
 
+  const overviewItems = useMemo(() => {
+    const totalSchedules = schedules.length;
+    const upcomingSchedules = schedules.filter((schedule) => schedule.status === "scheduled").length;
+    const totalOpenSeats = schedules.reduce((sum, schedule) => sum + schedule.availableSeats, 0);
+    const averagePrice = totalSchedules > 0
+      ? Math.round(schedules.reduce((sum, schedule) => sum + schedule.resolvedPrice, 0) / totalSchedules)
+      : 0;
+
+    return [
+      {
+        key: "schedules",
+        label: "Sessions listed",
+        value: totalSchedules,
+        helper: "Schedules currently visible in this planner",
+        icon: CalendarClock,
+      },
+      {
+        key: "upcoming",
+        label: "Scheduled next",
+        value: upcomingSchedules,
+        helper: "Sessions still active and awaiting attendance",
+        icon: Clock3,
+      },
+      {
+        key: "seats",
+        label: "Open seats",
+        value: totalOpenSeats,
+        helper: "Remaining capacity across the listed sessions",
+        icon: Users,
+        tone: "secondary" as const,
+      },
+      {
+        key: "price",
+        label: "Avg. session price",
+        value: `$${averagePrice.toLocaleString()}`,
+        helper: "Average resolved selling price per scheduled session",
+        icon: CircleDollarSign,
+      },
+    ];
+  }, [schedules]);
+
   const handleCloseViewModal = () => setViewingScheduleId(null);
   const handleCloseAddModal = () => {
     setShouldOpenAddModal(false);
@@ -234,15 +278,21 @@ function ActivitySchedulesTableClient() {
 
   return (
     <>
-      <DynamicTable<ActivitySchedule>
-        columns={activityScheduleColumns}
-        data={schedules}
-        isLoading={isLoading}
-        filtersConfig={activityScheduleFilters}
-        pageSize={6}
-        searchPlaceholder="Search schedules..."
-        actions={actions}
-      />
+      <div className="mb-5 md:mb-6">
+        <TableOverview items={overviewItems} isLoading={isLoading} />
+      </div>
+
+      <DashboardSectionCard>
+        <DynamicTable<ActivitySchedule>
+          columns={activityScheduleColumns}
+          data={schedules}
+          isLoading={isLoading}
+          filtersConfig={activityScheduleFilters}
+          pageSize={6}
+          searchPlaceholder="Search schedules..."
+          actions={actions}
+        />
+      </DashboardSectionCard>
 
       <SharedModal
         isOpen={Boolean(creatingDraft)}

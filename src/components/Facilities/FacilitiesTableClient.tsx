@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
+import { Activity, Building2, Users, Wrench } from "lucide-react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
 import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
@@ -71,6 +74,46 @@ function FacilitiesTableClient() {
     () => facilities.find((f) => f._id === deletingFacilityId) ?? null,
     [facilities, deletingFacilityId]
   );
+
+  const overviewItems = useMemo(() => {
+    const totalFacilities = facilities.length;
+    const activeFacilities = facilities.filter((facility) => facility.status === "Available").length;
+    const maintenanceFacilities = facilities.filter((facility) => facility.status === "Maintenance").length;
+    const totalCapacity = facilities.reduce((sum, facility) => sum + (facility.capacity ?? 0), 0);
+
+    return [
+      {
+        key: "total",
+        label: "Facilities listed",
+        value: totalFacilities,
+        helper: "Visible spaces managed from this table",
+        icon: Building2,
+      },
+      {
+        key: "available",
+        label: "Available now",
+        value: activeFacilities,
+        helper: "Facilities ready for guest use",
+        icon: Activity,
+      },
+      {
+        key: "maintenance",
+        label: "Need follow-up",
+        value: maintenanceFacilities,
+        helper: "Facilities currently in maintenance",
+        icon: Wrench,
+        tone: maintenanceFacilities > 0 ? "destructive" as const : "secondary" as const,
+      },
+      {
+        key: "capacity",
+        label: "Known capacity",
+        value: totalCapacity,
+        helper: "Combined guests across configured facilities",
+        icon: Users,
+        tone: "secondary" as const,
+      },
+    ];
+  }, [facilities]);
 
   const handleCloseViewModal = () => setViewingFacilityId(null);
   const handleCloseAddModal = () => {
@@ -147,15 +190,21 @@ function FacilitiesTableClient() {
 
   return (
     <>
-      <DynamicTable<Facility>
-        columns={facilityColumns}
-        data={facilities}
-        isLoading={isLoading}
-        filtersConfig={facilityFilters}
-        pageSize={5}
-        searchPlaceholder="Search facilities..."
-        actions={actions}
-      />
+      <div className="mb-5 md:mb-6">
+        <TableOverview items={overviewItems} isLoading={isLoading} />
+      </div>
+
+      <DashboardSectionCard>
+        <DynamicTable<Facility>
+          columns={facilityColumns}
+          data={facilities}
+          isLoading={isLoading}
+          filtersConfig={facilityFilters}
+          pageSize={5}
+          searchPlaceholder="Search facilities..."
+          actions={actions}
+        />
+      </DashboardSectionCard>
 
       <SharedModal
         isOpen={Boolean(creatingDraft)}

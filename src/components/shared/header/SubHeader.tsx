@@ -49,14 +49,14 @@ export default function SubHeader({
   const shouldRenderAction = Boolean(actionLabel);
 
   return (
-    <div className="mb-8 flex flex-col gap-4 border-b border-border pb-6 transition-colors duration-300 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-5 flex flex-col gap-3 border-b border-border pb-4 transition-colors duration-300 sm:flex-row sm:items-end sm:justify-between">
       
       <div className="flex-1 min-w-0">
-        <h1 className="font-header text-3xl font-bold tracking-tight text-primary transition-colors duration-300">
+        <h1 className="font-header text-2xl font-bold tracking-tight text-primary transition-colors duration-300 md:text-[1.85rem]">
           {resolvedTitle}
         </h1>
         {description && (
-          <p className="mt-1.5 font-main text-base text-muted-foreground transition-colors duration-300">
+          <p className="mt-1 font-main text-sm text-muted-foreground transition-colors duration-300 md:text-[15px]">
             {description}
           </p>
         )}

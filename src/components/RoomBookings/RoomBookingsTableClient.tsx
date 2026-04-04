@@ -2,13 +2,17 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomBookingColumns, roomBookingFilters } from "@/config/tablePresets/roomBookingColumns";
 import { fetchRoomBookings, updateRoomBooking } from "@/lib/room-bookings";
+import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import type { RoomBooking, RoomBookingDraft } from "./data";
+import { buildRoomBookingAlerts } from "./RoomBookingsAlerts";
 import RoomBookingDetailsView from "./RoomBookingDetailsView";
 import RoomBookingEditForm from "./RoomBookingEditForm";
+import RoomBookingsOverview from "./RoomBookingsOverview";
 
 function mapBookingToDraft(booking: RoomBooking): RoomBookingDraft {
   return {
@@ -54,6 +58,51 @@ function RoomBookingsTableClient() {
     [bookings, editingBookingId]
   );
 
+  const bookingOverview = useMemo(() => {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const isSameDay = (value?: string) => Boolean(value) && value?.slice(0, 10) === todayKey;
+
+    const arrivalsToday = bookings.filter((booking) => isSameDay(booking.checkInDate)).length;
+    const departuresToday = bookings.filter((booking) => isSameDay(booking.checkOutDate)).length;
+    const pendingBookings = bookings.filter((booking) => booking.status === "pending").length;
+    const unpaidBookings = bookings.filter((booking) => booking.paymentStatus === "unpaid").length;
+    const checkedInGuests = bookings.filter((booking) => booking.status === "checked-in").length;
+    const noShowBookings = bookings.filter((booking) => booking.status === "no-show").length;
+    const cancelledBookings = bookings.filter((booking) => booking.status === "cancelled").length;
+    const totalRevenue = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(bookings.reduce((sum, booking) => sum + booking.totalPrice, 0));
+
+    return {
+      arrivalsToday,
+      departuresToday,
+      pendingBookings,
+      unpaidBookings,
+      checkedInGuests,
+      noShowBookings,
+      cancelledBookings,
+      totalRevenue,
+    };
+  }, [bookings]);
+
+  const pageAlerts = useMemo(
+    () => ({
+      title: "Booking Alerts",
+      description: "Quick attention items for the reservations and front-office teams.",
+      alerts: buildRoomBookingAlerts({
+        pendingBookings: bookingOverview.pendingBookings,
+        unpaidBookings: bookingOverview.unpaidBookings,
+        noShowBookings: bookingOverview.noShowBookings,
+        cancelledBookings: bookingOverview.cancelledBookings,
+      }),
+    }),
+    [bookingOverview]
+  );
+
+  useDashboardAlerts(pageAlerts);
+
   const actions = [
     {
       key: "view" as const,
@@ -93,15 +142,29 @@ function RoomBookingsTableClient() {
 
   return (
     <>
-      <DynamicTable<RoomBooking>
-        columns={roomBookingColumns}
-        data={bookings}
-        isLoading={isLoading}
-        filtersConfig={roomBookingFilters}
-        pageSize={6}
-        searchPlaceholder="Search room bookings..."
-        actions={actions}
-      />
+      <div className="space-y-6">
+        <RoomBookingsOverview
+          arrivalsToday={bookingOverview.arrivalsToday}
+          departuresToday={bookingOverview.departuresToday}
+          pendingBookings={bookingOverview.pendingBookings}
+          unpaidBookings={bookingOverview.unpaidBookings}
+          checkedInGuests={bookingOverview.checkedInGuests}
+          totalRevenue={bookingOverview.totalRevenue}
+          isLoading={isLoading}
+        />
+
+        <DashboardSectionCard>
+          <DynamicTable<RoomBooking>
+            columns={roomBookingColumns}
+            data={bookings}
+            isLoading={isLoading}
+            filtersConfig={roomBookingFilters}
+            pageSize={6}
+            searchPlaceholder="Search room bookings..."
+            actions={actions}
+          />
+        </DashboardSectionCard>
+      </div>
 
       <SharedModal
         isOpen={Boolean(viewingBooking)}

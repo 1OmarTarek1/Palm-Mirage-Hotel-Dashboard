@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { NAV_ITEMS } from "./navItems";
+import SidebarCornerAccent from "./SidebarCornerAccent";
 import SidebarTooltip from "./SidebarTooltip";
 import { hasActiveChild, isItemActive } from "./utils";
 
@@ -12,7 +13,8 @@ export default function TabletSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-16 z-50 hidden h-[calc(100vh-4rem)] w-20 shrink-0 border-r border-sidebar-border/70 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,var(--background)_22%,var(--background)_100%)] px-3 py-5 text-sidebar-foreground md:flex lg:hidden">
+    <aside className="relative sticky top-16 z-50 hidden h-[calc(100vh-4rem)] w-20 shrink-0 border-r border-sidebar-border/70 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,var(--background)_22%,var(--background)_100%)] px-3 py-5 text-sidebar-foreground md:flex lg:hidden">
+      <SidebarCornerAccent className="top-0" />
       <div className="flex flex-1 flex-col overflow-visible">
         <div className="mb-4 border-b border-sidebar-border/70 pb-4">
           <Link

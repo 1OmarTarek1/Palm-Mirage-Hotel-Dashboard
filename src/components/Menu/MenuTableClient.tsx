@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { CircleDollarSign, CookingPot, Salad, Store } from "lucide-react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
 import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
@@ -76,6 +79,47 @@ function MenuTableClient() {
     () => menuItems.find((item) => item.id === deletingItemId) ?? null,
     [menuItems, deletingItemId]
   );
+
+  const overviewItems = useMemo(() => {
+    const totalItems = menuItems.length;
+    const availableItems = menuItems.filter((item) => item.available).length;
+    const categories = new Set(menuItems.map((item) => item.category)).size;
+    const averagePrice = totalItems > 0
+      ? Math.round(menuItems.reduce((sum, item) => sum + item.price, 0) / totalItems)
+      : 0;
+
+    return [
+      {
+        key: "items",
+        label: "Menu products",
+        value: totalItems,
+        helper: "Items currently visible in the catalog",
+        icon: CookingPot,
+      },
+      {
+        key: "available",
+        label: "Available now",
+        value: availableItems,
+        helper: "Items currently ready for ordering",
+        icon: Store,
+      },
+      {
+        key: "categories",
+        label: "Categories used",
+        value: categories,
+        helper: "Menu sections currently represented",
+        icon: Salad,
+        tone: "secondary" as const,
+      },
+      {
+        key: "price",
+        label: "Average price",
+        value: `$${averagePrice.toLocaleString()}`,
+        helper: "Average listed price across menu products",
+        icon: CircleDollarSign,
+      },
+    ];
+  }, [menuItems]);
 
   const handleCloseViewModal = () => setViewingItemId(null);
   const handleCloseAddModal = () => {
@@ -158,15 +202,21 @@ function MenuTableClient() {
 
   return (
     <>
-      <DynamicTable<MenuItem>
-        columns={menuColumns}
-        data={menuItems}
-        isLoading={isLoading}
-        filtersConfig={menuFilters}
-        pageSize={10}
-        searchPlaceholder="Search menu products..."
-        actions={actions}
-      />
+      <div className="mb-5 md:mb-6">
+        <TableOverview items={overviewItems} isLoading={isLoading} />
+      </div>
+
+      <DashboardSectionCard>
+        <DynamicTable<MenuItem>
+          columns={menuColumns}
+          data={menuItems}
+          isLoading={isLoading}
+          filtersConfig={menuFilters}
+          pageSize={6}
+          searchPlaceholder="Search menu products..."
+          actions={actions}
+        />
+      </DashboardSectionCard>
 
       {/* Add Modal */}
       <SharedModal

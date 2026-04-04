@@ -3,7 +3,7 @@ import {
   Building2,
   Calendar,
   House,
-  Menu,
+  UtensilsCrossed,
   Users,
 } from "lucide-react";
 import { createElement } from "react";
@@ -22,6 +22,11 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/dashboard/users",
   },
   {
+    label: "Facilities",
+    icon: createElement(Building2, { size: 18 }),
+    path: "/dashboard/facilities",
+  },
+  {
     label: "Rooms",
     icon: createElement(Bed, { size: 18 }),
     path: "/dashboard/rooms",
@@ -36,12 +41,12 @@ export const NAV_ITEMS: NavItem[] = [
         icon: null,
         path: "/dashboard/rooms/bookings",
       },
+      {
+        label: "Amenities",
+        icon: null,
+        path: "/dashboard/rooms/amenities",
+      },
     ],
-  },
-  {
-    label: "Facilities",
-    icon: createElement(Building2, { size: 18 }),
-    path: "/dashboard/facilities",
   },
   {
     label: "Activities",
@@ -66,8 +71,25 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: "Menu",
-    icon: createElement(Menu, { size: 18 }),
-    path: "/dashboard/menu",
+    label: "Restaurant",
+    icon: createElement(UtensilsCrossed, { size: 18 }),
+    path: "/dashboard/restaurant",
+    children: [
+      {
+        label: "Tables",
+        icon: null,
+        path: "/dashboard/restaurant",
+      },
+      {
+        label: "Bookings",
+        icon: null,
+        path: "/dashboard/restaurant/bookings",
+      },
+      {
+        label: "Menu",
+        icon: null,
+        path: "/dashboard/menu",
+      },
+    ],
   },
 ];

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { NAV_ITEMS } from "./navItems";
+import SidebarCornerAccent from "./SidebarCornerAccent";
 import DesktopSidebarItem from "./DesktopSidebarItem";
 import SidebarBrand from "./SidebarBrand";
 import SidebarCollapseButton from "./SidebarCollapseButton";
@@ -68,10 +69,12 @@ export default function DesktopSidebar({
 
   return (
     <aside
-      className={`sticky top-0 z-[150] hidden h-screen shrink-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,color-mix(in_srgb,var(--primary)_10%,var(--background))_5.5rem,color-mix(in_srgb,var(--primary)_9.5%,var(--background))_10rem,color-mix(in_srgb,var(--primary)_8.5%,var(--background))_15rem,color-mix(in_srgb,var(--primary)_6.5%,var(--background))_21rem,color-mix(in_srgb,var(--primary)_4%,var(--background))_30rem,var(--background)_100%)] text-sidebar-foreground transition-all duration-300 after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-[linear-gradient(180deg,transparent_0%,transparent_12%,color-mix(in_srgb,var(--border)_72%,transparent)_34%,color-mix(in_srgb,var(--border)_92%,transparent)_100%)] after:content-[''] ${
+      className={`relative sticky top-0 z-[150] hidden h-screen shrink-0 overflow-visible bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background))_0%,color-mix(in_srgb,var(--primary)_10%,var(--background))_5.5rem,color-mix(in_srgb,var(--primary)_9.5%,var(--background))_10rem,color-mix(in_srgb,var(--primary)_8.5%,var(--background))_15rem,color-mix(in_srgb,var(--primary)_6.5%,var(--background))_21rem,color-mix(in_srgb,var(--primary)_4%,var(--background))_30rem,var(--background)_100%)] text-sidebar-foreground transition-all duration-300 after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-[linear-gradient(180deg,transparent_0%,transparent_20%,color-mix(in_srgb,var(--border)_48%,transparent)_42%,color-mix(in_srgb,var(--border)_82%,transparent)_100%)] after:content-[''] ${
         collapsed ? "w-24" : "w-[17.5rem]"
       } ${className}`.trim()}
     >
+      <SidebarCornerAccent />
+
       <div className="flex h-full w-full flex-col px-3 pb-5 pt-3">
         <SidebarBrand collapsed={collapsed} showLabels={showLabels} />
 

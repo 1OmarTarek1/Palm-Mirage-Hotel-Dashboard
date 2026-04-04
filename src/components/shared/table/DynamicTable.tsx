@@ -9,6 +9,7 @@ import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import Pagination from "./Pagination";
 import MobileCard, { MobileCardSkeleton } from "./MobileCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DynamicTable<T extends object>({
   columns,
@@ -46,6 +47,7 @@ export default function DynamicTable<T extends object>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(initialPageSize);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const scrollOffset = 96;
 
   const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
 
@@ -122,8 +124,21 @@ export default function DynamicTable<T extends object>({
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
+    if (page === currentPage) return;
+
     setCurrentPage(page);
-  }, []);
+
+    window.requestAnimationFrame(() => {
+      const container = tableContainerRef.current;
+      if (!container) return;
+
+      const nextTop = Math.max(window.scrollY + container.getBoundingClientRect().top - scrollOffset, 0);
+      window.scrollTo({
+        top: nextTop,
+        behavior: "smooth",
+      });
+    });
+  }, [currentPage]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
@@ -242,39 +257,58 @@ export default function DynamicTable<T extends object>({
     return Math.max(2, Math.min(4, Math.max(dataColumns.length - 1, 1)));
   }, [computedColumns]);
   const hasFilterPanel = filtersConfig.length > 0 || columns.some((column) => column.sortable);
+  const showControlSkeleton = isLoading && data.length === 0 && !hasActiveFilters && searchTerm.length === 0;
 
   const totalPages = isLoading ? 1 : Math.max(1, Math.ceil(sortedData.length / pageSize));
 
   return (
     <div ref={tableContainerRef} className="w-full">
-      <div className="sticky top-16 z-30 rounded-t-[28px] border-b border-border bg-card/95 py-4 backdrop-blur-md">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <SearchBar
-              searchTerm={searchTerm}
-              onSearchChange={handleSearch}
-              placeholder={searchPlaceholder}
-              className="flex-1"
-            />
+      <div className="sticky top-16 z-30 rounded-t-[28px] border-b border-border bg-card/95 py-3 backdrop-blur-md">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            {showControlSkeleton ? (
+              <>
+                <Skeleton className="h-10 flex-1 rounded-full lg:max-w-md xl:max-w-sm" />
+                {hasFilterPanel ? (
+                  <>
+                    <div className="hidden flex-1 items-center justify-end gap-2 lg:flex">
+                      <Skeleton className="h-10 w-32 rounded-2xl" />
+                      <Skeleton className="h-10 w-28 rounded-2xl" />
+                      <Skeleton className="h-10 w-24 rounded-2xl" />
+                    </div>
+                    <Skeleton className="h-10 w-10 rounded-2xl lg:hidden" />
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <SearchBar
+                  searchTerm={searchTerm}
+                  onSearchChange={handleSearch}
+                  placeholder={searchPlaceholder}
+                  className="flex-1"
+                />
 
-            {hasFilterPanel ? (
-              <FiltersPanel
-                columns={columns}
-                filtersConfig={filtersConfig}
-                filters={filters}
-                sortConfig={sortConfig}
-                onFilterChange={handleFilterChange}
-                onSortColumnChange={handleMobileSortChange}
-                onSortDirectionToggle={handleSortDirectionToggle}
-                hasActiveFilters={hasActiveFilters}
-                onReset={handleReset}
-              />
-            ) : null}
+                {hasFilterPanel ? (
+                  <FiltersPanel
+                    columns={columns}
+                    filtersConfig={filtersConfig}
+                    filters={filters}
+                    sortConfig={sortConfig}
+                    onFilterChange={handleFilterChange}
+                    onSortColumnChange={handleMobileSortChange}
+                    onSortDirectionToggle={handleSortDirectionToggle}
+                    hasActiveFilters={hasActiveFilters}
+                    onReset={handleReset}
+                  />
+                ) : null}
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="pt-4 lg:hidden">
+      <div className="pt-3 lg:hidden">
         <div className="rounded-[30px] border border-border/70 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_4%,transparent),transparent_32%),var(--color-card)] p-3 shadow-inner shadow-black/[0.03]">
           {isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -304,7 +338,7 @@ export default function DynamicTable<T extends object>({
         </div>
       </div>
 
-      <div className="hidden max-h-[36rem] overflow-auto rounded-b-[30px] bg-card/30 lg:block">
+      <div className="hidden max-h-[36rem] overflow-auto bg-card/30 lg:block">
         <table className="w-full text-left text-sm">
           <TableHeader
             columns={computedColumns}
@@ -321,13 +355,25 @@ export default function DynamicTable<T extends object>({
         </table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        pageSize={pageSize}
-        totalEntries={isLoading ? pageSize : sortedData.length}
-      />
+      {showControlSkeleton ? (
+        <div className="flex flex-col gap-4 rounded-b-[28px] border-t border-border px-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-4 w-48 rounded-full" />
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
+          </div>
+        </div>
+      ) : (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          pageSize={pageSize}
+          totalEntries={isLoading ? pageSize : sortedData.length}
+        />
+      )}
     </div>
   );
 }

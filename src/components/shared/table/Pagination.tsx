@@ -21,7 +21,6 @@ const Pagination: React.FC<PaginationProps> = ({
   if (totalPages <= 1) return null;
   const goToPage = (page: number) => {
     onPageChange(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const getPageNumbers = (): (number | "...")[] => {

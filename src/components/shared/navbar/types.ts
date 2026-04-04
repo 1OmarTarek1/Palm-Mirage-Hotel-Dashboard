@@ -9,6 +9,8 @@ export interface NavbarProps {
   user?: UserData | null;
   notificationCount?: number;
   onSignOut?: () => void;
+  isAlertsPanelOpen?: boolean;
+  onAlertsPanelToggle?: () => void;
 }
 
 export type ActiveUser = UserData & {

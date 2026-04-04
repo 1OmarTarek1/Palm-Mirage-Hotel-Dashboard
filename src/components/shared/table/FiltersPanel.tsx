@@ -134,11 +134,11 @@ const FiltersPanel = <T,>({
           aria-label="Open filters"
           title="Open filters"
           className={cn(
-            "relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10",
+            "relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/10",
             activeFiltersCount > 0 && "border-primary/30 bg-primary/5 text-primary"
           )}
         >
-          <SlidersHorizontal size={18} />
+          <SlidersHorizontal size={16} />
           {activeFiltersCount > 0 ? (
             <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-main text-[10px] font-bold text-primary-foreground shadow-md">
               {activeFiltersCount}

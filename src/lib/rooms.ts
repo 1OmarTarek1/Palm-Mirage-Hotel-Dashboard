@@ -1,5 +1,13 @@
 import { apiRequest, getErrorMessage } from "@/lib/api-client";
-import type { Room, RoomDraft } from "@/components/Rooms/data";
+import type { Room, RoomAmenityPreview, RoomDraft, RoomType } from "@/components/Rooms/data";
+
+interface ApiRoomAmenity {
+  _id?: string;
+  id?: string;
+  name?: string;
+  icon?: string;
+  description?: string;
+}
 
 interface ApiRoom {
   _id: string;
@@ -11,7 +19,8 @@ interface ApiRoom {
   capacity: number;
   discount: number;
   description: string;
-  facilities: any[];
+  facilities: ApiRoomAmenity[];
+  amenities?: ApiRoomAmenity[];
   roomImages: { secure_url: string; public_id: string }[];
   hasOffer: boolean;
   isAvailable: boolean;
@@ -25,22 +34,41 @@ interface ApiRoom {
   createdAt: string;
 }
 
+function mapRoomType(roomType: string): RoomType {
+  const validRoomTypes: RoomType[] = ["single", "double", "twin", "deluxe", "family"];
+  return validRoomTypes.includes(roomType as RoomType) ? (roomType as RoomType) : "single";
+}
+
 function mapApiRoom(apiRoom: ApiRoom): Room {
+  const populatedAmenities = (apiRoom.amenities ?? apiRoom.facilities ?? [])
+    .map((amenity: ApiRoomAmenity): RoomAmenityPreview | null => {
+      if (typeof amenity !== "object" || amenity === null) return null;
+      const id = amenity._id ?? amenity.id;
+      if (!id) return null;
+      return {
+        _id: id,
+        name: amenity.name ?? "Amenity",
+        icon: amenity.icon ?? "",
+      };
+    })
+    .filter(Boolean) as RoomAmenityPreview[];
+
   return {
     id: apiRoom._id,
     roomName: apiRoom.roomName,
     roomNumber: apiRoom.roomNumber,
-    roomType: apiRoom.roomType as any,
+    roomType: mapRoomType(apiRoom.roomType),
     image: apiRoom.roomImages?.[0]?.secure_url || "",
     price: apiRoom.price,
     finalPrice: apiRoom.finalPrice,
     capacity: apiRoom.capacity,
     discount: apiRoom.discount,
     description: apiRoom.description,
-    facilities: apiRoom.facilities?.map((f: any) => {
+    amenities: (apiRoom.amenities ?? apiRoom.facilities)?.map((f: ApiRoomAmenity) => {
       if (typeof f === "object" && f !== null) return f._id || f.id;
       return f;
     }).filter(Boolean) || [],
+    amenityDetails: populatedAmenities,
     roomImages: apiRoom.roomImages || [],
     hasOffer: apiRoom.hasOffer,
     isAvailable: apiRoom.isAvailable,
@@ -71,10 +99,10 @@ function buildRoomFormData(room: RoomDraft) {
   formData.append("checkOutTime", room.checkOutTime);
   formData.append("cancellationPolicy", room.cancellationPolicy || "");
 
-  if (room.facilities?.length) {
-    room.facilities
+  if (room.amenities?.length) {
+    room.amenities
       .filter((id) => id && id !== "undefined" && typeof id === "string")
-      .forEach((id) => formData.append("facilities", id));
+      .forEach((id) => formData.append("amenities", id));
   }
 
   if (room.imageFiles?.length) {

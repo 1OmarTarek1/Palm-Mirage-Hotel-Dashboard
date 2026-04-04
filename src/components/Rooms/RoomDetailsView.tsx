@@ -63,23 +63,21 @@ export default function RoomDetailsView({ room }: RoomDetailsViewProps) {
           <p className="font-main text-sm leading-7 text-muted-foreground">{room.description}</p>
 
           <div>
-            <h4 className="font-header text-sm font-semibold text-foreground">Facilities</h4>
+            <h4 className="font-header text-sm font-semibold text-foreground">Room Amenities</h4>
             <div className="mt-3 flex flex-wrap gap-2">
-              {room.facilities && room.facilities.length > 0 ? (
-                room.facilities.map((f: any) => {
-                  const facilityId = typeof f === "object" ? f._id : f;
-                  const facilityName = typeof f === "object" ? f.name : "Facility";
+              {room.amenityDetails && room.amenityDetails.length > 0 ? (
+                room.amenityDetails.map((amenity) => {
                   return (
                     <span
-                      key={facilityId || Math.random().toString()}
+                      key={amenity._id || Math.random().toString()}
                       className="font-main rounded-xl border border-border bg-muted/35 px-3 py-1.5 text-xs font-semibold text-foreground flex items-center gap-2"
                     >
-                      {facilityName}
+                      {amenity.name}
                     </span>
                   );
                 })
               ) : (
-                <p className="text-xs text-muted-foreground italic">No facilities specified.</p>
+                <p className="text-xs text-muted-foreground italic">No room amenities specified.</p>
               )}
             </div>
           </div>

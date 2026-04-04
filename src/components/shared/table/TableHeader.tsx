@@ -57,12 +57,12 @@ export default function TableHeader<T>({
 
   return (
     <thead className="sticky top-0 z-20">
-      <tr className="border-b border-border bg-card/95 backdrop-blur-md">
+      <tr className="bg-card/95 shadow-[inset_0_-1px_0_0_color-mix(in_srgb,var(--color-border)_88%,transparent)] backdrop-blur-md">
         {columns.map((col) => (
           <th
             key={String(col.key)}
             onClick={() => onSort(col)}
-            className={`border-b border-border/80 px-6 py-5 font-header text-[13px] font-bold uppercase tracking-[0.14em] text-foreground/90 select-none ${getHeaderAlignmentClassName(col.headerAlign)}
+            className={`px-6 py-5 font-header text-[13px] font-bold uppercase tracking-[0.14em] text-foreground/90 select-none ${getHeaderAlignmentClassName(col.headerAlign)}
               ${
                 col.sortable
                   ? "cursor-pointer transition-colors hover:text-primary"

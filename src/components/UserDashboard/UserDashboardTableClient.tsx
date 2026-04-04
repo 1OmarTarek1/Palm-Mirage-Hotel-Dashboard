@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
+import { BadgeCheck, ShieldCheck, Users, UserRoundCheck } from "lucide-react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { userColumns, userFilters } from "@/config/tablePresets/userColumns";
 import { createUser, deleteUser, fetchUsers, updateUser } from "@/lib/users";
@@ -74,6 +77,46 @@ function UserDashboardTableClient() {
     () => users.find((user) => user.id === deletingUserId) ?? null,
     [users, deletingUserId]
   );
+
+  const overviewItems = useMemo(() => {
+    const totalUsers = users.length;
+    const confirmedUsers = users.filter((user) => user.isConfirmed).length;
+    const adminUsers = users.filter((user) => user.role === "admin").length;
+    const guestUsers = users.filter((user) => user.role === "user").length;
+
+    return [
+      {
+        key: "users",
+        label: "Users listed",
+        value: totalUsers,
+        helper: "All visible team members and guests",
+        icon: Users,
+      },
+      {
+        key: "confirmed",
+        label: "Confirmed accounts",
+        value: confirmedUsers,
+        helper: "Accounts already verified and usable",
+        icon: BadgeCheck,
+      },
+      {
+        key: "admins",
+        label: "Admin access",
+        value: adminUsers,
+        helper: "Users with dashboard management permissions",
+        icon: ShieldCheck,
+        tone: "secondary" as const,
+      },
+      {
+        key: "guests",
+        label: "Standard users",
+        value: guestUsers,
+        helper: "Non-admin accounts in the current list",
+        icon: UserRoundCheck,
+        tone: "secondary" as const,
+      },
+    ];
+  }, [users]);
 
   const handleCloseViewModal = () => setViewingUserId(null);
   const handleCloseAddModal = () => {
@@ -166,15 +209,21 @@ function UserDashboardTableClient() {
 
   return (
     <>
-      <DynamicTable<User>
-        columns={userColumns}
-        data={users}
-        isLoading={isLoading}
-        filtersConfig={userFilters}
-        pageSize={8}
-        searchPlaceholder="Search users..."
-        actions={actions}
-      />
+      <div className="mb-5 md:mb-6">
+        <TableOverview items={overviewItems} isLoading={isLoading} />
+      </div>
+
+      <DashboardSectionCard>
+        <DynamicTable<User>
+          columns={userColumns}
+          data={users}
+          isLoading={isLoading}
+          filtersConfig={userFilters}
+          pageSize={8}
+          searchPlaceholder="Search users..."
+          actions={actions}
+        />
+      </DashboardSectionCard>
 
       <SharedModal
         isOpen={Boolean(creatingDraft)}

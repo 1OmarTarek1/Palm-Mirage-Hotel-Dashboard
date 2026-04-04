@@ -5,6 +5,12 @@ export interface RoomImage {
   public_id?: string;
 }
 
+export interface RoomAmenityPreview {
+  _id: string;
+  name: string;
+  icon?: string;
+}
+
 export interface Room {
   id: string;
   roomName: string;
@@ -16,7 +22,8 @@ export interface Room {
   capacity: number;
   discount: number;
   description: string;
-  facilities: string[]; // Facility IDs
+  amenities: string[];
+  amenityDetails?: RoomAmenityPreview[];
   roomImages: RoomImage[];
   hasOffer: boolean;
   isAvailable: boolean;
@@ -30,7 +37,11 @@ export interface Room {
   createdAt: string;
 }
 
-export interface RoomDraft extends Omit<Room, "id" | "createdAt" | "reviewsCount" | "viewsCount" | "rating" | "finalPrice"> {
+export interface RoomDraft
+  extends Omit<
+    Room,
+    "id" | "createdAt" | "reviewsCount" | "viewsCount" | "rating" | "finalPrice" | "amenityDetails"
+  > {
   imageFiles?: File[];
 }
 
@@ -43,7 +54,7 @@ export function createEmptyRoomDraft(): RoomDraft {
     capacity: 1,
     discount: 0,
     description: "",
-    facilities: [],
+    amenities: [],
     roomImages: [],
     hasOffer: false,
     isAvailable: true,

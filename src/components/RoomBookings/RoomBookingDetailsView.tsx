@@ -2,6 +2,7 @@
 
 import type { RoomBooking } from "./data";
 import { User, Calendar, Moon, Users, CreditCard, MessageSquare, Clock } from "lucide-react";
+import Image from "next/image";
 
 interface RoomBookingDetailsViewProps {
   booking: RoomBooking;
@@ -10,6 +11,24 @@ interface RoomBookingDetailsViewProps {
 export default function RoomBookingDetailsView({ booking }: RoomBookingDetailsViewProps) {
   return (
     <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="overflow-hidden rounded-[28px] border border-border bg-muted">
+        <div className="relative h-64 w-full md:h-72">
+          {booking.roomImage ? (
+            <Image
+              src={booking.roomImage}
+              alt={booking.roomName}
+              fill
+              sizes="(max-width: 768px) 100vw, 896px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-muted/50 text-muted-foreground">
+              No room image available
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-[28px] border border-border bg-muted/35 p-6">
         <div className="flex flex-col gap-1">
           <p className="font-main text-xs font-bold uppercase tracking-[0.3em] text-primary">

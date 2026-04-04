@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
+import { Bell, Globe, LogOut, Moon, PanelRightOpen, Settings, Sun, User } from "lucide-react";
 
 import {
   NavbarDropdown,
@@ -21,6 +21,8 @@ interface NavbarActionsProps {
   isDarkMode: boolean;
   onThemeToggle: () => void;
   onSignOut: () => void;
+  isAlertsPanelOpen?: boolean;
+  onAlertsPanelToggle?: () => void;
 }
 
 export default function NavbarActions({
@@ -32,6 +34,8 @@ export default function NavbarActions({
   isDarkMode,
   onThemeToggle,
   onSignOut,
+  isAlertsPanelOpen = false,
+  onAlertsPanelToggle,
 }: NavbarActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -91,6 +95,23 @@ export default function NavbarActions({
 
   return (
     <div className="flex items-center gap-2">
+      {onAlertsPanelToggle ? (
+        <button
+          onClick={onAlertsPanelToggle}
+          className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-sm font-medium transition-all duration-200 sm:w-auto sm:gap-2 sm:px-3 ${
+            isAlertsPanelOpen
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border bg-card text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
+          }`}
+          type="button"
+          aria-label={isAlertsPanelOpen ? "Close alerts panel" : "Open alerts panel"}
+          aria-pressed={isAlertsPanelOpen}
+        >
+          <PanelRightOpen className="h-4 w-4" />
+          <span className="font-main hidden sm:inline">Alerts</span>
+        </button>
+      ) : null}
+
       <div className="relative z-[120] hidden sm:block" ref={langDropdownRef}>
         <button
           onClick={() => setLangDropdownOpen((value) => !value)}
@@ -154,7 +175,6 @@ export default function NavbarActions({
                 <User className="h-6 w-6" />
               </div>
             )}
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" />
           </div>
         </button>
 

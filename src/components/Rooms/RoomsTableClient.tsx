@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { BadgePercent, BedDouble, CircleDollarSign, DoorOpen } from "lucide-react";
 import { toast } from "react-toastify";
+import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
 import { fetchRooms, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
@@ -64,6 +67,47 @@ function RoomsTableClient() {
     () => rooms.find((r) => r.id === deletingRoomId) ?? null,
     [rooms, deletingRoomId]
   );
+
+  const overviewItems = useMemo(() => {
+    const totalRooms = rooms.length;
+    const availableRooms = rooms.filter((room) => room.isAvailable).length;
+    const offerRooms = rooms.filter((room) => room.hasOffer).length;
+    const averageRate = totalRooms > 0
+      ? Math.round(rooms.reduce((sum, room) => sum + (room.finalPrice ?? room.price), 0) / totalRooms)
+      : 0;
+
+    return [
+      {
+        key: "rooms",
+        label: "Rooms listed",
+        value: totalRooms,
+        helper: "Inventory currently visible in this table",
+        icon: BedDouble,
+      },
+      {
+        key: "available",
+        label: "Available now",
+        value: availableRooms,
+        helper: "Rooms ready for the next reservation",
+        icon: DoorOpen,
+      },
+      {
+        key: "offers",
+        label: "Offers running",
+        value: offerRooms,
+        helper: "Rooms currently showing promotional pricing",
+        icon: BadgePercent,
+        tone: "secondary" as const,
+      },
+      {
+        key: "rate",
+        label: "Average nightly rate",
+        value: `$${averageRate.toLocaleString()}`,
+        helper: "Average visible sell price across rooms",
+        icon: CircleDollarSign,
+      },
+    ];
+  }, [rooms]);
 
   const handleCloseViewModal = () => setViewingRoomId(null);
   const handleCloseAddModal = () => {
@@ -128,9 +172,24 @@ function RoomsTableClient() {
     {
       key: "edit" as const,
       onClick: (room: Room) => {
-        const { id, createdAt, reviewsCount, viewsCount, rating, finalPrice, image, ...rest } = room;
-        setEditingDraft({ ...rest });
-        setEditingRoomId(id);
+        setEditingDraft({
+          roomName: room.roomName,
+          roomNumber: room.roomNumber,
+          roomType: room.roomType,
+          price: room.price,
+          capacity: room.capacity,
+          discount: room.discount,
+          description: room.description,
+          amenities: room.amenities,
+          roomImages: room.roomImages,
+          hasOffer: room.hasOffer,
+          isAvailable: room.isAvailable,
+          floor: room.floor,
+          checkInTime: room.checkInTime,
+          checkOutTime: room.checkOutTime,
+          cancellationPolicy: room.cancellationPolicy,
+        });
+        setEditingRoomId(room.id);
       },
     },
     {
@@ -142,15 +201,21 @@ function RoomsTableClient() {
 
   return (
     <>
-      <DynamicTable<Room>
-        columns={roomColumns}
-        data={rooms}
-        isLoading={isLoading}
-        filtersConfig={roomFilters}
-        pageSize={5}
-        searchPlaceholder="Search rooms..."
-        actions={actions}
-      />
+      <div className="mb-5 md:mb-6">
+        <TableOverview items={overviewItems} isLoading={isLoading} />
+      </div>
+
+      <DashboardSectionCard>
+        <DynamicTable<Room>
+          columns={roomColumns}
+          data={rooms}
+          isLoading={isLoading}
+          filtersConfig={roomFilters}
+          pageSize={5}
+          searchPlaceholder="Search rooms..."
+          actions={actions}
+        />
+      </DashboardSectionCard>
 
       <SharedModal
         isOpen={Boolean(creatingDraft)}
