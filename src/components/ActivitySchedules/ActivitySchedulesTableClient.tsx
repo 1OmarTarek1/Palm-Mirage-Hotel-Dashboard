@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, CircleDollarSign, Clock3, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -10,6 +11,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityScheduleColumns, activityScheduleFilters } from "@/config/tablePresets/activityScheduleColumns";
 import { fetchActivities } from "@/lib/activities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   createActivitySchedule,
   deleteActivitySchedule,
@@ -56,9 +58,23 @@ function mapScheduleToDraft(schedule: ActivitySchedule): ActivityScheduleDraft {
 }
 
 function ActivitySchedulesTableClient() {
-  const [activities, setActivities] = useState<ActivityOption[]>([]);
-  const [schedules, setSchedules] = useState<ActivitySchedule[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const activitiesQuery = useQuery({
+    queryKey: queryKeys.activities.list,
+    queryFn: fetchActivities,
+    staleTime: 45_000,
+  });
+  const schedulesQuery = useQuery({
+    queryKey: queryKeys.activitySchedules.list,
+    queryFn: fetchActivitySchedules,
+    staleTime: 20_000,
+  });
+  const activities = useMemo(
+    () => (activitiesQuery.data ?? []).map(mapActivityToOption),
+    [activitiesQuery.data]
+  );
+  const schedules = schedulesQuery.data ?? [];
+  const isLoading = activitiesQuery.isLoading || schedulesQuery.isLoading;
   const [creatingDraft, setCreatingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [viewingScheduleId, setViewingScheduleId] = useState<string | null>(null);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
@@ -66,39 +82,6 @@ function ActivitySchedulesTableClient() {
   const [editingDraft, setEditingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [shouldOpenAddModal, setShouldOpenAddModal] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const [activitiesData, schedulesData] = await Promise.all([
-          fetchActivities(),
-          fetchActivitySchedules(),
-        ]);
-
-        if (!isMounted) return;
-
-        setActivities(activitiesData.map(mapActivityToOption));
-        setSchedules(schedulesData);
-      } catch (error) {
-        if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "Failed to load activity schedules");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!shouldOpenAddModal || isLoading) {
@@ -222,8 +205,8 @@ function ActivitySchedulesTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const createdSchedule = await createActivitySchedule(creatingDraft);
-        setSchedules((current) => [createdSchedule, ...current]);
+        await createActivitySchedule(creatingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity schedule created successfully.");
         handleCloseAddModal();
       } catch (error) {
@@ -240,12 +223,8 @@ function ActivitySchedulesTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const updatedSchedule = await updateActivitySchedule(editingDraft);
-        setSchedules((current) =>
-          current.map((schedule) =>
-            schedule.id === updatedSchedule.id ? updatedSchedule : schedule
-          )
-        );
+        await updateActivitySchedule(editingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity schedule updated successfully.");
         handleCloseEditModal();
       } catch (error) {
@@ -263,9 +242,7 @@ function ActivitySchedulesTableClient() {
       setIsSaving(true);
       try {
         await deleteActivitySchedule(deletingSchedule.id);
-        setSchedules((current) =>
-          current.filter((schedule) => schedule.id !== deletingSchedule.id)
-        );
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity schedule deleted successfully.");
         handleCloseDeleteModal();
       } catch (error) {

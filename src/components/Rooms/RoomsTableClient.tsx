@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, BedDouble, CircleDollarSign, DoorOpen } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -10,6 +11,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
 import { fetchRooms, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyRoomDraft, type Room, type RoomDraft } from "./data";
 import RoomAddForm from "./RoomAddForm";
 import RoomEditForm from "./RoomEditForm";
@@ -17,29 +19,18 @@ import RoomDetailsView from "./RoomDetailsView";
 import RoomDeleteConfirm from "./RoomDeleteConfirm";
 
 function RoomsTableClient() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: rooms = [], isLoading } = useQuery({
+    queryKey: queryKeys.rooms.list,
+    queryFn: fetchRooms,
+    staleTime: 45_000,
+  });
   const [creatingDraft, setCreatingDraft] = useState<RoomDraft | null>(null);
   const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const loadRooms = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fetchRooms();
-      setRooms(data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load rooms");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadRooms();
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -124,7 +115,7 @@ function RoomsTableClient() {
     setIsSaving(true);
     try {
       await deleteRoom(deletingRoom.id);
-      setRooms((current) => current.filter((r) => r.id !== deletingRoom.id));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
       toast.success("Room deleted successfully.");
       handleCloseDeleteModal();
     } catch (error) {
@@ -138,8 +129,8 @@ function RoomsTableClient() {
     if (!creatingDraft) return;
     setIsSaving(true);
     try {
-      const refreshedRooms = await createRoom(creatingDraft);
-      setRooms(refreshedRooms);
+      await createRoom(creatingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
       toast.success("Room created successfully.");
       handleCloseAddModal();
     } catch (error) {
@@ -153,8 +144,8 @@ function RoomsTableClient() {
     if (!editingRoomId || !editingDraft) return;
     setIsSaving(true);
     try {
-      const refreshedRooms = await updateRoom(editingRoomId, editingDraft);
-      setRooms(refreshedRooms);
+      await updateRoom(editingRoomId, editingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
       toast.success("Room updated successfully.");
       handleCloseEditModal();
     } catch (error) {

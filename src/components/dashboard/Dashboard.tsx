@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Bed, Building2, Calendar, ClipboardList, CreditCard, Users, type LucideIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import DashboardPageShell from "@/components/shared/layouts/DashboardPageShell";
@@ -15,7 +15,7 @@ import type { DashboardData } from "./types";
 import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/services/dashboard.service";
 import { DashboardHomeSkeleton } from "@/components/shared/loading/DashboardSkeleton";
-import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
+import { queryKeys } from "@/lib/queryKeys";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Bed,
@@ -27,64 +27,22 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const loadDashboardData = async ({ silent = false }: { silent?: boolean } = {}) => {
-    if (!silent) {
-      setLoading(true);
-    }
-
-    try {
-      const response = await getDashboardData();
-      setData(response);
-      setError(null);
-    } catch (err) {
-      console.error("Dashboard failed to load:", err);
-      setError("Failed to load dashboard data. Please try again later.");
-    } finally {
-      if (!silent) {
-        setLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadDashboardData()
-      .catch(() => null);
-  }, []);
-
-  useDashboardRealtime({
-    enabled: true,
-    onPaymentUpdate: () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-
-      refreshTimeoutRef.current = setTimeout(() => {
-        void loadDashboardData({ silent: true });
-      }, 250);
-    },
-    onBookingUpdate: () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-
-      refreshTimeoutRef.current = setTimeout(() => {
-        void loadDashboardData({ silent: true });
-      }, 250);
-    },
+  const {
+    data,
+    isLoading: loading,
+    isError,
+    error,
+  } = useQuery<DashboardData>({
+    queryKey: queryKeys.dashboardHome.stats,
+    queryFn: getDashboardData,
+    staleTime: 30_000,
   });
 
-  useEffect(() => {
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-    };
-  }, []);
+  const errorMessage = isError
+    ? error instanceof Error
+      ? error.message
+      : "Failed to load dashboard data. Please try again later."
+    : null;
 
   useDashboardAlerts(
     data
@@ -100,7 +58,7 @@ export default function Dashboard() {
     return <DashboardHomeSkeleton />;
   }
 
-  if (error || !data) {
+  if (errorMessage || !data) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center p-6 text-center">
         <div className="mb-4 rounded-full bg-destructive/10 p-4">
@@ -108,7 +66,7 @@ export default function Dashboard() {
         </div>
         <h3 className="mb-2 font-header text-xl font-semibold">Something went wrong</h3>
         <p className="mb-6 max-w-md font-main text-muted-foreground">
-          {error || "No data available."}
+          {errorMessage || "No data available."}
         </p>
         <Button variant="palmPrimary" onClick={() => window.location.reload()}>
           Try Refreshing

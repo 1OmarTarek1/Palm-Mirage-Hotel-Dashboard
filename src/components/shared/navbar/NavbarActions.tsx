@@ -39,8 +39,7 @@ export default function NavbarActions({
   onAlertsPanelToggle,
 }: NavbarActionsProps) {
   const { alertState } = useDashboardAlertsContext();
-  const badgeCount =
-    notificationCount > 0 ? notificationCount : alertState.alerts.length;
+  const badgeCount = Math.max(notificationCount, alertState.alerts.length);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);

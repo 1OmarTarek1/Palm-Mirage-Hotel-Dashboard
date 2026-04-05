@@ -50,7 +50,8 @@ export function buildRestaurantBookingAlerts({
   if (alerts.length === 0) {
     alerts.push({
       title: "Restaurant floor looks stable",
-      message: "No urgent restaurant-booking alerts right now.",
+      message:
+        "No urgent restaurant-booking alerts. Dine-in and room-service orders include menu lines from the guest’s website cart.",
       tone: "info",
     });
   }

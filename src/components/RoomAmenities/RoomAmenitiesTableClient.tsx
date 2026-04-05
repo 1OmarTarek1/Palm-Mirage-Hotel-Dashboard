@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeInfo, Sparkles, Type, Wand2 } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -15,32 +16,22 @@ import {
   updateRoomAmenity,
 } from "@/lib/room-amenities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import type { RoomAmenity } from "@/types/room-amenity";
 import { createEmptyRoomAmenityDraft } from "./data";
 import RoomAmenityForm from "./RoomAmenityForm";
 
 export default function RoomAmenitiesTableClient() {
-  const [amenities, setAmenities] = useState<RoomAmenity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: amenities = [], isLoading } = useQuery({
+    queryKey: queryKeys.roomAmenities.list,
+    queryFn: fetchRoomAmenities,
+    staleTime: 45_000,
+  });
   const [creatingDraft, setCreatingDraft] = useState<RoomAmenity | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomAmenity | null>(null);
   const [deletingAmenityId, setDeletingAmenityId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const loadAmenities = async () => {
-      try {
-        setIsLoading(true);
-        setAmenities(await fetchRoomAmenities());
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to load room amenities");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadAmenities();
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -104,8 +95,8 @@ export default function RoomAmenitiesTableClient() {
     if (!creatingDraft) return;
     setIsSaving(true);
     try {
-      const created = await createRoomAmenity(creatingDraft);
-      setAmenities((current) => [...current, created]);
+      await createRoomAmenity(creatingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.roomAmenities.all });
       toast.success("Room amenity created successfully.");
       setCreatingDraft(null);
     } catch (error) {
@@ -119,10 +110,8 @@ export default function RoomAmenitiesTableClient() {
     if (!editingDraft) return;
     setIsSaving(true);
     try {
-      const updated = await updateRoomAmenity(editingDraft._id, editingDraft);
-      setAmenities((current) =>
-        current.map((amenity) => (amenity._id === updated._id ? updated : amenity))
-      );
+      await updateRoomAmenity(editingDraft._id, editingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.roomAmenities.all });
       toast.success("Room amenity updated successfully.");
       setEditingDraft(null);
     } catch (error) {
@@ -137,7 +126,7 @@ export default function RoomAmenitiesTableClient() {
     setIsSaving(true);
     try {
       await deleteRoomAmenity(deletingAmenity._id);
-      setAmenities((current) => current.filter((amenity) => amenity._id !== deletingAmenity._id));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.roomAmenities.all });
       toast.success("Room amenity deleted successfully.");
       setDeletingAmenityId(null);
     } catch (error) {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, Compass, ListChecks, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -10,6 +11,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityColumns, activityFilters } from "@/config/tablePresets/activityColumns";
 import { createActivity, deleteActivity, fetchActivities, updateActivity } from "@/lib/activities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import ActivityAddForm from "./ActivityAddForm";
 import { createEmptyActivityDraft, type Activity } from "./data";
 import ActivityDeleteConfirm from "./ActivityDeleteConfirm";
@@ -17,41 +19,18 @@ import ActivityDetailsView from "./ActivityDetailsView";
 import ActivityEditForm from "./ActivityEditForm";
 
 function ActivitiesTableClient() {
-  const [activities, setActivities] = React.useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const queryClient = useQueryClient();
+  const { data: activities = [], isLoading } = useQuery({
+    queryKey: queryKeys.activities.list,
+    queryFn: fetchActivities,
+    staleTime: 45_000,
+  });
   const [creatingDraft, setCreatingDraft] = useState<Activity | null>(null);
   const [viewingActivityId, setViewingActivityId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Activity | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadActivities = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchActivities();
-        if (isMounted) {
-          setActivities(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "Failed to load activities");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadActivities();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -140,9 +119,8 @@ function ActivitiesTableClient() {
       setIsSaving(true);
       try {
         await deleteActivity(deletingActivity.id);
-        setActivities((currentActivities) =>
-          currentActivities.filter((activity) => activity.id !== deletingActivity.id)
-        );
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity deleted successfully.");
 
         if (viewingActivityId === deletingActivity.id) {
@@ -187,12 +165,9 @@ function ActivitiesTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const updatedActivity = await updateActivity(editingDraft);
-        setActivities((currentActivities) =>
-          currentActivities.map((activity) =>
-            activity.id === updatedActivity.id ? updatedActivity : activity
-          )
-        );
+        await updateActivity(editingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity updated successfully.");
         handleCloseEditModal();
       } catch (error) {
@@ -209,8 +184,9 @@ function ActivitiesTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const refreshedActivities = await createActivity(creatingDraft);
-        setActivities(refreshedActivities);
+        await createActivity(creatingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
         toast.success("Activity created successfully.");
         handleCloseAddModal();
       } catch (error) {

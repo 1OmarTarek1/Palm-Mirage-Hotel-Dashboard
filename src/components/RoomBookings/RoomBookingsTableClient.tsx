@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -8,7 +9,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomBookingColumns, roomBookingFilters } from "@/config/tablePresets/roomBookingColumns";
 import { fetchRoomBookings, updateRoomBooking } from "@/lib/room-bookings";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
-import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
+import { queryKeys } from "@/lib/queryKeys";
 import type { RoomBooking, RoomBookingDraft } from "./data";
 import { buildRoomBookingAlerts } from "./RoomBookingsAlerts";
 import RoomBookingDetailsView from "./RoomBookingDetailsView";
@@ -25,83 +26,58 @@ function mapBookingToDraft(booking: RoomBooking): RoomBookingDraft {
 }
 
 function RoomBookingsTableClient() {
-  const [bookings, setBookings] = useState<RoomBooking[]>([]);
+  const queryClient = useQueryClient();
+  const { data: bookings = [], isLoading } = useQuery({
+    queryKey: queryKeys.roomBookings.list,
+    queryFn: fetchRoomBookings,
+    staleTime: 0,
+    gcTime: 120_000,
+  });
+
   const [highlightedBookingIds, setHighlightedBookingIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomBookingDraft | null>(null);
   const [isSaving, setIsLoadingSaving] = useState(false);
-  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousBookingIdsRef = useRef<string[]>([]);
-
-  const loadBookings = async ({ silent = false }: { silent?: boolean } = {}) => {
-    try {
-      if (!silent) {
-        setIsLoading(true);
-      }
-      const data = await fetchRoomBookings();
-      setBookings(data);
-
-      const nextIds = data.map((booking) => booking.id);
-      const previousIds = previousBookingIdsRef.current;
-
-      if (silent && previousIds.length > 0) {
-        const newIds = nextIds.filter((id) => !previousIds.includes(id));
-
-        if (newIds.length > 0) {
-          setHighlightedBookingIds(newIds);
-
-          if (highlightTimeoutRef.current) {
-            clearTimeout(highlightTimeoutRef.current);
-          }
-
-          highlightTimeoutRef.current = setTimeout(() => {
-            setHighlightedBookingIds([]);
-          }, 4000);
-        }
-      }
-
-      previousBookingIdsRef.current = nextIds;
-    } catch (error) {
-      console.error("RoomBookings load error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to load room bookings");
-    } finally {
-      if (!silent) {
-        setIsLoading(false);
-      }
-    }
-  };
+  const hasHydratedRef = useRef(false);
 
   useEffect(() => {
-    void loadBookings();
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
+    if (isLoading) return;
+
+    const nextIds = bookings.map((booking) => booking.id);
+
+    if (!hasHydratedRef.current) {
+      hasHydratedRef.current = true;
+      previousBookingIdsRef.current = nextIds;
+      return;
+    }
+
+    const previousIds = previousBookingIdsRef.current;
+    if (previousIds.length > 0) {
+      const newIds = nextIds.filter((id) => !previousIds.includes(id));
+      if (newIds.length > 0) {
+        setHighlightedBookingIds(newIds);
+        if (highlightTimeoutRef.current) {
+          clearTimeout(highlightTimeoutRef.current);
+        }
+        highlightTimeoutRef.current = setTimeout(() => {
+          setHighlightedBookingIds([]);
+        }, 4000);
       }
+    }
+
+    previousBookingIdsRef.current = nextIds;
+  }, [bookings, isLoading]);
+
+  useEffect(() => {
+    return () => {
       if (highlightTimeoutRef.current) {
         clearTimeout(highlightTimeoutRef.current);
       }
     };
   }, []);
-
-  useDashboardRealtime({
-    enabled: true,
-    onBookingUpdate: (payload) => {
-      if (payload?.resource && payload.resource !== "room") {
-        return;
-      }
-
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-
-      refreshTimeoutRef.current = setTimeout(() => {
-        void loadBookings({ silent: true });
-      }, 250);
-    },
-  });
 
   const viewingBooking = useMemo(
     () => bookings.find((b) => b.id === viewingBookingId) ?? null,
@@ -182,10 +158,8 @@ function RoomBookingsTableClient() {
     if (!editingDraft) return;
     setIsLoadingSaving(true);
     try {
-      const updatedBooking = await updateRoomBooking(editingDraft);
-      setBookings((current) =>
-        current.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
-      );
+      await updateRoomBooking(editingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.roomBookings.all });
       toast.success("Room booking updated successfully.");
       handleCloseEditModal();
     } catch (error) {

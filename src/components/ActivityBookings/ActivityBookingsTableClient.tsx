@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
@@ -8,7 +9,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityBookingColumns, activityBookingFilters } from "@/config/tablePresets/activityBookingColumns";
 import { fetchActivityBookings, updateActivityBooking } from "@/lib/activityBookings";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
-import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
+import { queryKeys } from "@/lib/queryKeys";
 import { buildActivityBookingAlerts } from "./ActivityBookingsAlerts";
 import ActivityBookingDetailsView from "./ActivityBookingDetailsView";
 import ActivityBookingEditForm from "./ActivityBookingEditForm";
@@ -25,55 +26,17 @@ function mapBookingToDraft(booking: ActivityBooking): ActivityBookingDraft {
 }
 
 function ActivityBookingsTableClient() {
-  const [bookings, setBookings] = useState<ActivityBooking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: bookings = [], isLoading } = useQuery({
+    queryKey: queryKeys.activityBookings.list,
+    queryFn: fetchActivityBookings,
+    staleTime: 0,
+    gcTime: 120_000,
+  });
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ActivityBookingDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const loadBookings = async ({ silent = false }: { silent?: boolean } = {}) => {
-    try {
-      if (!silent) {
-        setIsLoading(true);
-      }
-      const data = await fetchActivityBookings();
-      setBookings(data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load activity bookings");
-    } finally {
-      if (!silent) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    void loadBookings();
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useDashboardRealtime({
-    enabled: true,
-    onBookingUpdate: (payload) => {
-      if (payload?.resource && payload.resource !== "activity") {
-        return;
-      }
-
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-
-      refreshTimeoutRef.current = setTimeout(() => {
-        void loadBookings({ silent: true });
-      }, 250);
-    },
-  });
 
   const viewingBooking = useMemo(
     () => bookings.find((booking) => booking.id === viewingBookingId) ?? null,
@@ -159,12 +122,8 @@ function ActivityBookingsTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const updatedBooking = await updateActivityBooking(editingDraft);
-        setBookings((current) =>
-          current.map((booking) =>
-            booking.id === updatedBooking.id ? updatedBooking : booking
-          )
-        );
+        await updateActivityBooking(editingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.activityBookings.all });
         toast.success("Activity booking updated successfully.");
         handleCloseEditModal();
       } catch (error) {

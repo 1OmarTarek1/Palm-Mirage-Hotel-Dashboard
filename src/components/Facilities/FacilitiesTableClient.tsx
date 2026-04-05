@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, Building2, Users, Wrench } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -11,45 +12,23 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
 import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyFacilityDraft } from "./data";
 import { Facility } from "@/types/facility";
 import FacilityForm from "./FacilityForm";
 
 function FacilitiesTableClient() {
-  const [facilities, setFacilities] = React.useState<Facility[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const queryClient = useQueryClient();
+  const { data: facilities = [], isLoading } = useQuery({
+    queryKey: queryKeys.facilities.list,
+    queryFn: fetchFacilities,
+    staleTime: 45_000,
+  });
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
   const [viewingFacilityId, setViewingFacilityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Facility | null>(null);
   const [deletingFacilityId, setDeletingFacilityId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadFacilities = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchFacilities();
-        if (isMounted) {
-          setFacilities(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "Failed to load facilities");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadFacilities();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -126,8 +105,8 @@ function FacilitiesTableClient() {
     if (!creatingDraft) return;
     setIsSaving(true);
     try {
-      const newFacility = await createFacility(creatingDraft);
-      setFacilities((current) => [...current, newFacility]);
+      await createFacility(creatingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.facilities.all });
       toast.success("Facility added successfully.");
       handleCloseAddModal();
     } catch (error) {
@@ -141,10 +120,8 @@ function FacilitiesTableClient() {
     if (!editingFacility) return;
     setIsSaving(true);
     try {
-      const updated = await updateFacility(editingFacility._id, editingFacility);
-      setFacilities((current) =>
-        current.map((f) => (f._id === updated._id ? updated : f))
-      );
+      await updateFacility(editingFacility._id, editingFacility);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.facilities.all });
       toast.success("Facility updated successfully.");
       handleCloseEditModal();
     } catch (error) {
@@ -161,7 +138,7 @@ function FacilitiesTableClient() {
       setIsSaving(true);
       try {
         await deleteFacility(deletingFacility._id);
-        setFacilities((current) => current.filter((f) => f._id !== deletingFacility._id));
+        await queryClient.invalidateQueries({ queryKey: queryKeys.facilities.all });
         toast.success("Facility deleted successfully.");
         handleCloseDeleteModal();
       } catch (error) {

@@ -6,6 +6,8 @@ const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BAS
 interface ProxyOptions {
   backendPath: string;
   requireAuth?: boolean;
+  /** Unauthenticated GET only. Never combine with requireAuth. */
+  nextRevalidate?: number;
 }
 
 function buildBackendUrl(request: NextRequest, backendPath: string) {
@@ -77,7 +79,7 @@ async function parseBackendResponse(response: Response) {
 
 export async function proxyApiRequest(
   request: NextRequest,
-  { backendPath, requireAuth = false }: ProxyOptions
+  { backendPath, requireAuth = false, nextRevalidate }: ProxyOptions
 ) {
   try {
     const [headers, body] = await Promise.all([
@@ -85,11 +87,19 @@ export async function proxyApiRequest(
       getProxyBody(request),
     ]);
 
+    const isSafeRevalidatedGet =
+      (request.method === "GET" || request.method === "HEAD") &&
+      typeof nextRevalidate === "number" &&
+      nextRevalidate > 0 &&
+      !requireAuth;
+
     const response = await fetch(buildBackendUrl(request, backendPath), {
       method: request.method,
       headers,
       body,
-      cache: "no-store",
+      ...(isSafeRevalidatedGet
+        ? { next: { revalidate: nextRevalidate } }
+        : { cache: "no-store" }),
     });
 
     const payload = await parseBackendResponse(response);

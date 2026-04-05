@@ -4,6 +4,7 @@ import { proxyApiRequest } from "@/lib/server-api";
 export async function GET(request: NextRequest) {
   return proxyApiRequest(request, {
     backendPath: "/facilities",
+    nextRevalidate: 120,
   });
 }
 

@@ -2,7 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { io, type Socket } from "socket.io-client";
+
+import {
+  invalidateBookingOperationalQueries,
+  invalidatePaymentOperationalQueries,
+} from "@/lib/dashboardRealtimeInvalidation";
+import { triggerPersistedNotificationRefresh } from "@/lib/persisted-notification-bridge";
 
 type UseDashboardRealtimeOptions = {
   enabled?: boolean;
@@ -43,6 +50,7 @@ export function useDashboardRealtime({
   onBookingUpdate,
 }: UseDashboardRealtimeOptions) {
   const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -61,10 +69,14 @@ export function useDashboardRealtime({
 
     socket.on("dashboard.payment.updated", (payload: DashboardPaymentRealtimePayload) => {
       onPaymentUpdate?.(payload);
+      triggerPersistedNotificationRefresh();
+      invalidatePaymentOperationalQueries(queryClient);
     });
 
     socket.on("dashboard.booking.updated", (payload: DashboardBookingRealtimePayload) => {
       onBookingUpdate?.(payload);
+      triggerPersistedNotificationRefresh();
+      invalidateBookingOperationalQueries(queryClient, payload);
     });
 
     socketRef.current = socket;
@@ -75,5 +87,13 @@ export function useDashboardRealtime({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [enabled, onBookingUpdate, onPaymentUpdate, session?.accessToken, session?.user?.role, status]);
+  }, [
+    enabled,
+    onBookingUpdate,
+    onPaymentUpdate,
+    queryClient,
+    session?.accessToken,
+    session?.user?.role,
+    status,
+  ]);
 }

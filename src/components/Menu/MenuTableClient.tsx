@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, CookingPot, Salad, Store } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -10,6 +11,7 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
 import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyMenuDraft, type MenuItem } from "./data";
 import MenuAddForm from "./MenuAddForm";
 import MenuEditForm from "./MenuEditForm";
@@ -17,41 +19,18 @@ import MenuDetailsView from "./MenuDetailsView";
 import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
 function MenuTableClient() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: menuItems = [], isLoading } = useQuery({
+    queryKey: queryKeys.menu.list,
+    queryFn: fetchMenuItems,
+    staleTime: 45_000,
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState<MenuItem | null>(null);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<MenuItem | null>(null);
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadMenu = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchMenuItems();
-        if (isMounted) {
-          setMenuItems(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "Failed to load menu items");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadMenu();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -137,7 +116,7 @@ function MenuTableClient() {
     try {
       setIsSaving(true);
       await deleteMenuItem(deletingItem.id);
-      setMenuItems((prev) => prev.filter((item) => item.id !== deletingItem.id));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.menu.all });
       toast.success("Item deleted successfully.");
       handleCloseDeleteModal();
     } catch (error) {
@@ -152,10 +131,8 @@ function MenuTableClient() {
 
     try {
       setIsSaving(true);
-      const updatedItem = await updateMenuItem(editingDraft);
-      setMenuItems((prev) =>
-        prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
+      await updateMenuItem(editingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.menu.all });
       toast.success("Item updated successfully.");
       handleCloseEditModal();
     } catch (error) {
@@ -170,8 +147,8 @@ function MenuTableClient() {
 
     try {
       setIsSaving(true);
-      const refreshedMenu = await createMenuItem(creatingDraft);
-      setMenuItems(refreshedMenu);
+      await createMenuItem(creatingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.menu.all });
       toast.success("Item created successfully.");
       handleCloseAddModal();
     } catch (error) {

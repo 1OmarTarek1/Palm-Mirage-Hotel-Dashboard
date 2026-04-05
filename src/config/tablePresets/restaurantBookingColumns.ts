@@ -27,6 +27,20 @@ export const restaurantBookingPreset = createTablePreset<RestaurantBooking>(
       type: "count",
     },
     {
+      key: "bookingMode",
+      title: "Type",
+      sortable: true,
+      searchable: true,
+      filterable: true,
+      type: "badge",
+    },
+    {
+      key: "dishQtyTotal",
+      title: "Dishes",
+      sortable: true,
+      type: "count",
+    },
+    {
       key: "bookingDate",
       title: "Date",
       sortable: true,
@@ -63,9 +77,20 @@ export const restaurantBookingPreset = createTablePreset<RestaurantBooking>(
       type: "select",
       options: [
         { label: "Pending", value: "pending" },
+        { label: "Awaiting payment", value: "awaiting_payment" },
         { label: "Confirmed", value: "confirmed" },
         { label: "Completed", value: "completed" },
         { label: "Cancelled", value: "cancelled" },
+      ],
+    },
+    {
+      key: "bookingMode",
+      label: "Booking type",
+      type: "select",
+      options: [
+        { label: "Table only", value: "table_only" },
+        { label: "Dine in", value: "dine_in" },
+        { label: "Room service", value: "room_service" },
       ],
     },
     {

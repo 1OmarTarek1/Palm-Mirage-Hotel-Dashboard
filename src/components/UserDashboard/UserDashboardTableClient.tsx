@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, ShieldCheck, Users, UserRoundCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -11,45 +12,23 @@ import SharedModal from "@/components/shared/modal/SharedModal";
 import { userColumns, userFilters } from "@/config/tablePresets/userColumns";
 import { createUser, deleteUser, fetchUsers, updateUser } from "@/lib/users";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyUserDraft, type User } from "./data";
 import UserForm from "./UserForm";
 
 function UserDashboardTableClient() {
-  const [users, setUsers] = React.useState<User[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const queryClient = useQueryClient();
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: queryKeys.users.list,
+    queryFn: fetchUsers,
+    staleTime: 45_000,
+  });
   const [creatingDraft, setCreatingDraft] = useState<User | null>(null);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadUsers = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchUsers();
-        if (isMounted) {
-          setUsers(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          toast.error(error instanceof Error ? error.message : "Failed to load users");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -135,9 +114,7 @@ function UserDashboardTableClient() {
       setIsSaving(true);
       try {
         await deleteUser(deletingUser.id);
-        setUsers((currentUsers) =>
-          currentUsers.filter((user) => user.id !== deletingUser.id)
-        );
+        await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
         toast.success("User deleted successfully.");
         handleCloseDeleteModal();
       } catch (error) {
@@ -173,12 +150,8 @@ function UserDashboardTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const updatedUser = await updateUser(editingDraft);
-        setUsers((currentUsers) =>
-          currentUsers.map((user) =>
-            user.id === updatedUser.id ? updatedUser : user
-          )
-        );
+        await updateUser(editingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
         toast.success("User updated successfully.");
         handleCloseEditModal();
       } catch (error) {
@@ -195,8 +168,8 @@ function UserDashboardTableClient() {
     void (async () => {
       setIsSaving(true);
       try {
-        const refreshedUsers = await createUser(creatingDraft);
-        setUsers(refreshedUsers);
+        await createUser(creatingDraft);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
         toast.success("User created successfully.");
         handleCloseAddModal();
       } catch (error) {

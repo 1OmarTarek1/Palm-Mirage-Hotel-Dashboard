@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -11,6 +12,7 @@ import {
   restaurantTableFilters,
 } from "@/config/tablePresets/restaurantTableColumns";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   createRestaurantTable,
   deleteRestaurantTable,
@@ -28,29 +30,21 @@ import {
 } from "./data";
 
 export default function RestaurantTablesClient() {
-  const [tables, setTables] = useState<RestaurantTable[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: tablesRaw = [], isLoading } = useQuery({
+    queryKey: queryKeys.restaurantTables.list,
+    queryFn: fetchRestaurantTables,
+    staleTime: 45_000,
+  });
+  const tables = useMemo(
+    () => [...tablesRaw].sort((a, b) => a.number - b.number),
+    [tablesRaw]
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState<RestaurantTableDraft | null>(null);
   const [editingTableNumber, setEditingTableNumber] = useState<number | null>(null);
   const [editingDraft, setEditingDraft] = useState<RestaurantTableDraft | null>(null);
   const [deletingTableNumber, setDeletingTableNumber] = useState<number | null>(null);
-
-  const loadTables = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fetchRestaurantTables();
-      setTables(data.sort((a, b) => a.number - b.number));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to load restaurant tables");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadTables();
-  }, []);
 
   useEffect(() => {
     const openAddModal = () => {
@@ -114,8 +108,8 @@ export default function RestaurantTablesClient() {
 
     try {
       setIsSaving(true);
-      const created = await createRestaurantTable(creatingDraft);
-      setTables((current) => [...current, created].sort((a, b) => a.number - b.number));
+      await createRestaurantTable(creatingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.restaurantTables.all });
       toast.success("Restaurant table created successfully.");
       handleCloseAddModal();
     } catch (error) {
@@ -130,12 +124,8 @@ export default function RestaurantTablesClient() {
 
     try {
       setIsSaving(true);
-      const updated = await updateRestaurantTable(editingTableNumber, editingDraft);
-      setTables((current) =>
-        current
-          .map((table) => (table.number === editingTableNumber ? updated : table))
-          .sort((a, b) => a.number - b.number)
-      );
+      await updateRestaurantTable(editingTableNumber, editingDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.restaurantTables.all });
       toast.success("Restaurant table updated successfully.");
       handleCloseEditModal();
     } catch (error) {
@@ -151,7 +141,7 @@ export default function RestaurantTablesClient() {
     try {
       setIsSaving(true);
       await deleteRestaurantTable(deletingTable.number);
-      setTables((current) => current.filter((table) => table.number !== deletingTable.number));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.restaurantTables.all });
       toast.success("Restaurant table deleted successfully.");
       handleCloseDeleteModal();
     } catch (error) {

@@ -25,7 +25,7 @@ export default function DashboardAlertsPanel({
   className,
 }: DashboardAlertsPanelProps) {
   return (
-    <div className={cn("rounded-[28px] border bg-card p-6 shadow-sm", className)}>
+    <div className={cn("", className)}>
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <h3 className="font-header text-xl font-semibold">{title}</h3>
@@ -40,9 +40,9 @@ export default function DashboardAlertsPanel({
             {emptyText}
           </div>
         ) : (
-          alerts.map((alert) => (
+          alerts.map((alert, index) => (
             <div
-              key={alert.title}
+              key={`${alert.title}-${index}`}
               className={`rounded-[22px] border p-4 ${ALERT_STYLES[alert.tone]}`}
             >
               <p className="font-main text-sm font-semibold">{alert.title}</p>

@@ -5,6 +5,15 @@ import type {
   RestaurantBookingDraft,
 } from "@/components/RestaurantBookings/data";
 
+interface ApiLineItem {
+  menuItemId?: string;
+  nameSnapshot?: string;
+  qty?: number;
+  unitPrice?: number;
+  name?: string;
+  image?: string;
+}
+
 interface ApiRestaurantBooking {
   _id?: string;
   id?: string;
@@ -19,7 +28,12 @@ interface ApiRestaurantBooking {
   endTime?: string;
   status?: RestaurantBooking["status"];
   paymentStatus?: RestaurantBooking["paymentStatus"];
+  bookingMode?: string;
+  paymentMethod?: string;
+  lineItemsTotal?: number;
+  roomNumber?: number | null;
   createdAt?: string;
+  lineItems?: ApiLineItem[];
 }
 
 function toDateKey(value?: string) {
@@ -39,6 +53,17 @@ function toTimeLabel(value?: string) {
 }
 
 function mapApiRestaurantBooking(booking: ApiRestaurantBooking): RestaurantBooking {
+  const rawLines = Array.isArray(booking.lineItems) ? booking.lineItems : [];
+  const lineItems: RestaurantBooking["lineItems"] = rawLines.map((li) => ({
+    menuItemId: String(li.menuItemId ?? ""),
+    nameSnapshot: String(li.nameSnapshot ?? "Item"),
+    qty: Math.max(0, Number(li.qty ?? 0)),
+    unitPrice: Number(li.unitPrice ?? 0),
+    name: typeof li.name === "string" ? li.name : undefined,
+    image: typeof li.image === "string" ? li.image : undefined,
+  }));
+  const dishQtyTotal = lineItems.reduce((sum, li) => sum + li.qty, 0);
+
   return {
     id: booking._id ?? booking.id ?? "",
     userName: booking.user?.userName ?? "Guest",
@@ -51,7 +76,13 @@ function mapApiRestaurantBooking(booking: ApiRestaurantBooking): RestaurantBooki
     endTime: toTimeLabel(booking.endTime),
     status: booking.status ?? "pending",
     paymentStatus: booking.paymentStatus ?? "unpaid",
+    bookingMode: booking.bookingMode,
+    paymentMethod: booking.paymentMethod,
+    lineItemsTotal: booking.lineItemsTotal,
+    roomNumber: booking.roomNumber ?? null,
     createdAt: toDateKey(booking.createdAt),
+    lineItems,
+    dishQtyTotal,
   };
 }
 
@@ -76,6 +107,7 @@ export async function updateRestaurantBooking(booking: RestaurantBookingDraft) {
         method: "PATCH",
         body: {
           status: booking.status,
+          ...(booking.paymentStatus ? { paymentStatus: booking.paymentStatus } : {}),
         },
       }
     );

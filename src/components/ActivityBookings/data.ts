@@ -1,5 +1,6 @@
 export type ActivityBookingStatus =
   | "pending"
+  | "awaiting_payment"
   | "confirmed"
   | "completed"
   | "cancelled"
@@ -38,6 +39,7 @@ export interface ActivityBookingDraft {
 
 export const activityBookingStatusOptions: ActivityBookingStatus[] = [
   "pending",
+  "awaiting_payment",
   "confirmed",
   "completed",
   "cancelled",
