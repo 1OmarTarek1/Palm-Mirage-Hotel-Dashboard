@@ -65,7 +65,7 @@ export default function AdminInboxSection({
           No inbox messages yet.
         </p>
       ) : (
-        <ul className="grid max-h-[40vh] gap-2 overflow-y-auto pr-1">
+        <ul className="grid gap-2">
           {items.map((item) => {
             const tone = severityToTone(item.severity);
             const isUnread = !item.readAt;

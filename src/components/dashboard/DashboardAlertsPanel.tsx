@@ -34,7 +34,7 @@ export default function DashboardAlertsPanel({
         <AlertTriangle className="h-5 w-5 text-primary" />
       </div>
 
-      <div className="grid gap-3 overflow-y-auto pr-1">
+      <div className="grid gap-3">
         {alerts.length === 0 ? (
           <div className="rounded-[22px] border border-dashed border-border bg-muted/20 px-4 py-8 text-center font-main text-sm text-muted-foreground">
             {emptyText}

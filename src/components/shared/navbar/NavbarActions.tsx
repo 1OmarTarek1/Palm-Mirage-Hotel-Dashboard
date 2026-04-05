@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 
 import { useDashboardAlertsContext } from "@/components/shared/alerts/dashboard-alerts-context";
+import { dashboardBellBadgeCount } from "@/lib/dashboardNotificationBadge";
 import {
   NavbarDropdown,
   NavbarDropdownDivider,
@@ -39,7 +40,7 @@ export default function NavbarActions({
   onAlertsPanelToggle,
 }: NavbarActionsProps) {
   const { alertState } = useDashboardAlertsContext();
-  const badgeCount = Math.max(notificationCount, alertState.alerts.length);
+  const badgeCount = dashboardBellBadgeCount(notificationCount, alertState.alerts);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
