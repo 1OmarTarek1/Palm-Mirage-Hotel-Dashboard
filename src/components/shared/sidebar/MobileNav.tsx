@@ -11,7 +11,7 @@ export default function MobileNav() {
   const pathname = usePathname();
   const listRef = useRef<HTMLUListElement | null>(null);
   const itemRefs = useRef<Array<HTMLLIElement | null>>([]);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [indicatorStyle, setIndicatorStyle] = useState({ x: 0, width: 0, opacity: 0 });
 
   const activeIndex = useMemo(
     () =>
@@ -32,7 +32,7 @@ export default function MobileNav() {
       }
 
       setIndicatorStyle({
-        left: activeElement.offsetLeft,
+        x: activeElement.offsetLeft,
         width: activeElement.offsetWidth,
         opacity: 1,
       });
@@ -65,10 +65,10 @@ export default function MobileNav() {
         >
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-2 bottom-2 rounded-[20px] border border-primary/20 bg-primary/8 shadow-sm shadow-primary/8 transition-[left,width,opacity] duration-300 ease-out"
+            className="pointer-events-none absolute left-0 top-2 bottom-2 rounded-[20px] border border-primary/20 bg-primary/8 shadow-sm shadow-primary/8 will-change-transform transition-[transform,opacity] duration-300 ease-out"
             style={{
-              left: indicatorStyle.left,
-              width: indicatorStyle.width,
+              width: indicatorStyle.width || undefined,
+              transform: `translate3d(${indicatorStyle.x}px, 0, 0)`,
               opacity: indicatorStyle.opacity,
             }}
           />

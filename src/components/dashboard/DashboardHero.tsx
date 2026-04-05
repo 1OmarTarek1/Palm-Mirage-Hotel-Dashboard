@@ -1,14 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 
-interface DashboardHeroProps {
-  lastUpdated: string;
-  paymentsFocus: string;
-}
-
-export default function DashboardHero({
-  lastUpdated,
-  paymentsFocus,
-}: DashboardHeroProps) {
+/** Static above-the-fold hero — kept free of data fetches so LCP text can paint immediately. */
+export default function DashboardHero() {
   return (
     <header className="relative overflow-hidden rounded-[22px] border border-primary/20 bg-card p-3.5 shadow-sm md:p-4">
       <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--primary)_0%,var(--secondary)_100%)]" />

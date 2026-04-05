@@ -2,7 +2,10 @@ import { fetchActivities } from "@/lib/activities";
 import { fetchActivityBookings } from "@/lib/activityBookings";
 import { fetchActivitySchedules } from "@/lib/activitySchedules";
 import { fetchFacilities } from "@/lib/facilities";
-import { fetchRoomBookings } from "@/lib/room-bookings";
+import {
+  fetchRoomBookingDashboardMetrics,
+  type RoomBookingDashboardMetrics,
+} from "@/lib/room-bookings";
 import { fetchRooms } from "@/lib/rooms";
 import { fetchUsers } from "@/lib/users";
 
@@ -37,24 +40,50 @@ function getLastSevenDays(today: Date) {
   });
 }
 
+const emptyRoomMetrics = (weekKeys: string[]): RoomBookingDashboardMetrics => ({
+  today: weekKeys[6] ?? "",
+  weekKeys,
+  arrivalsToday: 0,
+  departuresToday: 0,
+  pendingRoomBookings: 0,
+  unpaidRoomBookings: 0,
+  noShowBookings: 0,
+  checkedInGuests: 0,
+  todayRoomRevenue: 0,
+  bookingStatusCounts: {
+    pending: 0,
+    confirmed: 0,
+    checkedIn: 0,
+    completed: 0,
+    cancelled: 0,
+    noShow: 0,
+  },
+  roomRevenueByDay: weekKeys.map(() => 0),
+  recentRoomBookings: [],
+});
+
 export const getDashboardData = async () => {
   try {
     const today = new Date();
     const todayKey = today.toISOString().slice(0, 10);
+    const lastSevenDays = getLastSevenDays(today);
+    const weekKeys = lastSevenDays.map((d) => d.key);
 
-    const [users, rooms, facilities, activities, roomBookings, activityBookings, activitySchedules] =
+    const [users, rooms, facilities, activities, roomMetrics, activityBookings, activitySchedules] =
       await Promise.all([
         fetchUsers().catch(() => []),
         fetchRooms().catch(() => []),
         fetchFacilities().catch(() => []),
         fetchActivities().catch(() => []),
-        fetchRoomBookings().catch(() => []),
+        fetchRoomBookingDashboardMetrics({ today: todayKey, weekKeys }).catch(() => null),
         fetchActivityBookings().catch(() => []),
         fetchActivitySchedules().catch(() => []),
       ]);
 
+    const roomBookingMetrics = roomMetrics ?? emptyRoomMetrics(weekKeys);
+
     const totalRooms = rooms.length;
-    const availableRooms = rooms.filter((room) => room.isAvailable).length;
+    const availableRooms = rooms.filter((hotelRoom) => hotelRoom.isAvailable).length;
     const occupiedRooms = Math.max(totalRooms - availableRooms, 0);
     const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
 
@@ -64,21 +93,13 @@ export const getDashboardData = async () => {
     const totalActivities = activities.length;
     const activeActivities = activities.filter((activity) => activity.isActive).length;
 
-    const arrivalsToday = roomBookings.filter((booking) => isSameDay(booking.checkInDate, todayKey));
-    const departuresToday = roomBookings.filter((booking) =>
-      isSameDay(booking.checkOutDate, todayKey)
-    );
-    const pendingRoomBookings = roomBookings.filter((booking) => booking.status === "pending");
-    const unpaidRoomBookings = roomBookings.filter((booking) => booking.paymentStatus === "unpaid");
-    const noShowBookings = roomBookings.filter((booking) => booking.status === "no-show");
-    const checkedInGuests = roomBookings.filter((booking) => booking.status === "checked-in");
-    const todayRoomRevenue = roomBookings
-      .filter(
-        (booking) =>
-          isSameDay(booking.checkInDate, todayKey) &&
-          (booking.paymentStatus === "paid" || booking.status === "checked-in")
-      )
-      .reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const arrivalsTodayCount = roomBookingMetrics.arrivalsToday;
+    const departuresTodayCount = roomBookingMetrics.departuresToday;
+    const pendingRoomBookingsCount = roomBookingMetrics.pendingRoomBookings;
+    const unpaidRoomBookingsCount = roomBookingMetrics.unpaidRoomBookings;
+    const noShowBookingsCount = roomBookingMetrics.noShowBookings;
+    const checkedInGuestsCount = roomBookingMetrics.checkedInGuests;
+    const todayRoomRevenue = roomBookingMetrics.todayRoomRevenue;
 
     const todayActivityBookings = activityBookings.filter((booking) =>
       isSameDay(booking.bookingDate, todayKey)
@@ -105,26 +126,26 @@ export const getDashboardData = async () => {
       tone: DashboardAlertTone;
     }> = [];
 
-    if (pendingRoomBookings.length > 0) {
+    if (pendingRoomBookingsCount > 0) {
       alerts.push({
         title: "Pending room confirmations",
-        message: `${pendingRoomBookings.length} room bookings are still waiting for confirmation.`,
+        message: `${pendingRoomBookingsCount} room bookings are still waiting for confirmation.`,
         tone: "warning",
       });
     }
 
-    if (unpaidRoomBookings.length + unpaidActivityBookings.length > 0) {
+    if (unpaidRoomBookingsCount + unpaidActivityBookings.length > 0) {
       alerts.push({
         title: "Outstanding payments",
-        message: `${unpaidRoomBookings.length + unpaidActivityBookings.length} bookings still need payment follow-up.`,
+        message: `${unpaidRoomBookingsCount + unpaidActivityBookings.length} bookings still need payment follow-up.`,
         tone: "critical",
       });
     }
 
-    if (noShowBookings.length > 0) {
+    if (noShowBookingsCount > 0) {
       alerts.push({
         title: "No-show guests recorded",
-        message: `${noShowBookings.length} reservations are marked as no-show and may need review.`,
+        message: `${noShowBookingsCount} reservations are marked as no-show and may need review.`,
         tone: "info",
       });
     }
@@ -145,16 +166,13 @@ export const getDashboardData = async () => {
       });
     }
 
-    const recentRoomBookings = [...roomBookings]
-      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
-      .slice(0, 4)
-      .map((booking) => ({
-        id: booking.id,
-        guestName: booking.userName,
-        context: `Room ${booking.roomNumber} · ${booking.nights} night${booking.nights === 1 ? "" : "s"}`,
-        status: booking.status,
-        amount: formatCurrency(booking.totalPrice),
-      }));
+    const recentRoomBookings = roomBookingMetrics.recentRoomBookings.map((booking) => ({
+      id: booking.id,
+      guestName: booking.guestName,
+      context: `Room ${booking.roomNumber} · ${booking.nights} night${booking.nights === 1 ? "" : "s"}`,
+      status: booking.status,
+      amount: formatCurrency(booking.totalPrice),
+    }));
 
     const upcomingActivities = [...todaySchedules]
       .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))
@@ -169,20 +187,10 @@ export const getDashboardData = async () => {
             : `${schedule.availableSeats}/${schedule.capacity} seats left`,
       }));
 
-    const bookingStatusCounts = {
-      pending: roomBookings.filter((booking) => booking.status === "pending").length,
-      confirmed: roomBookings.filter((booking) => booking.status === "confirmed").length,
-      checkedIn: roomBookings.filter((booking) => booking.status === "checked-in").length,
-      completed: roomBookings.filter((booking) => booking.status === "completed").length,
-      cancelled: roomBookings.filter((booking) => booking.status === "cancelled").length,
-      noShow: roomBookings.filter((booking) => booking.status === "no-show").length,
-    };
+    const bookingStatusCounts = roomBookingMetrics.bookingStatusCounts;
 
-    const lastSevenDays = getLastSevenDays(today);
-    const trendValues = lastSevenDays.map(({ key }) => {
-      const roomRevenue = roomBookings
-        .filter((booking) => isSameDay(booking.createdAt, key))
-        .reduce((sum, booking) => sum + booking.totalPrice, 0);
+    const trendValues = lastSevenDays.map(({ key }, index) => {
+      const roomRevenue = roomBookingMetrics.roomRevenueByDay[index] ?? 0;
       const activityRevenue = activityBookings
         .filter((booking) => isSameDay(booking.createdAt, key))
         .reduce((sum, booking) => sum + booking.totalPrice, 0);
@@ -212,18 +220,18 @@ export const getDashboardData = async () => {
       },
       {
         title: "Today's Arrivals",
-        value: arrivalsToday.length,
+        value: arrivalsTodayCount,
         iconName: "ClipboardList",
-        description: `${departuresToday.length} departures scheduled`,
+        description: `${departuresTodayCount} departures scheduled`,
         color: "secondary",
       },
       {
         title: "Pending Follow-up",
-        value: pendingRoomBookings.length + pendingActivityBookings.length,
+        value: pendingRoomBookingsCount + pendingActivityBookings.length,
         iconName: "Calendar",
-        description: `${unpaidRoomBookings.length + unpaidActivityBookings.length} unpaid bookings`,
+        description: `${unpaidRoomBookingsCount + unpaidActivityBookings.length} unpaid bookings`,
         color:
-          pendingRoomBookings.length + pendingActivityBookings.length > 0 ? "destructive" : "muted",
+          pendingRoomBookingsCount + pendingActivityBookings.length > 0 ? "destructive" : "muted",
       },
       {
         title: "Today's Revenue",
@@ -283,17 +291,17 @@ export const getDashboardData = async () => {
       operations: [
         {
           label: "Arrivals today",
-          value: arrivalsToday.length,
+          value: arrivalsTodayCount,
           helper: "Guests expected to check in",
         },
         {
           label: "Departures today",
-          value: departuresToday.length,
+          value: departuresTodayCount,
           helper: "Rooms turning over today",
         },
         {
           label: "Checked-in guests",
-          value: checkedInGuests.length,
+          value: checkedInGuestsCount,
           helper: "Currently in-house reservations",
         },
         {
@@ -307,7 +315,7 @@ export const getDashboardData = async () => {
         users: `${totalUsers} users · ${adminCount} admins`,
         facilities: `${totalFacilities} active facilities`,
         activities: `${activeActivities}/${totalActivities} experiences active`,
-        payments: `${unpaidRoomBookings.length + unpaidActivityBookings.length} unpaid bookings need review`,
+        payments: `${unpaidRoomBookingsCount + unpaidActivityBookings.length} unpaid bookings need review`,
       },
       recentRoomBookings,
       upcomingActivities,

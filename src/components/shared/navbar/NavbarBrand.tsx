@@ -12,6 +12,8 @@ export default function NavbarBrand() {
           alt="Palm Mirage Logo"
           fill
           sizes="40px"
+          quality={55}
+          priority
           className="object-contain p-1.5"
         />
       </div>

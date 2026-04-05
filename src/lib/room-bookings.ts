@@ -97,11 +97,57 @@ function mapApiBooking(apiBooking: ApiBooking): RoomBooking {
   };
 }
 
-export async function fetchRoomBookings() {
+export type RoomBookingDashboardMetrics = {
+  today: string;
+  weekKeys: string[];
+  arrivalsToday: number;
+  departuresToday: number;
+  pendingRoomBookings: number;
+  unpaidRoomBookings: number;
+  noShowBookings: number;
+  checkedInGuests: number;
+  todayRoomRevenue: number;
+  bookingStatusCounts: {
+    pending: number;
+    confirmed: number;
+    checkedIn: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+  };
+  roomRevenueByDay: number[];
+  recentRoomBookings: Array<{
+    id: string;
+    guestName: string;
+    roomNumber: number;
+    nights: number;
+    status: string;
+    totalPrice: number;
+  }>;
+};
+
+export async function fetchRoomBookingDashboardMetrics(params: { today: string; weekKeys: string[] }) {
+  try {
+    const response = await apiRequest<{ data?: RoomBookingDashboardMetrics }>("/api/reservations", {
+      params: {
+        dashboard: "1",
+        today: params.today,
+        weekKeys: params.weekKeys.join(","),
+      },
+    });
+    return response?.data ?? null;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function fetchRoomBookings(options?: { summary?: boolean }) {
   try {
     const response = await apiRequest<{
       data?: ApiBooking[] | { bookings?: ApiBooking[]; reservations?: ApiBooking[] } | Record<string, ApiBooking>;
-    }>("/api/reservations");
+    }>("/api/reservations", {
+      params: options?.summary ? { summary: "1" } : undefined,
+    });
     const data = normalizeBookingCollection(response?.data);
     return Array.isArray(data) ? data.map(mapApiBooking) : [];
   } catch (error) {

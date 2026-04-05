@@ -21,7 +21,7 @@ export default function RestaurantPage() {
             <Button asChild variant="palmSecondary">
               <Link href="/dashboard/restaurant/bookings">
                 <BookMarked className="h-4 w-4" />
-                Bookings
+                Restaurant bookings
               </Link>
             </Button>
             <Button asChild variant="palmSecondary">

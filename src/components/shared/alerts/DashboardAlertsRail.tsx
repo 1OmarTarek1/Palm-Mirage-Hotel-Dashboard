@@ -105,10 +105,17 @@ export default function DashboardAlertsRail({
       />
 
       <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dashboard-alerts-rail-title"
+        {...(isOpen
+          ? {
+              role: "dialog" as const,
+              "aria-modal": true,
+              "aria-labelledby": "dashboard-alerts-rail-title",
+            }
+          : {})}
+        // When closed: `aria-hidden` + focusable close button tripped Lighthouse (aria-hidden-focus).
+        // `inert` removes descendants from tab order / interaction until the rail opens (React 19).
         aria-hidden={!isOpen}
+        inert={!isOpen ? true : undefined}
         className={cn(
           "fixed inset-y-0 end-0 z-[190] flex w-full max-w-[380px] flex-col border-border bg-background shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
           "border-s pt-[env(safe-area-inset-top,0px)]",

@@ -25,8 +25,6 @@ export const metadata: Metadata = {
   description: "Palm Mirage Hotel administration dashboard.",
   icons: {
     icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
   },
 };
 

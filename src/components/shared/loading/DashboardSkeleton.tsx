@@ -245,24 +245,10 @@ export function DashboardManagementPageSkeleton({
   );
 }
 
-export function DashboardHomeSkeleton() {
+/** Home dashboard body only — use with real `DashboardHero` above for faster LCP. */
+export function DashboardHomeBelowHeroSkeleton() {
   return (
-    <DashboardPageShell className="space-y-5 md:space-y-6">
-      <header className="relative overflow-hidden rounded-[22px] border border-primary/20 bg-card p-3.5 shadow-sm md:p-4">
-        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--primary)_0%,var(--secondary)_100%)]" />
-        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-secondary/10 blur-3xl" />
-
-        <div className="relative space-y-2.5">
-          <Skeleton className="h-6 w-40 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48 rounded-xl" />
-            <Skeleton className="h-4 w-full max-w-2xl rounded-full" />
-            <Skeleton className="h-4 w-5/6 max-w-xl rounded-full" />
-          </div>
-        </div>
-      </header>
-
+    <>
       <DashboardOverviewSkeleton cardCount={4} />
 
       <section className="flex flex-wrap gap-3">
@@ -362,6 +348,29 @@ export function DashboardHomeSkeleton() {
         </div>
         <Skeleton className="h-10 w-44 rounded-xl" />
       </div>
+    </>
+  );
+}
+
+export function DashboardHomeSkeleton() {
+  return (
+    <DashboardPageShell className="space-y-5 md:space-y-6">
+      <header className="relative overflow-hidden rounded-[22px] border border-primary/20 bg-card p-3.5 shadow-sm md:p-4">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--primary)_0%,var(--secondary)_100%)]" />
+        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-secondary/10 blur-3xl" />
+
+        <div className="relative space-y-2.5">
+          <Skeleton className="h-6 w-40 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48 rounded-xl" />
+            <Skeleton className="h-4 w-full max-w-2xl rounded-full" />
+            <Skeleton className="h-4 w-5/6 max-w-xl rounded-full" />
+          </div>
+        </div>
+      </header>
+
+      <DashboardHomeBelowHeroSkeleton />
     </DashboardPageShell>
   );
 }

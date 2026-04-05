@@ -29,7 +29,7 @@ function RoomBookingsTableClient() {
   const queryClient = useQueryClient();
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: queryKeys.roomBookings.list,
-    queryFn: fetchRoomBookings,
+    queryFn: () => fetchRoomBookings(),
     staleTime: 0,
     gcTime: 120_000,
   });

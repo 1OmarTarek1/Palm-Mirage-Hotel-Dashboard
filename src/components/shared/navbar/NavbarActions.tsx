@@ -71,16 +71,16 @@ export default function NavbarActions({
 
   const userMenuItems = [
     {
-      href: "/profile",
+      href: "/dashboard/profile",
       label: "My Profile",
       icon: <User className="h-4 w-4" />,
-      isActive: pathname === "/profile",
+      isActive: pathname === "/dashboard/profile",
     },
     {
-      href: "/settings",
+      href: "/dashboard/settings",
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,
-      isActive: pathname === "/settings",
+      isActive: pathname === "/dashboard/settings",
     },
   ];
 
@@ -105,8 +105,11 @@ export default function NavbarActions({
           onClick={() => setLangDropdownOpen((value) => !value)}
           className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-primary/10 hover:text-primary"
           type="button"
+          aria-label="Language"
+          aria-haspopup="menu"
+          aria-expanded={langDropdownOpen}
         >
-          <Globe className="h-5 w-5" />
+          <Globe className="h-5 w-5" aria-hidden />
         </button>
 
         <NavbarDropdown isOpen={langDropdownOpen} className="z-[130] w-56">
@@ -165,6 +168,9 @@ export default function NavbarActions({
           onClick={() => setDropdownOpen((value) => !value)}
           className="flex cursor-pointer items-center rounded-full transition-all duration-150 focus:outline-none"
           type="button"
+          aria-label={`Account menu, ${displayName}`}
+          aria-haspopup="menu"
+          aria-expanded={dropdownOpen}
         >
           <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border bg-card transition-all duration-200 hover:border-primary hover:bg-primary/10">
             {displayAvatar ? (
@@ -255,6 +261,7 @@ export default function NavbarActions({
                     isDarkMode ? "bg-primary" : "bg-border"
                   }`}
                   type="button"
+                  aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                 >
                   <span
                     className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${

@@ -21,7 +21,7 @@ export default function RoomsPage() {
             <Button asChild variant="palmSecondary">
               <Link href="/dashboard/rooms/bookings">
                 <Ticket className="h-4 w-4" />
-                Bookings
+                Room bookings
               </Link>
             </Button>
             <Button asChild variant="palmSecondary">

@@ -20,6 +20,7 @@ export default function SidebarBrand({
             alt="Palm Mirage Logo"
             fill
             sizes="44px"
+            quality={55}
             className="object-contain p-1.5"
           />
         </div>
