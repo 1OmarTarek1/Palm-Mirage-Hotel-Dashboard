@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { restaurantBookingColumns, restaurantBookingFilters } from "@/config/tablePresets/restaurantBookingColumns";
 import { fetchRestaurantBookings, updateRestaurantBooking } from "@/lib/restaurant-bookings";
 
@@ -30,22 +31,49 @@ export default function RestaurantBookingsTableClient() {
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RestaurantBookingDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadBookings = async () => {
+  const loadBookings = async ({ silent = false }: { silent?: boolean } = {}) => {
     try {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       const data = await fetchRestaurantBookings();
       setBookings(data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to load restaurant bookings");
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     void loadBookings();
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
   }, []);
+
+  useDashboardRealtime({
+    enabled: true,
+    onBookingUpdate: (payload) => {
+      if (payload?.resource && payload.resource !== "restaurant") {
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = setTimeout(() => {
+        void loadBookings({ silent: true });
+      }, 250);
+    },
+  });
 
   const viewingBooking = useMemo(
     () => bookings.find((booking) => booking.id === viewingBookingId) ?? null,

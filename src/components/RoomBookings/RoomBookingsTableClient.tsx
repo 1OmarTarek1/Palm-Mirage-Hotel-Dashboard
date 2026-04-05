@@ -88,7 +88,11 @@ function RoomBookingsTableClient() {
 
   useDashboardRealtime({
     enabled: true,
-    onPaymentUpdate: () => {
+    onBookingUpdate: (payload) => {
+      if (payload?.resource && payload.resource !== "room") {
+        return;
+      }
+
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }

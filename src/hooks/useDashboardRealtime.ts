@@ -6,7 +6,30 @@ import { io, type Socket } from "socket.io-client";
 
 type UseDashboardRealtimeOptions = {
   enabled?: boolean;
-  onPaymentUpdate?: () => void;
+  onPaymentUpdate?: (payload?: DashboardPaymentRealtimePayload) => void;
+  onBookingUpdate?: (payload?: DashboardBookingRealtimePayload) => void;
+};
+
+export type DashboardBookingRealtimePayload = {
+  resource?: "room" | "activity" | "restaurant";
+  action?: string;
+  bookingId?: string | null;
+  bookingIds?: string[];
+  userId?: string | null;
+  source?: string;
+  occurredAt?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type DashboardPaymentRealtimePayload = {
+  checkoutId?: string;
+  sessionId?: string;
+  status?: string;
+  paymentStatus?: string;
+  expiresAt?: string;
+  fulfilledAt?: string;
+  amountTotal?: number;
+  currency?: string;
 };
 
 const SOCKET_SERVER_URL =
@@ -17,6 +40,7 @@ const SOCKET_SERVER_URL =
 export function useDashboardRealtime({
   enabled = true,
   onPaymentUpdate,
+  onBookingUpdate,
 }: UseDashboardRealtimeOptions) {
   const { data: session, status } = useSession();
   const socketRef = useRef<Socket | null>(null);
@@ -35,16 +59,21 @@ export function useDashboardRealtime({
       },
     });
 
-    socket.on("dashboard.payment.updated", () => {
-      onPaymentUpdate?.();
+    socket.on("dashboard.payment.updated", (payload: DashboardPaymentRealtimePayload) => {
+      onPaymentUpdate?.(payload);
+    });
+
+    socket.on("dashboard.booking.updated", (payload: DashboardBookingRealtimePayload) => {
+      onBookingUpdate?.(payload);
     });
 
     socketRef.current = socket;
 
     return () => {
       socket.off("dashboard.payment.updated");
+      socket.off("dashboard.booking.updated");
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [enabled, onPaymentUpdate, session?.accessToken, session?.user?.role, status]);
+  }, [enabled, onBookingUpdate, onPaymentUpdate, session?.accessToken, session?.user?.role, status]);
 }

@@ -52,19 +52,22 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
     loadDashboardData()
       .catch(() => null);
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   useDashboardRealtime({
     enabled: true,
     onPaymentUpdate: () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = setTimeout(() => {
+        void loadDashboardData({ silent: true });
+      }, 250);
+    },
+    onBookingUpdate: () => {
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }
