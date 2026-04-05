@@ -118,7 +118,7 @@ function ActivityBookingsTableClient() {
 
   const pageAlerts = useMemo(
     () => ({
-      title: "Activity Alerts",
+      title: "Activity notifications",
       description: "Quick attention items for the recreation and guest-experience teams.",
       alerts: buildActivityBookingAlerts({
         sessionsToday: bookingOverview.sessionsToday,

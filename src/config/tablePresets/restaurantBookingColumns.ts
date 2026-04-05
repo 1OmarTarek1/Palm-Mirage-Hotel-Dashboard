@@ -47,6 +47,14 @@ export const restaurantBookingPreset = createTablePreset<RestaurantBooking>(
       filterable: true,
       type: "badge",
     },
+    {
+      key: "paymentStatus",
+      title: "Payment",
+      sortable: true,
+      searchable: true,
+      filterable: true,
+      type: "badge",
+    },
   ],
   [
     {
@@ -58,6 +66,16 @@ export const restaurantBookingPreset = createTablePreset<RestaurantBooking>(
         { label: "Confirmed", value: "confirmed" },
         { label: "Completed", value: "completed" },
         { label: "Cancelled", value: "cancelled" },
+      ],
+    },
+    {
+      key: "paymentStatus",
+      label: "Payment",
+      type: "select",
+      options: [
+        { label: "Unpaid", value: "unpaid" },
+        { label: "Paid", value: "paid" },
+        { label: "Refunded", value: "refunded" },
       ],
     },
   ]

@@ -110,7 +110,7 @@ export default function RestaurantBookingsTableClient() {
   }, [bookings]);
 
   useDashboardAlerts({
-    title: "Restaurant Alerts",
+    title: "Restaurant notifications",
     description: "Quick attention items for hosts and restaurant operations.",
     alerts: buildRestaurantBookingAlerts({
       pendingBookings: bookingOverview.pendingBookings,

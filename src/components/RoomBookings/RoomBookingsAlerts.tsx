@@ -62,10 +62,10 @@ export function buildRoomBookingAlerts({
 export default function RoomBookingsAlerts(props: RoomBookingsAlertsProps) {
   return (
     <DashboardAlertsPanel
-      title="Booking Alerts"
+      title="Booking notifications"
       description="Quick attention items for the reservations and front-office teams."
       alerts={buildRoomBookingAlerts(props)}
-      emptyText="No urgent booking alerts right now."
+      emptyText="No urgent booking notifications right now."
     />
   );
 }

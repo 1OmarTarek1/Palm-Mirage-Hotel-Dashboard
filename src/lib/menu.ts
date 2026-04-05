@@ -52,14 +52,21 @@ function buildMenuFormData(item: MenuItem) {
   return formData;
 }
 
+/** Backend paginates get-all-items (default limit 10); dashboard needs the full list for the table. */
+const MENU_ADMIN_LIST_LIMIT = 500;
+
 export async function fetchMenuItems() {
   try {
+    const qs = new URLSearchParams({
+      page: "1",
+      limit: String(MENU_ADMIN_LIST_LIMIT),
+    });
     const data = await apiRequest<{
       data?: {
         items?: ApiMenuItem[];
         menuItems?: ApiMenuItem[];
       } | ApiMenuItem[];
-    }>("/api/menu");
+    }>(`/api/menu?${qs.toString()}`);
 
     const items = Array.isArray(data?.data)
       ? data.data

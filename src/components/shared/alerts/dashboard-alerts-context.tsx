@@ -25,7 +25,7 @@ interface DashboardAlertsContextValue {
 }
 
 const DEFAULT_ALERT_STATE: DashboardAlertsState = {
-  title: "Alerts",
+  title: "Notifications",
   description: "Page-specific alerts will appear here.",
   alerts: [],
 };

@@ -18,6 +18,7 @@ interface ApiRestaurantBooking {
   startTime?: string;
   endTime?: string;
   status?: RestaurantBooking["status"];
+  paymentStatus?: RestaurantBooking["paymentStatus"];
   createdAt?: string;
 }
 
@@ -49,6 +50,7 @@ function mapApiRestaurantBooking(booking: ApiRestaurantBooking): RestaurantBooki
     startTime: toTimeLabel(booking.startTime),
     endTime: toTimeLabel(booking.endTime),
     status: booking.status ?? "pending",
+    paymentStatus: booking.paymentStatus ?? "unpaid",
     createdAt: toDateKey(booking.createdAt),
   };
 }

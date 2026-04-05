@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Bell, Globe, LogOut, Moon, PanelRightOpen, Settings, Sun, User } from "lucide-react";
+import { Bell, Globe, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 
+import { useDashboardAlertsContext } from "@/components/shared/alerts/dashboard-alerts-context";
 import {
   NavbarDropdown,
   NavbarDropdownDivider,
@@ -37,6 +38,10 @@ export default function NavbarActions({
   isAlertsPanelOpen = false,
   onAlertsPanelToggle,
 }: NavbarActionsProps) {
+  const { alertState } = useDashboardAlertsContext();
+  const badgeCount =
+    notificationCount > 0 ? notificationCount : alertState.alerts.length;
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<"en" | "ar">("en");
@@ -95,23 +100,6 @@ export default function NavbarActions({
 
   return (
     <div className="flex items-center gap-2">
-      {onAlertsPanelToggle ? (
-        <button
-          onClick={onAlertsPanelToggle}
-          className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-sm font-medium transition-all duration-200 sm:w-auto sm:gap-2 sm:px-3 ${
-            isAlertsPanelOpen
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border bg-card text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
-          }`}
-          type="button"
-          aria-label={isAlertsPanelOpen ? "Close alerts panel" : "Open alerts panel"}
-          aria-pressed={isAlertsPanelOpen}
-        >
-          <PanelRightOpen className="h-4 w-4" />
-          <span className="font-main hidden sm:inline">Alerts</span>
-        </button>
-      ) : null}
-
       <div className="relative z-[120] hidden sm:block" ref={langDropdownRef}>
         <button
           onClick={() => setLangDropdownOpen((value) => !value)}
@@ -141,14 +129,31 @@ export default function NavbarActions({
       </button>
 
       <button
-        className="group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-200 hover:border-primary hover:bg-primary/10 hover:text-primary"
         type="button"
-        aria-label="Notifications"
+        onClick={() => onAlertsPanelToggle?.()}
+        aria-label={
+          onAlertsPanelToggle
+            ? isAlertsPanelOpen
+              ? "Close notifications panel"
+              : `Open notifications panel${badgeCount > 0 ? `, ${badgeCount} items` : ""}`
+            : badgeCount > 0
+              ? `Notifications, ${badgeCount} items`
+              : "Notifications"
+        }
+        aria-pressed={Boolean(onAlertsPanelToggle) && isAlertsPanelOpen}
+        className={`group relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-all duration-200 ${
+          onAlertsPanelToggle && isAlertsPanelOpen
+            ? "border-primary bg-primary/10 text-primary hover:border-primary hover:bg-primary/15"
+            : "border-border bg-card text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary"
+        }`}
       >
         <Bell className="h-5 w-5" />
-        {notificationCount > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-card transition-transform duration-150 group-hover:scale-110">
-            {notificationCount > 99 ? "+99" : notificationCount}
+        {badgeCount > 0 ? (
+          <span
+            className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold tabular-nums leading-none text-primary-foreground shadow-md ring-2 ring-background transition-transform duration-150 group-hover:scale-105"
+            aria-hidden
+          >
+            {badgeCount > 99 ? "99+" : badgeCount}
           </span>
         ) : null}
       </button>

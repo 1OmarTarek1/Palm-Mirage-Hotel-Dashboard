@@ -18,10 +18,10 @@ interface DashboardAlertsPanelProps {
 }
 
 export default function DashboardAlertsPanel({
-  title = "Alerts & Attention",
+  title = "Notifications",
   description = "Small issues here turn into missed revenue or guest friction later.",
   alerts,
-  emptyText = "No active alerts right now.",
+  emptyText = "No notifications right now.",
   className,
 }: DashboardAlertsPanelProps) {
   return (

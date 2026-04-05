@@ -89,7 +89,7 @@ export default function Dashboard() {
   useDashboardAlerts(
     data
       ? {
-          title: "Alerts & Attention",
+          title: "Notifications & attention",
           description: "Small issues here turn into missed revenue or guest friction later.",
           alerts: data.alerts,
         }

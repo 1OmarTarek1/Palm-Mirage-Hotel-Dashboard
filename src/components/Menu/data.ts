@@ -2,6 +2,10 @@ export type MenuCategory = "Desserts" | "Appetizer" | "Restaurant" | "Drinks";
 
 export type MenuIcon =
   | "Utensils"
+  | "UtensilsCrossed"
+  | "Salad"
+  | "CakeSlice"
+  | "GlassWater"
   | "Beef"
   | "Cake"
   | "IceCream"
@@ -34,6 +38,10 @@ export const menuCategoryOptions: MenuCategory[] = [
 ];
 
 export const menuIconOptions: MenuIcon[] = [
+  "Salad",
+  "UtensilsCrossed",
+  "CakeSlice",
+  "GlassWater",
   "Utensils",
   "Beef",
   "Cake",

@@ -68,6 +68,10 @@ export default function RestaurantBookingDetailsView({
             <p className="font-main mt-1 text-sm font-semibold text-foreground">{booking.status}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <p className="font-main text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment</p>
+            <p className="font-main mt-1 text-sm font-semibold text-foreground">{booking.paymentStatus}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card px-4 py-3">
             <p className="font-main text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Created At</p>
             <p className="font-main mt-1 text-sm font-semibold text-foreground">{booking.createdAt}</p>
           </div>

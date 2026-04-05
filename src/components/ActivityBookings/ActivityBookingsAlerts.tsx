@@ -72,10 +72,10 @@ export function buildActivityBookingAlerts({
 export default function ActivityBookingsAlerts(props: ActivityBookingsAlertsProps) {
   return (
     <DashboardAlertsPanel
-      title="Activity Alerts"
+      title="Activity notifications"
       description="Quick attention items for the recreation and guest-experience teams."
       alerts={buildActivityBookingAlerts(props)}
-      emptyText="No urgent activity-booking alerts right now."
+      emptyText="No urgent activity notifications right now."
     />
   );
 }

@@ -1,5 +1,7 @@
 export type RestaurantBookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
+export type RestaurantBookingPaymentStatus = "unpaid" | "paid" | "refunded";
+
 export interface RestaurantBooking {
   id: string;
   userName: string;
@@ -11,6 +13,7 @@ export interface RestaurantBooking {
   startTime: string;
   endTime: string;
   status: RestaurantBookingStatus;
+  paymentStatus: RestaurantBookingPaymentStatus;
   createdAt: string;
 }
 

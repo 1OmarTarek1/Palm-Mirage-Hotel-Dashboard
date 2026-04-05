@@ -144,7 +144,7 @@ function RoomBookingsTableClient() {
 
   const pageAlerts = useMemo(
     () => ({
-      title: "Booking Alerts",
+      title: "Booking notifications",
       description: "Quick attention items for the reservations and front-office teams.",
       alerts: buildRoomBookingAlerts({
         pendingBookings: bookingOverview.pendingBookings,
