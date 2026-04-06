@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL =
+  process.env.NODE_ENV === "development"
+    ? process.env.API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      "http://localhost:5000"
+    : process.env.API_BASE_URL;
 
 interface ProxyOptions {
   backendPath: string;

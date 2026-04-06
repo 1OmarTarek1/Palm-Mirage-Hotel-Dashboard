@@ -40,9 +40,11 @@ export type DashboardPaymentRealtimePayload = {
 };
 
 const SOCKET_SERVER_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.API_BASE_URL ||
-  "http://localhost:5000";
+  process.env.NODE_ENV === "development"
+    ? process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.API_BASE_URL ||
+      "http://localhost:5000"
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function useDashboardRealtime({
   enabled = true,

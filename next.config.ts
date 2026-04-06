@@ -12,7 +12,10 @@ function connectSrcExtras(): string {
     process.env.API_BASE_URL?.trim() ||
     "";
   if (!raw) {
-    return "http://localhost:5000 http://127.0.0.1:5000 ws://localhost:5000 ws://127.0.0.1:5000";
+    if (process.env.NODE_ENV === "development") {
+      return "http://localhost:5000 http://127.0.0.1:5000 ws://localhost:5000 ws://127.0.0.1:5000";
+    }
+    return "";
   }
   try {
     const u = new URL(raw);
