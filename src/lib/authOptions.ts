@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
         if (!response.ok) {
           const textExcerpt = await (await response.clone().text()).slice(0, 100);
           console.error(`[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`);
-          throw new Error(`Auth Error: ${response.status}`);
+          throw new Error(`Auth Error: ${response.status} at ${loginUrl}`);
         }
 
         const data = await response.json();
