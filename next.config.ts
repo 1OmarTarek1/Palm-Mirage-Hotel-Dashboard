@@ -8,9 +8,9 @@ const isProd = process.env.NODE_ENV === "production";
  */
 function connectSrcExtras(): string {
   const raw =
-    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
     process.env.API_BASE_URL?.trim() ||
-    "";
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+
   if (!raw) {
     if (process.env.NODE_ENV === "development") {
       return "http://localhost:5000 http://127.0.0.1:5000 ws://localhost:5000 ws://127.0.0.1:5000";

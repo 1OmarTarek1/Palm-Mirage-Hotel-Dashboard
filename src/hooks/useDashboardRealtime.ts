@@ -39,12 +39,14 @@ export type DashboardPaymentRealtimePayload = {
   currency?: string;
 };
 
-const SOCKET_SERVER_URL =
-  process.env.NODE_ENV === "development"
-    ? process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.API_BASE_URL ||
-      "http://localhost:5000"
-    : process.env.NEXT_PUBLIC_API_BASE_URL;
+const getSocketUrl = () => {
+    const url = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (url) return url;
+    if (process.env.NODE_ENV === "development") return "http://localhost:5000";
+    throw new Error("API Base URL is not configured (NEXT_PUBLIC_API_BASE_URL required)");
+};
+
+const SOCKET_SERVER_URL = getSocketUrl();
 
 export function useDashboardRealtime({
   enabled = true,

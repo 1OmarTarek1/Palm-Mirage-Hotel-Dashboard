@@ -12,12 +12,14 @@ type AuthorizedUser = {
   token: string;
 };
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? process.env.API_BASE_URL ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      "http://localhost:5000"
-    : process.env.API_BASE_URL;
+const getBaseUrl = () => {
+  const url = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (url) return url;
+  if (process.env.NODE_ENV === "development") return "http://localhost:5000";
+  throw new Error("API Base URL is not configured (API_BASE_URL or NEXT_PUBLIC_API_BASE_URL required)");
+};
+
+const API_BASE_URL = getBaseUrl();
 
 export const authOptions: NextAuthOptions = {
   providers: [
