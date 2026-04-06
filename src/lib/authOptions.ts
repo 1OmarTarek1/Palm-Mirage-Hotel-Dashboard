@@ -39,7 +39,15 @@ export const authOptions: NextAuthOptions = {
         },
       },
       authorize: async (credentials) => {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        const loginUrl = `${API_BASE_URL}/auth/login`;
+        // Safe diagnostics: which source, which URL
+        const baseUrlSource = process.env.API_BASE_URL ? "API_BASE_URL" : 
+                            process.env.NEXT_PUBLIC_API_BASE_URL ? "NEXT_PUBLIC_API_BASE_URL" : 
+                            process.env.NODE_ENV === "development" ? "dev-fallback" : "unknown";
+
+        console.log(`[NextAuth] Authorize Attempt: ${loginUrl} (Source: ${baseUrlSource})`);
+
+        const response = await fetch(loginUrl, {
           method: "POST",
           body: JSON.stringify({
             email: credentials?.email,
@@ -49,8 +57,16 @@ export const authOptions: NextAuthOptions = {
             "Content-Type": "application/json",
           },
         });
+
+        // Safe logging of response status
+        if (!response.ok) {
+          const textExcerpt = await (await response.clone().text()).slice(0, 100);
+          console.error(`[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`);
+          throw new Error(`Auth Error: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log("NextAuth Authorize Response:", data);
+        console.log(`[NextAuth] Authorize Response Status: ${response.status}`);
 
         if (data.message === "Done") {
           // Broad search for the token: data.token, data.accessToken, or nested in data.data

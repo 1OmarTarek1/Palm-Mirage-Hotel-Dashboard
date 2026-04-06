@@ -61,7 +61,7 @@ const securityHeaders: { key: string; value: string }[] = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
       "style-src 'self' 'unsafe-inline' https://vercel.live",
-      "img-src 'self' data: blob: https:",
+      "img-src 'self' data: blob: https: https://vercel.live",
       "font-src 'self' data:",
       `connect-src 'self' https: wss: https://vercel.live ${connectSrcExtras()}`.trim(),
       "frame-src https://vercel.live",
