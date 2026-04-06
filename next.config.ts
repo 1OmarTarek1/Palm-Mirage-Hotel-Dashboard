@@ -8,8 +8,8 @@ const isProd = process.env.NODE_ENV === "production";
  */
 function connectSrcExtras(): string {
   const raw =
-    process.env.API_BASE_URL?.trim() ||
-    process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+    (process.env.API_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim())?.replace(/\/$/, "");
 
   if (!raw) {
     if (process.env.NODE_ENV === "development") {

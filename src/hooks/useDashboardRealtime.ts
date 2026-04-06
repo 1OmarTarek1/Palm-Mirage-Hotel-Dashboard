@@ -41,7 +41,7 @@ export type DashboardPaymentRealtimePayload = {
 
 const getSocketUrl = () => {
     const url = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (url) return url;
+    if (url) return url.trim().replace(/\/$/, "");
     if (process.env.NODE_ENV === "development") return "http://localhost:5000";
     throw new Error("API Base URL is not configured (NEXT_PUBLIC_API_BASE_URL required)");
 };

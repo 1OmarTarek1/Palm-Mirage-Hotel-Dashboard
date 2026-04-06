@@ -14,7 +14,7 @@ type AuthorizedUser = {
 
 const getBaseUrl = () => {
   const url = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (url) return url;
+  if (url) return url.trim().replace(/\/$/, "");
   if (process.env.NODE_ENV === "development") return "http://localhost:5000";
   throw new Error("API Base URL is not configured (API_BASE_URL or NEXT_PUBLIC_API_BASE_URL required)");
 };
