@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -17,6 +17,8 @@ interface DashboardAlertsRailProps {
   inboxLoading: boolean;
   onInboxMarkRead: (id: string) => void;
   onInboxMarkAllRead: () => void;
+  onInboxDeleteOne: (id: string) => void;
+  onInboxClearRead: () => void;
 }
 
 /**
@@ -69,9 +71,12 @@ export default function DashboardAlertsRail({
   inboxLoading,
   onInboxMarkRead,
   onInboxMarkAllRead,
+  onInboxDeleteOne,
+  onInboxClearRead,
 }: DashboardAlertsRailProps) {
   const { alertState } = useDashboardAlertsContext();
   const [isMounted, setIsMounted] = useState(false);
+  const railRef = useRef<HTMLElement>(null);
 
   useBodyScrollLock(isOpen);
 
@@ -89,6 +94,14 @@ export default function DashboardAlertsRail({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (isOpen) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && railRef.current?.contains(active)) {
+      active.blur();
+    }
+  }, [isOpen]);
+
   if (!isMounted || typeof document === "undefined") {
     return null;
   }
@@ -105,6 +118,7 @@ export default function DashboardAlertsRail({
       />
 
       <aside
+        ref={railRef}
         {...(isOpen
           ? {
               role: "dialog" as const,
@@ -112,9 +126,8 @@ export default function DashboardAlertsRail({
               "aria-labelledby": "dashboard-alerts-rail-title",
             }
           : {})}
-        // When closed: `aria-hidden` + focusable close button tripped Lighthouse (aria-hidden-focus).
-        // `inert` removes descendants from tab order / interaction until the rail opens (React 19).
-        aria-hidden={!isOpen}
+        // Keep the subtree non-interactive when closed.
+        // `inert` is sufficient and avoids aria-hidden + focused-descendant warnings.
         inert={!isOpen ? true : undefined}
         className={cn(
           "fixed inset-y-0 end-0 z-[190] flex w-full max-w-[380px] flex-col border-border bg-background shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
@@ -146,6 +159,7 @@ export default function DashboardAlertsRail({
             title={alertState.title}
             description={alertState.description}
             alerts={alertState.alerts}
+            loading={inboxLoading}
             emptyText="No notifications for this page right now."
             className="border-0 p-0 shadow-none"
           />
@@ -154,6 +168,8 @@ export default function DashboardAlertsRail({
             loading={inboxLoading}
             onMarkRead={onInboxMarkRead}
             onMarkAllRead={onInboxMarkAllRead}
+            onDeleteOne={onInboxDeleteOne}
+            onClearRead={onInboxClearRead}
           />
         </div>
       </aside>

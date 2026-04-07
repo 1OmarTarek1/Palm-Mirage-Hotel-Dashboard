@@ -60,9 +60,19 @@ export const authOptions: NextAuthOptions = {
 
         // Safe logging of response status
         if (!response.ok) {
-          const textExcerpt = await (await response.clone().text()).slice(0, 100);
-          console.error(`[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`);
-          throw new Error(`Auth Error: ${response.status}`);
+          const rawText = await response.clone().text();
+          const textExcerpt = rawText.slice(0, 200);
+          let backendMessage = "";
+          try {
+            const parsed = JSON.parse(rawText);
+            backendMessage = parsed?.message || "";
+          } catch {
+            backendMessage = "";
+          }
+          console.error(
+            `[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`
+          );
+          throw new Error(backendMessage || `Auth Error: ${response.status}`);
         }
 
         const data = await response.json();

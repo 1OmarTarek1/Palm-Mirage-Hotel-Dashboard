@@ -7,13 +7,19 @@ const isProd = process.env.NODE_ENV === "production";
  * `wss:` / `https:` scheme keywords do not allow insecure `ws://` (e.g. Socket.IO in dev).
  */
 function connectSrcExtras(): string {
+  const devLocalOrigins = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "ws://localhost:5000",
+    "ws://127.0.0.1:5000",
+  ];
   const raw =
     (process.env.API_BASE_URL?.trim() ||
     process.env.NEXT_PUBLIC_API_BASE_URL?.trim())?.replace(/\/$/, "");
 
   if (!raw) {
     if (process.env.NODE_ENV === "development") {
-      return "http://localhost:5000 http://127.0.0.1:5000 ws://localhost:5000 ws://127.0.0.1:5000";
+      return devLocalOrigins.join(" ");
     }
     return "";
   }
@@ -27,7 +33,10 @@ function connectSrcExtras(): string {
           : `ws://${u.hostname}`;
       parts.push(ws);
     }
-    return parts.join(" ");
+    if (process.env.NODE_ENV === "development") {
+      parts.push(...devLocalOrigins);
+    }
+    return Array.from(new Set(parts)).join(" ");
   } catch {
     return "";
   }
@@ -86,6 +95,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    qualities: [70, 75],
     remotePatterns: [
       {
         protocol: "https",

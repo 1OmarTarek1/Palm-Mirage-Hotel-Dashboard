@@ -12,12 +12,13 @@ import { useAdminNotificationInbox } from "@/hooks/useAdminNotificationInbox";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(false);
   const inbox = useAdminNotificationInbox();
+  const refreshInbox = inbox.refresh;
 
   useEffect(() => {
     if (isAlertsPanelOpen) {
-      void inbox.refresh();
+      void refreshInbox();
     }
-  }, [isAlertsPanelOpen, inbox.refresh]);
+  }, [isAlertsPanelOpen, refreshInbox]);
 
   return (
     <DashboardAlertsProvider>
@@ -38,6 +39,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             inboxLoading={inbox.loading}
             onInboxMarkRead={(id) => void inbox.markRead(id)}
             onInboxMarkAllRead={() => void inbox.markAllRead()}
+            onInboxDeleteOne={(id) => void inbox.deleteOne(id)}
+            onInboxClearRead={() => void inbox.clearRead()}
           />
           <div className="w-full flex-1 px-4 pb-28 pt-4 md:px-6 md:pb-8 md:pt-6 lg:px-8 lg:pt-8">
             <main className="mx-auto min-w-0 w-full max-w-[1720px]">{children}</main>

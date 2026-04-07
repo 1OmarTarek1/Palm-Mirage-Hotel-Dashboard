@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -58,7 +59,7 @@ export default function MenuEditForm({
   };
 
   const renderIcon = (iconName: MenuIcon) => {
-    const IconComponent = (Icons as any)[iconName];
+    const IconComponent = (Icons as Record<string, LucideIcon>)[iconName];
     return IconComponent ? <IconComponent size={16} /> : null;
   };
 
@@ -142,7 +143,7 @@ export default function MenuEditForm({
           <label className="text-sm font-semibold text-foreground">Category</label>
           <Select
             value={formData.category}
-            onValueChange={(value) => handleChange("category", value as any)}
+            onValueChange={(value) => handleChange("category", value as MenuItem["category"])}
           >
             <SelectTrigger className="h-11 rounded-xl bg-muted/30">
               <SelectValue placeholder="Select category" />
@@ -161,7 +162,7 @@ export default function MenuEditForm({
           <label className="text-sm font-semibold text-foreground">Category Icon</label>
           <Select
             value={formData.categoryIcon}
-            onValueChange={(value) => handleChange("categoryIcon", value as any)}
+            onValueChange={(value) => handleChange("categoryIcon", value as MenuItem["categoryIcon"])}
           >
             <SelectTrigger className="h-11 rounded-xl bg-muted/30">
               <SelectValue placeholder="Select icon" />

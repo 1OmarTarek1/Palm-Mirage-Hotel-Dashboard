@@ -26,7 +26,7 @@ export default function ActivitiesPage() {
             <Button asChild variant="palmSecondary">
               <Link href="/dashboard/activities/bookings">
                 <Ticket className="h-4 w-4" />
-                Activity bookings
+                Bookings
               </Link>
             </Button>
           </div>

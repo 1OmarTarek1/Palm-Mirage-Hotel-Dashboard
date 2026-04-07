@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, CookingPot, Salad, Store } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
 import { fetchMenuItems, fetchMenuItemsPage, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyMenuDraft, type MenuItem } from "./data";
@@ -21,47 +21,41 @@ import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
 function MenuTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<MenuItem>>({
-    page: 1,
-    pageSize: 6,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: menuResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.menu.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: menuItems,
+    overviewItems: allMenuItems,
+    totalEntries: totalItemsCount,
+    isLoading,
+  } = useServerTableData<MenuItem>({
+    queryKeyBase: queryKeys.menu.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
       fetchMenuItemsPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        category: typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        category: typeof query.filters.category === "string" ? query.filters.category : undefined,
         available:
-          typeof tableQuery.filters.available === "string" ? tableQuery.filters.available : undefined,
+          typeof query.filters.available === "string" ? query.filters.available : undefined,
         sort:
-          tableQuery.sort?.key === "price"
-            ? tableQuery.sort.direction === "asc"
+          query.sort?.key === "price"
+            ? query.sort.direction === "asc"
               ? "price_asc"
               : "price_desc"
-            : tableQuery.sort?.key === "name"
-              ? tableQuery.sort.direction === "asc"
+            : query.sort?.key === "name"
+              ? query.sort.direction === "asc"
                 ? "name_asc"
                 : "name_desc"
-              : tableQuery.sort?.key === "createdAt"
-                ? tableQuery.sort.direction === "asc"
+              : query.sort?.key === "createdAt"
+                ? query.sort.direction === "asc"
                   ? "oldest"
                   : "newest"
                 : undefined,
       }),
+    fetchOverview: fetchMenuItems,
     staleTime: 45_000,
   });
-  const { data: allMenuItems = [] } = useQuery({
-    queryKey: [...queryKeys.menu.all, "overview"],
-    queryFn: fetchMenuItems,
-    staleTime: 45_000,
-  });
-  const menuItems = menuResponse?.items ?? [];
-  const totalItemsCount = menuResponse?.pagination.total ?? 0;
   const [isSaving, setIsSaving] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState<MenuItem | null>(null);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
@@ -226,7 +220,7 @@ function MenuTableClient() {
           data={menuItems}
           isLoading={isLoading}
           filtersConfig={menuFilters}
-          pageSize={6}
+          pageSize={10}
           mode="server"
           totalEntries={totalItemsCount}
           onQueryChange={setTableQuery}

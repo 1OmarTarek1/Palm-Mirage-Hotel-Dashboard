@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, BedDouble, CircleDollarSign, DoorOpen } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
 import { fetchRooms, fetchRoomsPage, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyRoomDraft, type Room, type RoomDraft } from "./data";
@@ -21,53 +21,47 @@ import RoomDeleteConfirm from "./RoomDeleteConfirm";
 
 function RoomsTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<Room>>({
-    page: 1,
-    pageSize: 5,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-
-  const { data: roomsResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.rooms.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: rooms,
+    overviewItems: allRooms,
+    totalEntries: totalRoomsCount,
+    isLoading,
+  } = useServerTableData<Room>({
+    queryKeyBase: queryKeys.rooms.all,
+    initialPageSize: 5,
+    fetchPage: (query) =>
       fetchRoomsPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
         sort:
-          tableQuery.sort?.key === "price"
-            ? tableQuery.sort.direction === "asc"
+          query.sort?.key === "price"
+            ? query.sort.direction === "asc"
               ? "price_asc"
               : "price_desc"
-            : tableQuery.sort?.key === "roomName"
-              ? tableQuery.sort.direction === "asc"
+            : query.sort?.key === "roomName"
+              ? query.sort.direction === "asc"
                 ? "roomName_asc"
                 : "roomName_desc"
-              : tableQuery.sort?.key === "createdAt"
-                ? tableQuery.sort.direction === "asc"
+              : query.sort?.key === "createdAt"
+                ? query.sort.direction === "asc"
                   ? "oldest"
                   : "newest"
                 : undefined,
         roomType:
-          typeof tableQuery.filters.roomType === "string"
-            ? tableQuery.filters.roomType
+          typeof query.filters.roomType === "string"
+            ? query.filters.roomType
             : undefined,
         isAvailable:
-          typeof tableQuery.filters.isAvailable === "string"
-            ? tableQuery.filters.isAvailable
+          typeof query.filters.isAvailable === "string"
+            ? query.filters.isAvailable
             : undefined,
       }),
+    fetchOverview: fetchRooms,
     staleTime: 45_000,
   });
-  const { data: allRooms = [] } = useQuery({
-    queryKey: [...queryKeys.rooms.all, "overview"],
-    queryFn: fetchRooms,
-    staleTime: 45_000,
-  });
-  const rooms = roomsResponse?.items ?? [];
-  const totalRoomsCount = roomsResponse?.pagination.total ?? 0;
+
   const [creatingDraft, setCreatingDraft] = useState<RoomDraft | null>(null);
   const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);

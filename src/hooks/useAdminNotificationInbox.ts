@@ -84,16 +84,71 @@ export function useAdminNotificationInbox() {
 
   const markRead = useCallback(
     async (id: string) => {
-      await apiRequest(`/api/notifications/${id}/read`, { method: "PATCH" });
-      await refresh();
+      const now = new Date().toISOString();
+      const prevItemsSnapshot = items;
+      const wasUnread = items.some((item) => item.id === id && !item.readAt);
+
+      // Optimistic local update so Inbox doesn't switch to loading state.
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, readAt: item.readAt ?? now } : item)),
+      );
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      try {
+        await apiRequest(`/api/notifications/${id}/read`, { method: "PATCH" });
+      } catch {
+        setItems(prevItemsSnapshot);
+        void refreshUnreadOnly();
+      }
     },
-    [refresh],
+    [items, refreshUnreadOnly],
   );
 
   const markAllRead = useCallback(async () => {
-    await apiRequest("/api/notifications/read-all", { method: "POST" });
-    await refresh();
-  }, [refresh]);
+    const prevItemsSnapshot = items;
+    const prevUnreadSnapshot = unreadCount;
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: now })));
+    setUnreadCount(0);
+    try {
+      await apiRequest("/api/notifications/read-all", { method: "POST" });
+    } catch {
+      setItems(prevItemsSnapshot);
+      setUnreadCount(prevUnreadSnapshot);
+    }
+  }, [items, unreadCount]);
 
-  return { items, unreadCount, loading, refresh, markRead, markAllRead };
+  const deleteOne = useCallback(async (id: string) => {
+    const prevItemsSnapshot = items;
+    const prevUnreadSnapshot = unreadCount;
+    const target = items.find((item) => item.id === id);
+    const wasUnread = Boolean(target && !target.readAt);
+
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    if (wasUnread) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+
+    try {
+      await apiRequest(`/api/notifications/${id}`, { method: "DELETE" });
+    } catch {
+      setItems(prevItemsSnapshot);
+      setUnreadCount(prevUnreadSnapshot);
+    }
+  }, [items, unreadCount]);
+
+  const clearRead = useCallback(async () => {
+    const prevItemsSnapshot = items;
+    setItems((prev) => prev.filter((item) => !item.readAt));
+
+    try {
+      await apiRequest("/api/notifications/clear-read", { method: "POST" });
+    } catch {
+      setItems(prevItemsSnapshot);
+    }
+  }, [items]);
+
+  return { items, unreadCount, loading, refresh, markRead, markAllRead, deleteOne, clearRead };
 }

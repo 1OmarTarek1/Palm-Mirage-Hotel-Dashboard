@@ -6,7 +6,6 @@ import { CalendarClock, CircleDollarSign, Clock3, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityScheduleColumns, activityScheduleFilters } from "@/config/tablePresets/activityScheduleColumns";
@@ -20,6 +19,7 @@ import {
   fetchActivitySchedulesPage,
   updateActivitySchedule,
 } from "@/lib/activitySchedules";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import ActivityScheduleAddForm from "./ActivityScheduleAddForm";
 import ActivityScheduleDeleteConfirm from "./ActivityScheduleDeleteConfirm";
 import ActivityScheduleDetailsView from "./ActivityScheduleDetailsView";
@@ -61,51 +61,44 @@ function mapScheduleToDraft(schedule: ActivitySchedule): ActivityScheduleDraft {
 
 function ActivitySchedulesTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<ActivitySchedule>>({
-    page: 1,
-    pageSize: 6,
-    search: "",
-    filters: {},
-    sort: null,
-  });
   const activitiesQuery = useQuery({
     queryKey: queryKeys.activities.list,
     queryFn: fetchActivities,
     staleTime: 45_000,
   });
-  const schedulesQuery = useQuery({
-    queryKey: [...queryKeys.activitySchedules.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: schedules,
+    overviewItems: allSchedules,
+    totalEntries: totalSchedules,
+    isLoading: schedulesLoading,
+  } = useServerTableData<ActivitySchedule>({
+    queryKeyBase: queryKeys.activitySchedules.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
       fetchActivitySchedulesPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
-        sort: tableQuery.sort?.key === "date"
-          ? tableQuery.sort.direction === "asc"
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
+        sort: query.sort?.key === "date"
+          ? query.sort.direction === "asc"
             ? "date_asc"
             : "date_desc"
-          : tableQuery.sort?.key === "createdAt"
-            ? tableQuery.sort.direction === "asc"
+          : query.sort?.key === "createdAt"
+            ? query.sort.direction === "asc"
               ? "oldest"
               : "newest"
             : undefined,
       }),
-    staleTime: 20_000,
-  });
-  const allSchedulesQuery = useQuery({
-    queryKey: [...queryKeys.activitySchedules.all, "overview"],
-    queryFn: fetchActivitySchedules,
+    fetchOverview: fetchActivitySchedules,
     staleTime: 20_000,
   });
   const activities = useMemo(
     () => (activitiesQuery.data ?? []).map(mapActivityToOption),
     [activitiesQuery.data]
   );
-  const schedules = schedulesQuery.data?.items ?? [];
-  const allSchedules = allSchedulesQuery.data ?? [];
-  const totalSchedules = schedulesQuery.data?.pagination.total ?? 0;
-  const isLoading = activitiesQuery.isLoading || schedulesQuery.isLoading;
+  const isLoading = activitiesQuery.isLoading || schedulesLoading;
   const [creatingDraft, setCreatingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [viewingScheduleId, setViewingScheduleId] = useState<string | null>(null);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
@@ -160,18 +153,19 @@ function ActivitySchedulesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
+    const totalSchedulesAll = allSchedules.length;
     const upcomingSchedules = allSchedules.filter((schedule) => schedule.status === "scheduled").length;
     const totalOpenSeats = allSchedules.reduce((sum, schedule) => sum + schedule.availableSeats, 0);
-    const averagePrice = totalSchedules > 0
-      ? Math.round(allSchedules.reduce((sum, schedule) => sum + schedule.resolvedPrice, 0) / totalSchedules)
+    const averagePrice = totalSchedulesAll > 0
+      ? Math.round(allSchedules.reduce((sum, schedule) => sum + schedule.resolvedPrice, 0) / totalSchedulesAll)
       : 0;
 
     return [
       {
         key: "schedules",
         label: "Sessions listed",
-        value: totalSchedules,
-        helper: "Schedules currently visible in this planner",
+        value: totalSchedulesAll,
+        helper: "Total schedules across all pages",
         icon: CalendarClock,
       },
       {
@@ -197,7 +191,7 @@ function ActivitySchedulesTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [allSchedules, totalSchedules]);
+  }, [allSchedules]);
 
   const handleCloseViewModal = () => setViewingScheduleId(null);
   const handleCloseAddModal = () => {
@@ -295,7 +289,7 @@ function ActivitySchedulesTableClient() {
           data={schedules}
           isLoading={isLoading}
           filtersConfig={activityScheduleFilters}
-          pageSize={6}
+          pageSize={8}
           mode="server"
           totalEntries={totalSchedules}
           onQueryChange={setTableQuery}

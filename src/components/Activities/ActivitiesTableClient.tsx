@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, Compass, ListChecks, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityColumns, activityFilters } from "@/config/tablePresets/activityColumns";
 import { createActivity, deleteActivity, fetchActivities, fetchActivitiesPage, updateActivity } from "@/lib/activities";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import ActivityAddForm from "./ActivityAddForm";
@@ -21,41 +21,35 @@ import ActivityEditForm from "./ActivityEditForm";
 
 function ActivitiesTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<Activity>>({
-    page: 1,
-    pageSize: 5,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: activitiesResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.activities.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: activities,
+    overviewItems: allActivities,
+    totalEntries: totalActivities,
+    isLoading,
+  } = useServerTableData<Activity>({
+    queryKeyBase: queryKeys.activities.all,
+    initialPageSize: 5,
+    fetchPage: (query) =>
       fetchActivitiesPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        category: typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        category: typeof query.filters.category === "string" ? query.filters.category : undefined,
         sort:
-          tableQuery.sort?.key === "title"
-            ? tableQuery.sort.direction === "asc"
+          query.sort?.key === "title"
+            ? query.sort.direction === "asc"
               ? "title_asc"
               : "title_desc"
-            : tableQuery.sort?.key === "createdAt"
-              ? tableQuery.sort.direction === "asc"
+            : query.sort?.key === "createdAt"
+              ? query.sort.direction === "asc"
                 ? "oldest"
                 : "newest"
               : undefined,
       }),
+    fetchOverview: fetchActivities,
     staleTime: 45_000,
   });
-  const { data: allActivities = [] } = useQuery({
-    queryKey: [...queryKeys.activities.all, "overview"],
-    queryFn: fetchActivities,
-    staleTime: 45_000,
-  });
-  const activities = activitiesResponse?.items ?? [];
-  const totalActivities = activitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<Activity | null>(null);
   const [viewingActivityId, setViewingActivityId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -239,7 +233,7 @@ function ActivitiesTableClient() {
           data={activities}
           isLoading={isLoading}
           filtersConfig={activityFilters}
-          pageSize={5}
+          pageSize={8}
           mode="server"
           totalEntries={totalActivities}
           onQueryChange={setTableQuery}

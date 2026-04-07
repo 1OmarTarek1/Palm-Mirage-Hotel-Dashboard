@@ -37,14 +37,14 @@ export const NAV_ITEMS: NavItem[] = [
         path: "/dashboard/rooms",
       },
       {
-        label: "Room bookings",
-        icon: null,
-        path: "/dashboard/rooms/bookings",
-      },
-      {
         label: "Amenities",
         icon: null,
         path: "/dashboard/rooms/amenities",
+      },
+      {
+        label: "Bookings",
+        icon: null,
+        path: "/dashboard/rooms/bookings",
       },
     ],
   },
@@ -64,7 +64,7 @@ export const NAV_ITEMS: NavItem[] = [
         path: "/dashboard/activities/schedules",
       },
       {
-        label: "Activity bookings",
+        label: "Bookings",
         icon: null,
         path: "/dashboard/activities/bookings",
       },
@@ -81,14 +81,14 @@ export const NAV_ITEMS: NavItem[] = [
         path: "/dashboard/restaurant",
       },
       {
-        label: "Restaurant bookings",
-        icon: null,
-        path: "/dashboard/restaurant/bookings",
-      },
-      {
-        label: "Menu",
+        label: "Menus",
         icon: null,
         path: "/dashboard/menu",
+      },
+      {
+        label: "Bookings",
+        icon: null,
+        path: "/dashboard/restaurant/bookings",
       },
     ],
   },

@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomBookingColumns, roomBookingFilters } from "@/config/tablePresets/roomBookingColumns";
 import { fetchRoomBookings, fetchRoomBookingsPage, updateRoomBooking } from "@/lib/room-bookings";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import type { RoomBooking, RoomBookingDraft } from "./data";
@@ -28,37 +28,30 @@ function mapBookingToDraft(booking: RoomBooking): RoomBookingDraft {
 
 function RoomBookingsTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<RoomBooking>>({
-    page: 1,
-    pageSize: 6,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: bookingsResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.roomBookings.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: bookings,
+    overviewItems: allBookings,
+    totalEntries: totalBookings,
+    isLoading,
+  } = useServerTableData<RoomBooking>({
+    queryKeyBase: queryKeys.roomBookings.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
       fetchRoomBookingsPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         paymentStatus:
-          typeof tableQuery.filters.paymentStatus === "string"
-            ? tableQuery.filters.paymentStatus
+          typeof query.filters.paymentStatus === "string"
+            ? query.filters.paymentStatus
             : undefined,
       }),
+    fetchOverview: () => fetchRoomBookings(),
     staleTime: 0,
     gcTime: 120_000,
   });
-  const { data: allBookings = [] } = useQuery({
-    queryKey: [...queryKeys.roomBookings.all, "overview"],
-    queryFn: () => fetchRoomBookings(),
-    staleTime: 0,
-    gcTime: 120_000,
-  });
-  const bookings = bookingsResponse?.items ?? [];
-  const totalBookings = bookingsResponse?.pagination.total ?? 0;
 
   const [highlightedBookingIds, setHighlightedBookingIds] = useState<string[]>([]);
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);

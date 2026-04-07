@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityBookingColumns, activityBookingFilters } from "@/config/tablePresets/activityBookingColumns";
 import { fetchActivityBookings, fetchActivityBookingsPage, updateActivityBooking } from "@/lib/activityBookings";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import { buildActivityBookingAlerts } from "./ActivityBookingsAlerts";
@@ -28,43 +28,36 @@ function mapBookingToDraft(booking: ActivityBooking): ActivityBookingDraft {
 
 function ActivityBookingsTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<ActivityBooking>>({
-    page: 1,
-    pageSize: 6,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: bookingsResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.activityBookings.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: bookings,
+    overviewItems: allBookings,
+    totalEntries: totalBookings,
+    isLoading,
+  } = useServerTableData<ActivityBooking>({
+    queryKeyBase: queryKeys.activityBookings.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
       fetchActivityBookingsPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         paymentStatus:
-          typeof tableQuery.filters.paymentStatus === "string"
-            ? tableQuery.filters.paymentStatus
+          typeof query.filters.paymentStatus === "string"
+            ? query.filters.paymentStatus
             : undefined,
         sort:
-          tableQuery.sort?.key === "createdAt"
-            ? tableQuery.sort.direction === "asc"
+          query.sort?.key === "createdAt"
+            ? query.sort.direction === "asc"
               ? "oldest"
               : "newest"
             : undefined,
       }),
+    fetchOverview: fetchActivityBookings,
     staleTime: 0,
     gcTime: 120_000,
   });
-  const { data: allBookings = [] } = useQuery({
-    queryKey: [...queryKeys.activityBookings.all, "overview"],
-    queryFn: fetchActivityBookings,
-    staleTime: 0,
-    gcTime: 120_000,
-  });
-  const bookings = bookingsResponse?.items ?? [];
-  const totalBookings = bookingsResponse?.pagination.total ?? 0;
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ActivityBookingDraft | null>(null);

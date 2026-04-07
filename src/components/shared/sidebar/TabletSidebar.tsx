@@ -28,7 +28,7 @@ export default function TabletSidebar() {
                 alt="Palm Mirage Logo"
                 fill
                 sizes="40px"
-                quality={55}
+                quality={70}
                 className="object-contain p-1.5"
               />
             </div>

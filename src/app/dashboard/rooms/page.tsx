@@ -19,15 +19,15 @@ export default function RoomsPage() {
         <div className="mb-5 flex justify-start md:mb-6">
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/rooms/bookings">
-                <Ticket className="h-4 w-4" />
-                Room bookings
-              </Link>
-            </Button>
-            <Button asChild variant="palmSecondary">
               <Link href="/dashboard/rooms/amenities">
                 <Sparkles className="h-4 w-4" />
                 Amenities
+              </Link>
+            </Button>
+            <Button asChild variant="palmSecondary">
+              <Link href="/dashboard/rooms/bookings">
+                <Ticket className="h-4 w-4" />
+                Bookings
               </Link>
             </Button>
           </div>

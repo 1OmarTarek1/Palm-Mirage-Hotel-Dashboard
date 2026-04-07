@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { Plus, Trash2 } from "lucide-react";
 import {
   Select,
@@ -103,12 +104,15 @@ export default function ActivityEditForm({
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Activity Image</span>
           <div className="space-y-3">
-            <div className="overflow-hidden rounded-[24px] border border-border bg-muted/35">
+            <div className="relative h-48 overflow-hidden rounded-[24px] border border-border bg-muted/35">
               {formData.image ? (
-                <img
+                <Image
                   src={formData.image}
                   alt={formData.title || "Activity preview"}
-                  className="h-48 w-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
                 />
               ) : (
                 <div className="font-main flex h-48 items-center justify-center text-sm text-muted-foreground">

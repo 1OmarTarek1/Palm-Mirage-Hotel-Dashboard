@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BadgeInfo, Sparkles, Type, Wand2 } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomAmenityColumns, roomAmenityFilters } from "@/config/tablePresets/roomAmenityColumns";
@@ -17,6 +16,7 @@ import {
   fetchRoomAmenitiesPage,
   updateRoomAmenity,
 } from "@/lib/room-amenities";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import type { RoomAmenity } from "@/types/room-amenity";
@@ -25,30 +25,24 @@ import RoomAmenityForm from "./RoomAmenityForm";
 
 export default function RoomAmenitiesTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<RoomAmenity>>({
-    page: 1,
-    pageSize: 6,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: amenitiesResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.roomAmenities.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: amenities,
+    overviewItems: allAmenities,
+    totalEntries: totalAmenitiesCount,
+    isLoading,
+  } = useServerTableData<RoomAmenity>({
+    queryKeyBase: queryKeys.roomAmenities.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
       fetchRoomAmenitiesPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
       }),
+    fetchOverview: fetchRoomAmenities,
     staleTime: 45_000,
   });
-  const { data: allAmenities = [] } = useQuery({
-    queryKey: [...queryKeys.roomAmenities.all, "overview"],
-    queryFn: fetchRoomAmenities,
-    staleTime: 45_000,
-  });
-  const amenities = amenitiesResponse?.items ?? [];
-  const totalAmenitiesCount = amenitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<RoomAmenity | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomAmenity | null>(null);
   const [deletingAmenityId, setDeletingAmenityId] = useState<string | null>(null);

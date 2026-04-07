@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, ShieldCheck, Users, UserRoundCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { userColumns, userFilters } from "@/config/tablePresets/userColumns";
 import { createUser, deleteUser, fetchUsers, fetchUsersPage, updateUser } from "@/lib/users";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyUserDraft, type User } from "./data";
@@ -19,38 +19,32 @@ import UserForm from "./UserForm";
 
 function UserDashboardTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<User>>({
-    page: 1,
-    pageSize: 8,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: usersResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.users.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: users,
+    overviewItems: allUsers,
+    totalEntries: totalUsersCount,
+    isLoading,
+  } = useServerTableData<User>({
+    queryKeyBase: queryKeys.users.all,
+    initialPageSize: 8,
+    fetchPage: (query) =>
       fetchUsersPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        role: typeof tableQuery.filters.role === "string" ? tableQuery.filters.role : undefined,
-        gender: typeof tableQuery.filters.gender === "string" ? tableQuery.filters.gender : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        role: typeof query.filters.role === "string" ? query.filters.role : undefined,
+        gender: typeof query.filters.gender === "string" ? query.filters.gender : undefined,
         sort:
-          tableQuery.sort?.key === "userName"
-            ? tableQuery.sort.direction === "asc"
+          query.sort?.key === "userName"
+            ? query.sort.direction === "asc"
               ? "userName_asc"
               : "userName_desc"
             : undefined,
       }),
+    fetchOverview: fetchUsers,
     staleTime: 45_000,
   });
-  const { data: allUsers = [] } = useQuery({
-    queryKey: [...queryKeys.users.all, "overview"],
-    queryFn: fetchUsers,
-    staleTime: 45_000,
-  });
-  const users = usersResponse?.items ?? [];
-  const totalUsersCount = usersResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<User | null>(null);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);

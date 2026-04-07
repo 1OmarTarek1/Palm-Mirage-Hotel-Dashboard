@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Activity, Building2, Users, Wrench } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
@@ -18,6 +17,7 @@ import {
   fetchFacilitiesPage,
   updateFacility,
 } from "@/lib/facilities";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyFacilityDraft } from "./data";
@@ -26,33 +26,27 @@ import FacilityForm from "./FacilityForm";
 
 function FacilitiesTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<Facility>>({
-    page: 1,
-    pageSize: 5,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: facilitiesResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.facilities.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: facilities,
+    overviewItems: allFacilities,
+    totalEntries: totalFacilitiesCount,
+    isLoading,
+  } = useServerTableData<Facility>({
+    queryKeyBase: queryKeys.facilities.all,
+    initialPageSize: 5,
+    fetchPage: (query) =>
       fetchFacilitiesPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         category:
-          typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+          typeof query.filters.category === "string" ? query.filters.category : undefined,
       }),
+    fetchOverview: fetchFacilities,
     staleTime: 45_000,
   });
-  const { data: allFacilities = [] } = useQuery({
-    queryKey: [...queryKeys.facilities.all, "overview"],
-    queryFn: fetchFacilities,
-    staleTime: 45_000,
-  });
-  const facilities = facilitiesResponse?.items ?? [];
-  const totalFacilitiesCount = facilitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
   const [viewingFacilityId, setViewingFacilityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Facility | null>(null);

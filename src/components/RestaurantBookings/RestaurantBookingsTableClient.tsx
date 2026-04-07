@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import DynamicTable from "@/components/shared/table/DynamicTable";
-import type { TableQueryState } from "@/components/shared/table/types";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import { restaurantBookingColumns, restaurantBookingFilters } from "@/config/tablePresets/restaurantBookingColumns";
@@ -33,37 +33,30 @@ function mapBookingToDraft(booking: RestaurantBooking): RestaurantBookingDraft {
 
 export default function RestaurantBookingsTableClient() {
   const queryClient = useQueryClient();
-  const [tableQuery, setTableQuery] = useState<TableQueryState<RestaurantBooking>>({
-    page: 1,
-    pageSize: 8,
-    search: "",
-    filters: {},
-    sort: null,
-  });
-  const { data: bookingsResponse, isLoading } = useQuery({
-    queryKey: [...queryKeys.restaurantBookings.list, tableQuery],
-    queryFn: () =>
+  const {
+    setTableQuery,
+    pageItems: bookings,
+    overviewItems: allBookings,
+    totalEntries: totalBookingsCount,
+    isLoading,
+  } = useServerTableData<RestaurantBooking>({
+    queryKeyBase: queryKeys.restaurantBookings.all,
+    initialPageSize: 8,
+    fetchPage: (query) =>
       fetchRestaurantBookingsPage({
-        page: tableQuery.page,
-        limit: tableQuery.pageSize,
-        search: tableQuery.search || undefined,
-        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         paymentStatus:
-          typeof tableQuery.filters.paymentStatus === "string"
-            ? tableQuery.filters.paymentStatus
+          typeof query.filters.paymentStatus === "string"
+            ? query.filters.paymentStatus
             : undefined,
       }),
+    fetchOverview: fetchRestaurantBookings,
     staleTime: 0,
     gcTime: 120_000,
   });
-  const { data: allBookings = [] } = useQuery({
-    queryKey: [...queryKeys.restaurantBookings.all, "overview"],
-    queryFn: fetchRestaurantBookings,
-    staleTime: 0,
-    gcTime: 120_000,
-  });
-  const bookings = bookingsResponse?.items ?? [];
-  const totalBookingsCount = bookingsResponse?.pagination.total ?? 0;
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RestaurantBookingDraft | null>(null);

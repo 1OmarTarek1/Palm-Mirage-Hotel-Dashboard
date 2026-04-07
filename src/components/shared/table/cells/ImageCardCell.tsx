@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { CellProps } from "./types";
 import { DynamicIcon } from "@/components/shared/utils/icons";
 
@@ -36,15 +37,18 @@ export default function ImageCardCell({
       }`}
     >
       <div
-        className={`flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/5 ${
+        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/5 ${
           displayMode === "card" ? "h-12 w-16 rounded-[18px]" : "h-16 w-24"
         }`}
       >
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={String(resolvedValue)}
-            className="h-full w-full object-cover transition-transform duration-700 hover:scale-110"
+            fill
+            unoptimized
+            sizes={displayMode === "card" ? "64px" : "96px"}
+            className="object-cover transition-transform duration-700 hover:scale-110"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-primary/40 transition-colors group-hover:text-primary">
@@ -66,7 +70,7 @@ export default function ImageCardCell({
             displayMode === "card" ? "text-sm" : "text-sm"
           }`}
         >
-          {String(resolvedValue as any)}
+          {String(resolvedValue ?? "")}
         </span>
         {subtitleText && (
           <span
