@@ -33,9 +33,43 @@ function buildRoomAmenityPayload(amenity: RoomAmenity) {
 export async function fetchRoomAmenities() {
   try {
     const data =
-      await apiRequest<{ data?: { amenities?: ApiRoomAmenity[] } }>("/api/room-amenities");
+      await apiRequest<{ data?: { amenities?: ApiRoomAmenity[] } }>("/api/room-amenities", {
+        params: { page: 1, limit: 1000 },
+      });
     const amenities = data?.data?.amenities ?? [];
     return Array.isArray(amenities) ? amenities.map(mapApiRoomAmenity) : [];
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type RoomAmenitiesListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: "name_asc" | "name_desc" | "newest" | "oldest";
+};
+
+export async function fetchRoomAmenitiesPage(params: RoomAmenitiesListQuery = {}) {
+  try {
+    const data =
+      await apiRequest<{
+        data?: {
+          amenities?: ApiRoomAmenity[];
+          pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+        };
+      }>("/api/room-amenities", { params });
+    const amenities = data?.data?.amenities ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(amenities) ? amenities.map(mapApiRoomAmenity) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

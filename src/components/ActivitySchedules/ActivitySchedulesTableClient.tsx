@@ -6,6 +6,7 @@ import { CalendarClock, CircleDollarSign, Clock3, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityScheduleColumns, activityScheduleFilters } from "@/config/tablePresets/activityScheduleColumns";
@@ -16,6 +17,7 @@ import {
   createActivitySchedule,
   deleteActivitySchedule,
   fetchActivitySchedules,
+  fetchActivitySchedulesPage,
   updateActivitySchedule,
 } from "@/lib/activitySchedules";
 import ActivityScheduleAddForm from "./ActivityScheduleAddForm";
@@ -59,13 +61,40 @@ function mapScheduleToDraft(schedule: ActivitySchedule): ActivityScheduleDraft {
 
 function ActivitySchedulesTableClient() {
   const queryClient = useQueryClient();
+  const [tableQuery, setTableQuery] = useState<TableQueryState<ActivitySchedule>>({
+    page: 1,
+    pageSize: 6,
+    search: "",
+    filters: {},
+    sort: null,
+  });
   const activitiesQuery = useQuery({
     queryKey: queryKeys.activities.list,
     queryFn: fetchActivities,
     staleTime: 45_000,
   });
   const schedulesQuery = useQuery({
-    queryKey: queryKeys.activitySchedules.list,
+    queryKey: [...queryKeys.activitySchedules.list, tableQuery],
+    queryFn: () =>
+      fetchActivitySchedulesPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        sort: tableQuery.sort?.key === "date"
+          ? tableQuery.sort.direction === "asc"
+            ? "date_asc"
+            : "date_desc"
+          : tableQuery.sort?.key === "createdAt"
+            ? tableQuery.sort.direction === "asc"
+              ? "oldest"
+              : "newest"
+            : undefined,
+      }),
+    staleTime: 20_000,
+  });
+  const allSchedulesQuery = useQuery({
+    queryKey: [...queryKeys.activitySchedules.all, "overview"],
     queryFn: fetchActivitySchedules,
     staleTime: 20_000,
   });
@@ -73,7 +102,9 @@ function ActivitySchedulesTableClient() {
     () => (activitiesQuery.data ?? []).map(mapActivityToOption),
     [activitiesQuery.data]
   );
-  const schedules = schedulesQuery.data ?? [];
+  const schedules = schedulesQuery.data?.items ?? [];
+  const allSchedules = allSchedulesQuery.data ?? [];
+  const totalSchedules = schedulesQuery.data?.pagination.total ?? 0;
   const isLoading = activitiesQuery.isLoading || schedulesQuery.isLoading;
   const [creatingDraft, setCreatingDraft] = useState<ActivityScheduleDraft | null>(null);
   const [viewingScheduleId, setViewingScheduleId] = useState<string | null>(null);
@@ -129,11 +160,10 @@ function ActivitySchedulesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalSchedules = schedules.length;
-    const upcomingSchedules = schedules.filter((schedule) => schedule.status === "scheduled").length;
-    const totalOpenSeats = schedules.reduce((sum, schedule) => sum + schedule.availableSeats, 0);
+    const upcomingSchedules = allSchedules.filter((schedule) => schedule.status === "scheduled").length;
+    const totalOpenSeats = allSchedules.reduce((sum, schedule) => sum + schedule.availableSeats, 0);
     const averagePrice = totalSchedules > 0
-      ? Math.round(schedules.reduce((sum, schedule) => sum + schedule.resolvedPrice, 0) / totalSchedules)
+      ? Math.round(allSchedules.reduce((sum, schedule) => sum + schedule.resolvedPrice, 0) / totalSchedules)
       : 0;
 
     return [
@@ -167,7 +197,7 @@ function ActivitySchedulesTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [schedules]);
+  }, [allSchedules, totalSchedules]);
 
   const handleCloseViewModal = () => setViewingScheduleId(null);
   const handleCloseAddModal = () => {
@@ -266,6 +296,9 @@ function ActivitySchedulesTableClient() {
           isLoading={isLoading}
           filtersConfig={activityScheduleFilters}
           pageSize={6}
+          mode="server"
+          totalEntries={totalSchedules}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search schedules..."
           actions={actions}
         />

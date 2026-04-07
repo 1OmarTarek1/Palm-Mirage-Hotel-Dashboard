@@ -6,10 +6,11 @@ import { BadgePercent, BedDouble, CircleDollarSign, DoorOpen } from "lucide-reac
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
-import { fetchRooms, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
+import { fetchRooms, fetchRoomsPage, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyRoomDraft, type Room, type RoomDraft } from "./data";
@@ -20,11 +21,53 @@ import RoomDeleteConfirm from "./RoomDeleteConfirm";
 
 function RoomsTableClient() {
   const queryClient = useQueryClient();
-  const { data: rooms = [], isLoading } = useQuery({
-    queryKey: queryKeys.rooms.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<Room>>({
+    page: 1,
+    pageSize: 5,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+
+  const { data: roomsResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.rooms.list, tableQuery],
+    queryFn: () =>
+      fetchRoomsPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        sort:
+          tableQuery.sort?.key === "price"
+            ? tableQuery.sort.direction === "asc"
+              ? "price_asc"
+              : "price_desc"
+            : tableQuery.sort?.key === "roomName"
+              ? tableQuery.sort.direction === "asc"
+                ? "roomName_asc"
+                : "roomName_desc"
+              : tableQuery.sort?.key === "createdAt"
+                ? tableQuery.sort.direction === "asc"
+                  ? "oldest"
+                  : "newest"
+                : undefined,
+        roomType:
+          typeof tableQuery.filters.roomType === "string"
+            ? tableQuery.filters.roomType
+            : undefined,
+        isAvailable:
+          typeof tableQuery.filters.isAvailable === "string"
+            ? tableQuery.filters.isAvailable
+            : undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allRooms = [] } = useQuery({
+    queryKey: [...queryKeys.rooms.all, "overview"],
     queryFn: fetchRooms,
     staleTime: 45_000,
   });
+  const rooms = roomsResponse?.items ?? [];
+  const totalRoomsCount = roomsResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<RoomDraft | null>(null);
   const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -60,11 +103,11 @@ function RoomsTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalRooms = rooms.length;
-    const availableRooms = rooms.filter((room) => room.isAvailable).length;
-    const offerRooms = rooms.filter((room) => room.hasOffer).length;
-    const averageRate = totalRooms > 0
-      ? Math.round(rooms.reduce((sum, room) => sum + (room.finalPrice ?? room.price), 0) / totalRooms)
+    const totalRooms = totalRoomsCount;
+    const availableRooms = allRooms.filter((room) => room.isAvailable).length;
+    const offerRooms = allRooms.filter((room) => room.hasOffer).length;
+    const averageRate = allRooms.length > 0
+      ? Math.round(allRooms.reduce((sum, room) => sum + (room.finalPrice ?? room.price), 0) / allRooms.length)
       : 0;
 
     return [
@@ -98,7 +141,7 @@ function RoomsTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [rooms]);
+  }, [allRooms, totalRoomsCount]);
 
   const handleCloseViewModal = () => setViewingRoomId(null);
   const handleCloseAddModal = () => {
@@ -203,6 +246,9 @@ function RoomsTableClient() {
           isLoading={isLoading}
           filtersConfig={roomFilters}
           pageSize={5}
+          mode="server"
+          totalEntries={totalRoomsCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search rooms..."
           actions={actions}
         />

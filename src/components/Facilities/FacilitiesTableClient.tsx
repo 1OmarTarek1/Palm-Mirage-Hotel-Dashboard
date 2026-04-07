@@ -7,10 +7,17 @@ import { Activity, Building2, Users, Wrench } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
-import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
+import {
+  createFacility,
+  deleteFacility,
+  fetchFacilities,
+  fetchFacilitiesPage,
+  updateFacility,
+} from "@/lib/facilities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyFacilityDraft } from "./data";
@@ -19,11 +26,33 @@ import FacilityForm from "./FacilityForm";
 
 function FacilitiesTableClient() {
   const queryClient = useQueryClient();
-  const { data: facilities = [], isLoading } = useQuery({
-    queryKey: queryKeys.facilities.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<Facility>>({
+    page: 1,
+    pageSize: 5,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: facilitiesResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.facilities.list, tableQuery],
+    queryFn: () =>
+      fetchFacilitiesPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        category:
+          typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allFacilities = [] } = useQuery({
+    queryKey: [...queryKeys.facilities.all, "overview"],
     queryFn: fetchFacilities,
     staleTime: 45_000,
   });
+  const facilities = facilitiesResponse?.items ?? [];
+  const totalFacilitiesCount = facilitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
   const [viewingFacilityId, setViewingFacilityId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<Facility | null>(null);
@@ -55,10 +84,10 @@ function FacilitiesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalFacilities = facilities.length;
-    const activeFacilities = facilities.filter((facility) => facility.status === "Available").length;
-    const maintenanceFacilities = facilities.filter((facility) => facility.status === "Maintenance").length;
-    const totalCapacity = facilities.reduce((sum, facility) => sum + (facility.capacity ?? 0), 0);
+    const totalFacilities = totalFacilitiesCount;
+    const activeFacilities = allFacilities.filter((facility) => facility.status === "Available").length;
+    const maintenanceFacilities = allFacilities.filter((facility) => facility.status === "Maintenance").length;
+    const totalCapacity = allFacilities.reduce((sum, facility) => sum + (facility.capacity ?? 0), 0);
 
     return [
       {
@@ -92,7 +121,7 @@ function FacilitiesTableClient() {
         tone: "secondary" as const,
       },
     ];
-  }, [facilities]);
+  }, [allFacilities, totalFacilitiesCount]);
 
   const handleCloseViewModal = () => setViewingFacilityId(null);
   const handleCloseAddModal = () => {
@@ -178,6 +207,9 @@ function FacilitiesTableClient() {
           isLoading={isLoading}
           filtersConfig={facilityFilters}
           pageSize={5}
+          mode="server"
+          totalEntries={totalFacilitiesCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search facilities..."
           actions={actions}
         />

@@ -146,10 +146,54 @@ export async function fetchRoomBookings(options?: { summary?: boolean }) {
     const response = await apiRequest<{
       data?: ApiBooking[] | { bookings?: ApiBooking[]; reservations?: ApiBooking[] } | Record<string, ApiBooking>;
     }>("/api/reservations", {
-      params: options?.summary ? { summary: "1" } : undefined,
+      params: options?.summary ? { summary: "1", page: 1, limit: 1000 } : { page: 1, limit: 1000 },
     });
     const data = normalizeBookingCollection(response?.data);
     return Array.isArray(data) ? data.map(mapApiBooking) : [];
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type RoomBookingsListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  paymentStatus?: string;
+  sort?: "newest" | "oldest" | "checkIn_asc" | "checkIn_desc";
+  summary?: boolean;
+};
+
+export async function fetchRoomBookingsPage(params: RoomBookingsListQuery = {}) {
+  try {
+    const response = await apiRequest<{
+      data?: {
+        bookings?: ApiBooking[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/reservations", {
+      params: {
+        page: params.page,
+        limit: params.limit,
+        search: params.search,
+        status: params.status,
+        paymentStatus: params.paymentStatus,
+        sort: params.sort,
+        ...(params.summary ? { summary: "1" } : {}),
+      },
+    });
+    const rows = response?.data?.bookings ?? [];
+    const pg = response?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(rows) ? rows.map(mapApiBooking) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

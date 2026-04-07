@@ -7,10 +7,11 @@ import { BadgeCheck, ShieldCheck, Users, UserRoundCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { userColumns, userFilters } from "@/config/tablePresets/userColumns";
-import { createUser, deleteUser, fetchUsers, updateUser } from "@/lib/users";
+import { createUser, deleteUser, fetchUsers, fetchUsersPage, updateUser } from "@/lib/users";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyUserDraft, type User } from "./data";
@@ -18,11 +19,38 @@ import UserForm from "./UserForm";
 
 function UserDashboardTableClient() {
   const queryClient = useQueryClient();
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: queryKeys.users.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<User>>({
+    page: 1,
+    pageSize: 8,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: usersResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.users.list, tableQuery],
+    queryFn: () =>
+      fetchUsersPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        role: typeof tableQuery.filters.role === "string" ? tableQuery.filters.role : undefined,
+        gender: typeof tableQuery.filters.gender === "string" ? tableQuery.filters.gender : undefined,
+        sort:
+          tableQuery.sort?.key === "userName"
+            ? tableQuery.sort.direction === "asc"
+              ? "userName_asc"
+              : "userName_desc"
+            : undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allUsers = [] } = useQuery({
+    queryKey: [...queryKeys.users.all, "overview"],
     queryFn: fetchUsers,
     staleTime: 45_000,
   });
+  const users = usersResponse?.items ?? [];
+  const totalUsersCount = usersResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<User | null>(null);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -58,10 +86,10 @@ function UserDashboardTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalUsers = users.length;
-    const confirmedUsers = users.filter((user) => user.isConfirmed).length;
-    const adminUsers = users.filter((user) => user.role === "admin").length;
-    const guestUsers = users.filter((user) => user.role === "user").length;
+    const totalUsers = totalUsersCount;
+    const confirmedUsers = allUsers.filter((user) => user.isConfirmed).length;
+    const adminUsers = allUsers.filter((user) => user.role === "admin").length;
+    const guestUsers = allUsers.filter((user) => user.role === "user").length;
 
     return [
       {
@@ -95,7 +123,7 @@ function UserDashboardTableClient() {
         tone: "secondary" as const,
       },
     ];
-  }, [users]);
+  }, [allUsers, totalUsersCount]);
 
   const handleCloseViewModal = () => setViewingUserId(null);
   const handleCloseAddModal = () => {
@@ -193,6 +221,9 @@ function UserDashboardTableClient() {
           isLoading={isLoading}
           filtersConfig={userFilters}
           pageSize={8}
+          mode="server"
+          totalEntries={totalUsersCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search users..."
           actions={actions}
         />

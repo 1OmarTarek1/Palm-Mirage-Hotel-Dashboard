@@ -6,6 +6,7 @@ import { BadgeInfo, Sparkles, Type, Wand2 } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomAmenityColumns, roomAmenityFilters } from "@/config/tablePresets/roomAmenityColumns";
@@ -13,6 +14,7 @@ import {
   createRoomAmenity,
   deleteRoomAmenity,
   fetchRoomAmenities,
+  fetchRoomAmenitiesPage,
   updateRoomAmenity,
 } from "@/lib/room-amenities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
@@ -23,11 +25,30 @@ import RoomAmenityForm from "./RoomAmenityForm";
 
 export default function RoomAmenitiesTableClient() {
   const queryClient = useQueryClient();
-  const { data: amenities = [], isLoading } = useQuery({
-    queryKey: queryKeys.roomAmenities.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<RoomAmenity>>({
+    page: 1,
+    pageSize: 6,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: amenitiesResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.roomAmenities.list, tableQuery],
+    queryFn: () =>
+      fetchRoomAmenitiesPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allAmenities = [] } = useQuery({
+    queryKey: [...queryKeys.roomAmenities.all, "overview"],
     queryFn: fetchRoomAmenities,
     staleTime: 45_000,
   });
+  const amenities = amenitiesResponse?.items ?? [];
+  const totalAmenitiesCount = amenitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<RoomAmenity | null>(null);
   const [editingDraft, setEditingDraft] = useState<RoomAmenity | null>(null);
   const [deletingAmenityId, setDeletingAmenityId] = useState<string | null>(null);
@@ -50,11 +71,11 @@ export default function RoomAmenitiesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalAmenities = amenities.length;
-    const withIcons = amenities.filter((amenity) => Boolean(amenity.icon)).length;
-    const withDescriptions = amenities.filter((amenity) => amenity.description.trim().length > 0).length;
+    const totalAmenities = totalAmenitiesCount;
+    const withIcons = allAmenities.filter((amenity) => Boolean(amenity.icon)).length;
+    const withDescriptions = allAmenities.filter((amenity) => amenity.description.trim().length > 0).length;
     const averageNameLength = totalAmenities > 0
-      ? Math.round(amenities.reduce((sum, amenity) => sum + amenity.name.trim().length, 0) / totalAmenities)
+      ? Math.round(allAmenities.reduce((sum, amenity) => sum + amenity.name.trim().length, 0) / totalAmenities)
       : 0;
 
     return [
@@ -89,7 +110,7 @@ export default function RoomAmenitiesTableClient() {
         tone: "secondary" as const,
       },
     ];
-  }, [amenities]);
+  }, [allAmenities, totalAmenitiesCount]);
 
   const handleConfirmCreate = async () => {
     if (!creatingDraft) return;
@@ -161,6 +182,9 @@ export default function RoomAmenitiesTableClient() {
           isLoading={isLoading}
           filtersConfig={roomAmenityFilters}
           pageSize={6}
+          mode="server"
+          totalEntries={totalAmenitiesCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search room amenities..."
           actions={actions}
         />

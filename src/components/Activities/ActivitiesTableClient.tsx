@@ -6,10 +6,11 @@ import { CircleDollarSign, Compass, ListChecks, Users } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityColumns, activityFilters } from "@/config/tablePresets/activityColumns";
-import { createActivity, deleteActivity, fetchActivities, updateActivity } from "@/lib/activities";
+import { createActivity, deleteActivity, fetchActivities, fetchActivitiesPage, updateActivity } from "@/lib/activities";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import ActivityAddForm from "./ActivityAddForm";
@@ -20,11 +21,41 @@ import ActivityEditForm from "./ActivityEditForm";
 
 function ActivitiesTableClient() {
   const queryClient = useQueryClient();
-  const { data: activities = [], isLoading } = useQuery({
-    queryKey: queryKeys.activities.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<Activity>>({
+    page: 1,
+    pageSize: 5,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: activitiesResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.activities.list, tableQuery],
+    queryFn: () =>
+      fetchActivitiesPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        category: typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+        sort:
+          tableQuery.sort?.key === "title"
+            ? tableQuery.sort.direction === "asc"
+              ? "title_asc"
+              : "title_desc"
+            : tableQuery.sort?.key === "createdAt"
+              ? tableQuery.sort.direction === "asc"
+                ? "oldest"
+                : "newest"
+              : undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allActivities = [] } = useQuery({
+    queryKey: [...queryKeys.activities.all, "overview"],
     queryFn: fetchActivities,
     staleTime: 45_000,
   });
+  const activities = activitiesResponse?.items ?? [];
+  const totalActivities = activitiesResponse?.pagination.total ?? 0;
   const [creatingDraft, setCreatingDraft] = useState<Activity | null>(null);
   const [viewingActivityId, setViewingActivityId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -60,13 +91,12 @@ function ActivitiesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalActivities = activities.length;
-    const activeActivities = activities.filter((activity) => activity.isActive).length;
+    const activeActivities = allActivities.filter((activity) => activity.isActive).length;
     const averageCapacity = totalActivities > 0
-      ? Math.round(activities.reduce((sum, activity) => sum + activity.defaultCapacity, 0) / totalActivities)
+      ? Math.round(allActivities.reduce((sum, activity) => sum + activity.defaultCapacity, 0) / totalActivities)
       : 0;
     const averagePrice = totalActivities > 0
-      ? Math.round(activities.reduce((sum, activity) => sum + activity.basePrice, 0) / totalActivities)
+      ? Math.round(allActivities.reduce((sum, activity) => sum + activity.basePrice, 0) / totalActivities)
       : 0;
 
     return [
@@ -100,7 +130,7 @@ function ActivitiesTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [activities]);
+  }, [allActivities, totalActivities]);
 
   const handleCloseViewModal = () => setViewingActivityId(null);
   const handleCloseAddModal = () => {
@@ -210,6 +240,9 @@ function ActivitiesTableClient() {
           isLoading={isLoading}
           filtersConfig={activityFilters}
           pageSize={5}
+          mode="server"
+          totalEntries={totalActivities}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search experiences..."
           actions={actions}
         />

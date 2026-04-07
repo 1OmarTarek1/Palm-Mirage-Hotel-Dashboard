@@ -10,17 +10,22 @@ import TableBody from "./TableBody";
 import Pagination from "./Pagination";
 import MobileCard, { MobileCardSkeleton } from "./MobileCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clampPage, getTotalPages, paginateCollection } from "@/lib/pagination";
 
 export default function DynamicTable<T extends object>({
   columns,
   data,
   isLoading = false,
   pageSize: initialPageSize = 10,
+  mode = "client",
+  totalEntries,
+  onQueryChange,
   searchPlaceholder = "Search...",
   filtersConfig = [],
   actions,
   highlightedRowKeys = [],
 }: DynamicTableProps<T>) {
+  const isServerMode = mode === "server";
   const enabledActions = useMemo(() => {
     if (!actions || actions.length === 0) return [];
 
@@ -67,6 +72,17 @@ export default function DynamicTable<T extends object>({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, filterKey]);
+
+  useEffect(() => {
+    if (!isServerMode || typeof onQueryChange !== "function") return;
+    onQueryChange({
+      page: currentPage,
+      pageSize,
+      search: debouncedSearchTerm.trim(),
+      filters,
+      sort: sortConfig,
+    });
+  }, [isServerMode, onQueryChange, currentPage, pageSize, debouncedSearchTerm, filters, sortConfig]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
@@ -126,9 +142,10 @@ export default function DynamicTable<T extends object>({
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
-    if (page === currentPage) return;
+    const nextPage = Math.max(1, page);
+    if (nextPage === currentPage) return;
 
-    setCurrentPage(page);
+    setCurrentPage(nextPage);
 
     window.requestAnimationFrame(() => {
       const desktopContainer = desktopScrollContainerRef.current;
@@ -172,6 +189,7 @@ export default function DynamicTable<T extends object>({
   }, [searchTerm, filters, sortConfig]);
 
   const filteredData = useMemo(() => {
+    if (isServerMode) return data;
     let result = [...data];
 
     const q = debouncedSearchTerm.trim().toLowerCase();
@@ -230,9 +248,10 @@ export default function DynamicTable<T extends object>({
     });
 
     return result;
-  }, [data, debouncedSearchTerm, filters, filtersConfig, columns]);
+  }, [isServerMode, data, debouncedSearchTerm, filters, filtersConfig, columns]);
 
   const sortedData = useMemo(() => {
+    if (isServerMode) return filteredData;
     if (!sortConfig) return filteredData;
 
     const column = columns.find((item) => item.key === sortConfig.key);
@@ -255,12 +274,23 @@ export default function DynamicTable<T extends object>({
 
       return sortConfig.direction === "asc" ? comparison : -comparison;
     });
-  }, [filteredData, sortConfig, columns]);
+  }, [isServerMode, filteredData, sortConfig, columns]);
+
+  const effectiveTotalEntries =
+    isServerMode && typeof totalEntries === "number" ? totalEntries : sortedData.length;
+  const totalPages = getTotalPages(effectiveTotalEntries, pageSize, isLoading);
+  const safeCurrentPage = clampPage(currentPage, totalPages);
+
+  useEffect(() => {
+    if (safeCurrentPage !== currentPage) {
+      setCurrentPage(safeCurrentPage);
+    }
+  }, [currentPage, safeCurrentPage]);
 
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedData.slice(start, start + pageSize);
-  }, [sortedData, currentPage, pageSize]);
+    if (isServerMode) return sortedData;
+    return paginateCollection(sortedData, safeCurrentPage, pageSize);
+  }, [isServerMode, sortedData, safeCurrentPage, pageSize]);
 
   const mobileSkeletonDetailCount = useMemo(() => {
     const dataColumns = computedColumns.filter((column) => column.type !== "action-dropdown");
@@ -268,8 +298,6 @@ export default function DynamicTable<T extends object>({
   }, [computedColumns]);
   const hasFilterPanel = filtersConfig.length > 0 || columns.some((column) => column.sortable);
   const showControlSkeleton = isLoading && data.length === 0 && !hasActiveFilters && searchTerm.length === 0;
-
-  const totalPages = isLoading ? 1 : Math.max(1, Math.ceil(sortedData.length / pageSize));
 
   return (
     <div ref={tableContainerRef} className="w-full">
@@ -337,13 +365,13 @@ export default function DynamicTable<T extends object>({
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {paginatedData.map((row, rowIndex) => (
                 (() => {
-                  const rowKey = resolveRowKey(row, (currentPage - 1) * pageSize + rowIndex);
+                  const rowKey = resolveRowKey(row, (safeCurrentPage - 1) * pageSize + rowIndex);
                   return (
                 <MobileCard
                   key={rowKey}
                   row={row}
                   columns={computedColumns}
-                  itemNumber={(currentPage - 1) * pageSize + rowIndex + 1}
+                  itemNumber={(safeCurrentPage - 1) * pageSize + rowIndex + 1}
                   isHighlighted={highlightedRowKeys.includes(rowKey)}
                 />
                   );
@@ -364,7 +392,7 @@ export default function DynamicTable<T extends object>({
           <TableBody
             data={paginatedData}
             columns={computedColumns}
-            startIndex={(currentPage - 1) * pageSize}
+            startIndex={(safeCurrentPage - 1) * pageSize}
             isLoading={isLoading}
             skeletonRowCount={pageSize}
             highlightedRowKeys={highlightedRowKeys}
@@ -384,11 +412,11 @@ export default function DynamicTable<T extends object>({
         </div>
       ) : (
         <Pagination
-          currentPage={currentPage}
+          currentPage={safeCurrentPage}
           totalPages={totalPages}
           onPageChange={handlePageChange}
           pageSize={pageSize}
-          totalEntries={isLoading ? pageSize : sortedData.length}
+          totalEntries={isLoading ? pageSize : effectiveTotalEntries}
         />
       )}
     </div>

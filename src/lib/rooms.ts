@@ -121,11 +121,72 @@ function buildRoomFormData(room: RoomDraft) {
 
 export async function fetchRooms() {
   try {
-    const response = await apiRequest<{ data: { data: ApiRoom[] } }>("/api/rooms");
-    return response?.data?.data?.map(mapApiRoom) || [];
+    const response = await fetchRoomsPage({ page: 1, limit: 1000 });
+    return response.items;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+}
+
+export type RoomsListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+  roomType?: string;
+  isAvailable?: string;
+};
+
+export type RoomsListResponse = {
+  items: Room[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+};
+
+export async function fetchRoomsPage(params: RoomsListQuery = {}): Promise<RoomsListResponse> {
+  const response = await apiRequest<{
+    data?: {
+      data?: ApiRoom[];
+      rooms?: ApiRoom[];
+      items?: ApiRoom[];
+      pagination?: {
+        page?: number;
+        limit?: number;
+        total?: number;
+        totalPages?: number;
+        hasNextPage?: boolean;
+        hasPrevPage?: boolean;
+      };
+      page?: number;
+      limit?: number;
+      total?: number;
+      totalPages?: number;
+      hasNextPage?: boolean;
+      hasPrevPage?: boolean;
+    };
+  }>("/api/rooms", { params });
+
+  const payload = response?.data ?? {};
+  const rows = payload.items ?? payload.rooms ?? payload.data ?? [];
+  const pg = payload.pagination ?? payload;
+
+  return {
+    items: Array.isArray(rows) ? rows.map(mapApiRoom) : [],
+    pagination: {
+      page: Number(pg?.page ?? params.page ?? 1),
+      limit: Number(pg?.limit ?? params.limit ?? 10),
+      total: Number(pg?.total ?? 0),
+      totalPages: Number(pg?.totalPages ?? 1),
+      hasNextPage: Boolean(pg?.hasNextPage ?? false),
+      hasPrevPage: Boolean(pg?.hasPrevPage ?? false),
+    },
+  };
 }
 
 export async function createRoom(room: RoomDraft) {

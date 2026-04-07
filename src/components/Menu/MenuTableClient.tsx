@@ -6,10 +6,11 @@ import { CircleDollarSign, CookingPot, Salad, Store } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
-import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
+import { fetchMenuItems, fetchMenuItemsPage, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyMenuDraft, type MenuItem } from "./data";
@@ -20,11 +21,47 @@ import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
 function MenuTableClient() {
   const queryClient = useQueryClient();
-  const { data: menuItems = [], isLoading } = useQuery({
-    queryKey: queryKeys.menu.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<MenuItem>>({
+    page: 1,
+    pageSize: 6,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: menuResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.menu.list, tableQuery],
+    queryFn: () =>
+      fetchMenuItemsPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        category: typeof tableQuery.filters.category === "string" ? tableQuery.filters.category : undefined,
+        available:
+          typeof tableQuery.filters.available === "string" ? tableQuery.filters.available : undefined,
+        sort:
+          tableQuery.sort?.key === "price"
+            ? tableQuery.sort.direction === "asc"
+              ? "price_asc"
+              : "price_desc"
+            : tableQuery.sort?.key === "name"
+              ? tableQuery.sort.direction === "asc"
+                ? "name_asc"
+                : "name_desc"
+              : tableQuery.sort?.key === "createdAt"
+                ? tableQuery.sort.direction === "asc"
+                  ? "oldest"
+                  : "newest"
+                : undefined,
+      }),
+    staleTime: 45_000,
+  });
+  const { data: allMenuItems = [] } = useQuery({
+    queryKey: [...queryKeys.menu.all, "overview"],
     queryFn: fetchMenuItems,
     staleTime: 45_000,
   });
+  const menuItems = menuResponse?.items ?? [];
+  const totalItemsCount = menuResponse?.pagination.total ?? 0;
   const [isSaving, setIsSaving] = useState(false);
   const [creatingDraft, setCreatingDraft] = useState<MenuItem | null>(null);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
@@ -60,11 +97,11 @@ function MenuTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalItems = menuItems.length;
-    const availableItems = menuItems.filter((item) => item.available).length;
-    const categories = new Set(menuItems.map((item) => item.category)).size;
+    const totalItems = totalItemsCount;
+    const availableItems = allMenuItems.filter((item) => item.available).length;
+    const categories = new Set(allMenuItems.map((item) => item.category)).size;
     const averagePrice = totalItems > 0
-      ? Math.round(menuItems.reduce((sum, item) => sum + item.price, 0) / totalItems)
+      ? Math.round(allMenuItems.reduce((sum, item) => sum + item.price, 0) / totalItems)
       : 0;
 
     return [
@@ -98,7 +135,7 @@ function MenuTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [menuItems]);
+  }, [allMenuItems, totalItemsCount]);
 
   const handleCloseViewModal = () => setViewingItemId(null);
   const handleCloseAddModal = () => {
@@ -190,6 +227,9 @@ function MenuTableClient() {
           isLoading={isLoading}
           filtersConfig={menuFilters}
           pageSize={6}
+          mode="server"
+          totalEntries={totalItemsCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search menu products..."
           actions={actions}
         />

@@ -5,9 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { activityBookingColumns, activityBookingFilters } from "@/config/tablePresets/activityBookingColumns";
-import { fetchActivityBookings, updateActivityBooking } from "@/lib/activityBookings";
+import { fetchActivityBookings, fetchActivityBookingsPage, updateActivityBooking } from "@/lib/activityBookings";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import { buildActivityBookingAlerts } from "./ActivityBookingsAlerts";
@@ -27,12 +28,43 @@ function mapBookingToDraft(booking: ActivityBooking): ActivityBookingDraft {
 
 function ActivityBookingsTableClient() {
   const queryClient = useQueryClient();
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: queryKeys.activityBookings.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<ActivityBooking>>({
+    page: 1,
+    pageSize: 6,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: bookingsResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.activityBookings.list, tableQuery],
+    queryFn: () =>
+      fetchActivityBookingsPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        paymentStatus:
+          typeof tableQuery.filters.paymentStatus === "string"
+            ? tableQuery.filters.paymentStatus
+            : undefined,
+        sort:
+          tableQuery.sort?.key === "createdAt"
+            ? tableQuery.sort.direction === "asc"
+              ? "oldest"
+              : "newest"
+            : undefined,
+      }),
+    staleTime: 0,
+    gcTime: 120_000,
+  });
+  const { data: allBookings = [] } = useQuery({
+    queryKey: [...queryKeys.activityBookings.all, "overview"],
     queryFn: fetchActivityBookings,
     staleTime: 0,
     gcTime: 120_000,
   });
+  const bookings = bookingsResponse?.items ?? [];
+  const totalBookings = bookingsResponse?.pagination.total ?? 0;
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ActivityBookingDraft | null>(null);
@@ -52,21 +84,21 @@ function ActivityBookingsTableClient() {
     const todayKey = new Date().toISOString().slice(0, 10);
     const isToday = (value?: string) => Boolean(value) && value?.slice(0, 10) === todayKey;
 
-    const sessionsToday = bookings.filter((booking) => isToday(booking.bookingDate)).length;
-    const pendingBookings = bookings.filter((booking) => booking.status === "pending").length;
-    const unpaidBookings = bookings.filter((booking) => booking.paymentStatus === "unpaid").length;
-    const confirmedGuests = bookings
+    const sessionsToday = allBookings.filter((booking) => isToday(booking.bookingDate)).length;
+    const pendingBookings = allBookings.filter((booking) => booking.status === "pending").length;
+    const unpaidBookings = allBookings.filter((booking) => booking.paymentStatus === "unpaid").length;
+    const confirmedGuests = allBookings
       .filter((booking) => booking.status === "confirmed")
       .reduce((sum, booking) => sum + booking.guests, 0);
-    const cancelledBookings = bookings.filter((booking) =>
+    const cancelledBookings = allBookings.filter((booking) =>
       ["cancelled", "rejected"].includes(booking.status)
     ).length;
-    const highAttendanceBookings = bookings.filter((booking) => booking.guests >= 4).length;
+    const highAttendanceBookings = allBookings.filter((booking) => booking.guests >= 4).length;
     const projectedRevenue = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,
-    }).format(bookings.reduce((sum, booking) => sum + booking.totalPrice, 0));
+    }).format(allBookings.reduce((sum, booking) => sum + booking.totalPrice, 0));
 
     return {
       sessionsToday,
@@ -77,7 +109,7 @@ function ActivityBookingsTableClient() {
       highAttendanceBookings,
       projectedRevenue,
     };
-  }, [bookings]);
+  }, [allBookings]);
 
   const pageAlerts = useMemo(
     () => ({
@@ -154,6 +186,9 @@ function ActivityBookingsTableClient() {
             isLoading={isLoading}
             filtersConfig={activityBookingFilters}
             pageSize={6}
+            mode="server"
+            totalEntries={totalBookings}
+            onQueryChange={setTableQuery}
             searchPlaceholder="Search activity bookings..."
             actions={actions}
           />

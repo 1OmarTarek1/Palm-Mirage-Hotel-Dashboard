@@ -7,10 +7,15 @@ import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import type { TableQueryState } from "@/components/shared/table/types";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import { restaurantBookingColumns, restaurantBookingFilters } from "@/config/tablePresets/restaurantBookingColumns";
-import { fetchRestaurantBookings, updateRestaurantBooking } from "@/lib/restaurant-bookings";
+import {
+  fetchRestaurantBookings,
+  fetchRestaurantBookingsPage,
+  updateRestaurantBooking,
+} from "@/lib/restaurant-bookings";
 
 import RestaurantBookingDetailsView from "./RestaurantBookingDetailsView";
 import RestaurantBookingEditForm from "./RestaurantBookingEditForm";
@@ -28,12 +33,37 @@ function mapBookingToDraft(booking: RestaurantBooking): RestaurantBookingDraft {
 
 export default function RestaurantBookingsTableClient() {
   const queryClient = useQueryClient();
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: queryKeys.restaurantBookings.list,
+  const [tableQuery, setTableQuery] = useState<TableQueryState<RestaurantBooking>>({
+    page: 1,
+    pageSize: 8,
+    search: "",
+    filters: {},
+    sort: null,
+  });
+  const { data: bookingsResponse, isLoading } = useQuery({
+    queryKey: [...queryKeys.restaurantBookings.list, tableQuery],
+    queryFn: () =>
+      fetchRestaurantBookingsPage({
+        page: tableQuery.page,
+        limit: tableQuery.pageSize,
+        search: tableQuery.search || undefined,
+        status: typeof tableQuery.filters.status === "string" ? tableQuery.filters.status : undefined,
+        paymentStatus:
+          typeof tableQuery.filters.paymentStatus === "string"
+            ? tableQuery.filters.paymentStatus
+            : undefined,
+      }),
+    staleTime: 0,
+    gcTime: 120_000,
+  });
+  const { data: allBookings = [] } = useQuery({
+    queryKey: [...queryKeys.restaurantBookings.all, "overview"],
     queryFn: fetchRestaurantBookings,
     staleTime: 0,
     gcTime: 120_000,
   });
+  const bookings = bookingsResponse?.items ?? [];
+  const totalBookingsCount = bookingsResponse?.pagination.total ?? 0;
   const [viewingBookingId, setViewingBookingId] = useState<string | null>(null);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<RestaurantBookingDraft | null>(null);
@@ -52,13 +82,13 @@ export default function RestaurantBookingsTableClient() {
   const bookingOverview = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10);
 
-    const totalBookings = bookings.length;
-    const pendingBookings = bookings.filter((booking) => booking.status === "pending").length;
-    const assignedTables = bookings.filter((booking) => booking.tableNumber !== null).length;
-    const totalGuests = bookings.reduce((sum, booking) => sum + booking.guests, 0);
-    const unassignedBookings = bookings.filter((booking) => booking.tableNumber === null).length;
-    const largePartyBookings = bookings.filter((booking) => booking.guests >= 5).length;
-    const completedToday = bookings.filter(
+    const totalBookings = totalBookingsCount;
+    const pendingBookings = allBookings.filter((booking) => booking.status === "pending").length;
+    const assignedTables = allBookings.filter((booking) => booking.tableNumber !== null).length;
+    const totalGuests = allBookings.reduce((sum, booking) => sum + booking.guests, 0);
+    const unassignedBookings = allBookings.filter((booking) => booking.tableNumber === null).length;
+    const largePartyBookings = allBookings.filter((booking) => booking.guests >= 5).length;
+    const completedToday = allBookings.filter(
       (booking) => booking.status === "completed" && booking.bookingDate === todayKey
     ).length;
 
@@ -71,7 +101,7 @@ export default function RestaurantBookingsTableClient() {
       largePartyBookings,
       completedToday,
     };
-  }, [bookings]);
+  }, [allBookings, totalBookingsCount]);
 
   useDashboardAlerts({
     title: "Restaurant notifications",
@@ -140,6 +170,9 @@ export default function RestaurantBookingsTableClient() {
             isLoading={isLoading}
             filtersConfig={restaurantBookingFilters}
             pageSize={8}
+            mode="server"
+            totalEntries={totalBookingsCount}
+            onQueryChange={setTableQuery}
             searchPlaceholder="Search restaurant bookings..."
             actions={actions}
           />

@@ -50,9 +50,44 @@ function buildFacilityPayload(facility: Facility) {
 
 export async function fetchFacilities() {
   try {
-    const data = await apiRequest<{ data?: { facilities?: ApiFacility[] } }>("/api/facilities");
+    const data = await apiRequest<{ data?: { facilities?: ApiFacility[] } }>("/api/facilities", {
+      params: { page: 1, limit: 1000 },
+    });
     const facilities = data?.data?.facilities ?? [];
     return Array.isArray(facilities) ? facilities.map(mapApiFacility) : [];
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type FacilitiesListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  category?: string;
+  sort?: "name_asc" | "name_desc" | "newest" | "oldest";
+};
+
+export async function fetchFacilitiesPage(params: FacilitiesListQuery = {}) {
+  try {
+    const data = await apiRequest<{
+      data?: {
+        facilities?: ApiFacility[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/facilities", { params });
+    const facilities = data?.data?.facilities ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(facilities) ? facilities.map(mapApiFacility) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

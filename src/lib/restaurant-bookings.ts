@@ -89,11 +89,45 @@ function mapApiRestaurantBooking(booking: ApiRestaurantBooking): RestaurantBooki
 export async function fetchRestaurantBookings() {
   try {
     const data = await apiRequest<{ data?: { bookings?: ApiRestaurantBooking[] } }>(
-      "/api/restaurant-bookings"
+      "/api/restaurant-bookings",
+      { params: { page: 1, limit: 1000 } }
     );
     const bookings = data?.data?.bookings ?? [];
 
     return Array.isArray(bookings) ? bookings.map(mapApiRestaurantBooking) : [];
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type RestaurantBookingsListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  paymentStatus?: string;
+  sort?: "newest" | "oldest" | "start_asc" | "start_desc";
+};
+
+export async function fetchRestaurantBookingsPage(params: RestaurantBookingsListQuery = {}) {
+  try {
+    const data = await apiRequest<{
+      data?: {
+        bookings?: ApiRestaurantBooking[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/restaurant-bookings", { params });
+    const rows = data?.data?.bookings ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(rows) ? rows.map(mapApiRestaurantBooking) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
