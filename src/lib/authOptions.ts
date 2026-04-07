@@ -40,12 +40,6 @@ export const authOptions: NextAuthOptions = {
       },
       authorize: async (credentials) => {
         const loginUrl = `${API_BASE_URL}/auth/login`;
-        // Safe diagnostics: which source, which URL
-        const baseUrlSource = process.env.API_BASE_URL ? "API_BASE_URL" : 
-                            process.env.NEXT_PUBLIC_API_BASE_URL ? "NEXT_PUBLIC_API_BASE_URL" : 
-                            process.env.NODE_ENV === "development" ? "dev-fallback" : "unknown";
-
-        console.log(`[NextAuth] Authorize Attempt: ${loginUrl} (Source: ${baseUrlSource})`);
 
         const response = await fetch(loginUrl, {
           method: "POST",
@@ -76,7 +70,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         const data = await response.json();
-        console.log(`[NextAuth] Authorize Response Status: ${response.status}`);
 
         if (data.message === "Done") {
           // Broad search for the token: data.token, data.accessToken, or nested in data.data

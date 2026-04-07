@@ -8,9 +8,6 @@ export async function proxy(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
-  const cookieNames = request.cookies.getAll().map(c => c.name);
-  console.log(`Middleware Run: Path: ${pathname}, Has Token: ${!!token}, Cookies: ${cookieNames.join(", ")}`);
-
   if (pathname === "/") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
