@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Activity, Building2, Users, Wrench } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -10,7 +10,14 @@ import DynamicTable from "@/components/shared/table/DynamicTable";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { facilityColumns, facilityFilters } from "@/config/tablePresets/facilityColumns";
-import { createFacility, deleteFacility, fetchFacilities, updateFacility } from "@/lib/facilities";
+import {
+  createFacility,
+  deleteFacility,
+  fetchFacilities,
+  fetchFacilitiesPage,
+  updateFacility,
+} from "@/lib/facilities";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyFacilityDraft } from "./data";
@@ -19,9 +26,35 @@ import FacilityForm from "./FacilityForm";
 
 function FacilitiesTableClient() {
   const queryClient = useQueryClient();
-  const { data: facilities = [], isLoading } = useQuery({
-    queryKey: queryKeys.facilities.list,
-    queryFn: fetchFacilities,
+  const {
+    setTableQuery,
+    pageItems: facilities,
+    overviewItems: allFacilities,
+    totalEntries: totalFacilitiesCount,
+    isLoading,
+  } = useServerTableData<Facility>({
+    queryKeyBase: queryKeys.facilities.all,
+    initialPageSize: 5,
+    fetchPage: (query) =>
+      fetchFacilitiesPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
+        category:
+          typeof query.filters.category === "string" ? query.filters.category : undefined,
+        sort:
+          query.sort?.key === "name"
+            ? query.sort.direction === "asc"
+              ? "name_asc"
+              : "name_desc"
+            : query.sort?.key === "updatedAt"
+              ? query.sort.direction === "asc"
+                ? "oldest"
+                : "newest"
+              : "newest",
+      }),
+    fetchOverview: fetchFacilities,
     staleTime: 45_000,
   });
   const [creatingDraft, setCreatingDraft] = useState<Facility | null>(null);
@@ -55,10 +88,10 @@ function FacilitiesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalFacilities = facilities.length;
-    const activeFacilities = facilities.filter((facility) => facility.status === "Available").length;
-    const maintenanceFacilities = facilities.filter((facility) => facility.status === "Maintenance").length;
-    const totalCapacity = facilities.reduce((sum, facility) => sum + (facility.capacity ?? 0), 0);
+    const totalFacilities = totalFacilitiesCount;
+    const activeFacilities = allFacilities.filter((facility) => facility.status === "Available").length;
+    const maintenanceFacilities = allFacilities.filter((facility) => facility.status === "Maintenance").length;
+    const totalCapacity = allFacilities.reduce((sum, facility) => sum + (facility.capacity ?? 0), 0);
 
     return [
       {
@@ -92,7 +125,7 @@ function FacilitiesTableClient() {
         tone: "secondary" as const,
       },
     ];
-  }, [facilities]);
+  }, [allFacilities, totalFacilitiesCount]);
 
   const handleCloseViewModal = () => setViewingFacilityId(null);
   const handleCloseAddModal = () => {
@@ -178,6 +211,9 @@ function FacilitiesTableClient() {
           isLoading={isLoading}
           filtersConfig={facilityFilters}
           pageSize={5}
+          mode="server"
+          totalEntries={totalFacilitiesCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search facilities..."
           actions={actions}
         />

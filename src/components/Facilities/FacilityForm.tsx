@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -19,15 +19,8 @@ interface FacilityFormProps {
 }
 
 export default function FacilityForm({ facility, onChange, usedIcons = [] }: FacilityFormProps) {
-  const [formData, setFormData] = useState<Facility>(facility);
-
-  useEffect(() => {
-    setFormData(facility);
-  }, [facility]);
-
   const handleChange = <K extends keyof Facility>(key: K, value: Facility[K]) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...facility, [key]: value };
     onChange(updated);
   };
 
@@ -38,9 +31,9 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Facility Name</span>
           <input
-            value={formData.name}
+            value={facility.name}
             onChange={(event) => handleChange("name", event.target.value)}
-            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+            className="font-main h-[50px] w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary focus:bg-card"
             placeholder="e.g. Fitness Center"
           />
         </label>
@@ -49,7 +42,7 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Category</span>
           <Select
-            value={formData.category}
+            value={facility.category}
             onValueChange={(value) => handleChange("category", value)}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35 border-border">
@@ -69,7 +62,7 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Status</span>
           <Select
-            value={formData.status}
+            value={facility.status}
             onValueChange={(value) => handleChange("status", value as Facility["status"])}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35 border-border">
@@ -89,13 +82,13 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Icon</span>
           <div className="flex items-center gap-3">
-            {formData.icon && (
+            {facility.icon && (
               <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl border border-border bg-primary/5 text-primary">
-                <DynamicIcon name={formData.icon} size={22} />
+                <DynamicIcon name={facility.icon} size={22} />
               </div>
             )}
             <Select
-              value={formData.icon}
+              value={facility.icon}
               onValueChange={(value) => handleChange("icon", value)}
             >
               <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35 border-border">
@@ -103,7 +96,7 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
               </SelectTrigger>
               <SelectContent>
                 {facilityIconOptions
-                  .filter((opt) => opt === formData.icon || !usedIcons.includes(opt))
+                  .filter((opt) => opt === facility.icon || !usedIcons.includes(opt))
                   .map((opt) => (
                     <SelectItem key={opt} value={opt}>
                       <span className="flex items-center gap-2">
@@ -121,9 +114,9 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Location</span>
           <input
-            value={formData.location}
+            value={facility.location}
             onChange={(event) => handleChange("location", event.target.value)}
-            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+            className="font-main h-[50px] w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary focus:bg-card"
             placeholder="e.g. Ground Floor, East Wing"
           />
         </label>
@@ -133,9 +126,10 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
           <span className="font-main text-sm font-semibold text-foreground">Capacity (Optional)</span>
           <input
             type="number"
-            value={formData.capacity || ""}
+            min="1"
+            value={facility.capacity || ""}
             onChange={(event) => handleChange("capacity", parseInt(event.target.value) || 0)}
-            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+            className="font-main h-[50px] w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary focus:bg-card"
             placeholder="e.g. 50"
           />
         </label>
@@ -144,9 +138,9 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Operating Hours</span>
           <input
-            value={formData.operatingHours}
+            value={facility.operatingHours}
             onChange={(event) => handleChange("operatingHours", event.target.value)}
-            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
+            className="font-main h-[50px] w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary focus:bg-card"
             placeholder="e.g. 06:00 - 22:00"
           />
         </label>
@@ -155,10 +149,10 @@ export default function FacilityForm({ facility, onChange, usedIcons = [] }: Fac
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Description</span>
           <textarea
-            value={formData.description}
+            value={facility.description}
             onChange={(event) => handleChange("description", event.target.value)}
             rows={3}
-            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card resize-none"
+            className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary focus:bg-card resize-none"
             placeholder="Enter facility description..."
           />
         </label>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, BedDouble, CircleDollarSign, DoorOpen } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -9,7 +9,8 @@ import DynamicTable from "@/components/shared/table/DynamicTable";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomColumns, roomFilters } from "@/config/tablePresets/roomColumns";
-import { fetchRooms, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
+import { fetchRooms, fetchRoomsPage, createRoom, updateRoom, deleteRoom } from "@/lib/rooms";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyRoomDraft, type Room, type RoomDraft } from "./data";
@@ -20,11 +21,47 @@ import RoomDeleteConfirm from "./RoomDeleteConfirm";
 
 function RoomsTableClient() {
   const queryClient = useQueryClient();
-  const { data: rooms = [], isLoading } = useQuery({
-    queryKey: queryKeys.rooms.list,
-    queryFn: fetchRooms,
+  const {
+    setTableQuery,
+    pageItems: rooms,
+    overviewItems: allRooms,
+    totalEntries: totalRoomsCount,
+    isLoading,
+  } = useServerTableData<Room>({
+    queryKeyBase: queryKeys.rooms.all,
+    initialPageSize: 5,
+    fetchPage: (query) =>
+      fetchRoomsPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        sort:
+          query.sort?.key === "price"
+            ? query.sort.direction === "asc"
+              ? "price_asc"
+              : "price_desc"
+            : query.sort?.key === "roomName"
+              ? query.sort.direction === "asc"
+                ? "roomName_asc"
+                : "roomName_desc"
+              : query.sort?.key === "createdAt"
+                ? query.sort.direction === "asc"
+                  ? "oldest"
+                  : "newest"
+                : "newest",
+        roomType:
+          typeof query.filters.roomType === "string"
+            ? query.filters.roomType
+            : undefined,
+        isAvailable:
+          typeof query.filters.isAvailable === "string"
+            ? query.filters.isAvailable
+            : undefined,
+      }),
+    fetchOverview: fetchRooms,
     staleTime: 45_000,
   });
+
   const [creatingDraft, setCreatingDraft] = useState<RoomDraft | null>(null);
   const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -60,11 +97,11 @@ function RoomsTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalRooms = rooms.length;
-    const availableRooms = rooms.filter((room) => room.isAvailable).length;
-    const offerRooms = rooms.filter((room) => room.hasOffer).length;
-    const averageRate = totalRooms > 0
-      ? Math.round(rooms.reduce((sum, room) => sum + (room.finalPrice ?? room.price), 0) / totalRooms)
+    const totalRooms = totalRoomsCount;
+    const availableRooms = allRooms.filter((room) => room.isAvailable).length;
+    const offerRooms = allRooms.filter((room) => room.hasOffer).length;
+    const averageRate = allRooms.length > 0
+      ? Math.round(allRooms.reduce((sum, room) => sum + (room.finalPrice ?? room.price), 0) / allRooms.length)
       : 0;
 
     return [
@@ -98,7 +135,7 @@ function RoomsTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [rooms]);
+  }, [allRooms, totalRoomsCount]);
 
   const handleCloseViewModal = () => setViewingRoomId(null);
   const handleCloseAddModal = () => {
@@ -179,6 +216,7 @@ function RoomsTableClient() {
           checkInTime: room.checkInTime,
           checkOutTime: room.checkOutTime,
           cancellationPolicy: room.cancellationPolicy,
+          deletedImageIds: [],
         });
         setEditingRoomId(room.id);
       },
@@ -203,6 +241,9 @@ function RoomsTableClient() {
           isLoading={isLoading}
           filtersConfig={roomFilters}
           pageSize={5}
+          mode="server"
+          totalEntries={totalRoomsCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search rooms..."
           actions={actions}
         />

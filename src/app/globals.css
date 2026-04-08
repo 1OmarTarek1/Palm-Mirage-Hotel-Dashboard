@@ -127,8 +127,75 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply font-sans bg-background text-foreground;
     scroll-behavior: smooth;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-family: var(--font-main), sans-serif;
+  }
+
+  input,
+  textarea {
+    transition-property: border-color, background-color, box-shadow, color;
+    transition-duration: 140ms;
+    transition-timing-function: ease;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="file"] {
+    line-height: normal;
+  }
+
+  .dashboard-modal-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]),
+  .dashboard-modal-content textarea,
+  .dashboard-modal-content [data-slot="select-trigger"] {
+    border-radius: var(--radius-2xl);
+  }
+
+  .dashboard-modal-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]),
+  .dashboard-modal-content [data-slot="select-trigger"] {
+    min-height: 50px;
+  }
+
+  .dashboard-modal-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]) {
+    padding-inline: 1rem;
+  }
+
+  .dashboard-modal-content textarea {
+    min-height: 120px;
+    padding: 0.875rem 1rem;
+  }
+
+  .dashboard-modal-content input[type="file"] {
+    min-height: 50px;
+    border-radius: var(--radius-2xl);
+  }
+
+  .dashboard-modal-content .space-y-2 > label,
+  .dashboard-modal-content .space-y-3 > label {
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .dashboard-modal-content .space-y-2 > span:first-child,
+  .dashboard-modal-content .space-y-3 > span:first-child {
+    display: inline-block;
+    margin-bottom: 0.25rem;
   }
 }
 

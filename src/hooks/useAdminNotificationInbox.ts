@@ -14,6 +14,11 @@ export type AdminInboxItem = {
   title: string;
   message: string;
   severity: string;
+  type?: string | null;
+  resource?: string | null;
+  action?: string | null;
+  bookingIds?: string[];
+  metadata?: Record<string, unknown> | null;
   readAt: string | null;
   createdAt: string;
 };
@@ -36,6 +41,8 @@ export function useAdminNotificationInbox() {
   const [items, setItems] = useState<AdminInboxItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [mutating, setMutating] = useState(false);
+  const pendingMarkAllReadRef = useRef<Promise<void> | null>(null);
 
   const refreshUnreadOnly = useCallback(async () => {
     if (!enabled) return;
@@ -84,16 +91,96 @@ export function useAdminNotificationInbox() {
 
   const markRead = useCallback(
     async (id: string) => {
-      await apiRequest(`/api/notifications/${id}/read`, { method: "PATCH" });
-      await refresh();
+      const now = new Date().toISOString();
+      const prevItemsSnapshot = items;
+      const wasUnread = items.some((item) => item.id === id && !item.readAt);
+
+      // Optimistic local update so Inbox doesn't switch to loading state.
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, readAt: item.readAt ?? now } : item)),
+      );
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      try {
+        await apiRequest(`/api/notifications/${id}/read`, { method: "PATCH" });
+      } catch {
+        setItems(prevItemsSnapshot);
+        void refreshUnreadOnly();
+      }
     },
-    [refresh],
+    [items, refreshUnreadOnly],
   );
 
   const markAllRead = useCallback(async () => {
-    await apiRequest("/api/notifications/read-all", { method: "POST" });
-    await refresh();
-  }, [refresh]);
+    if (pendingMarkAllReadRef.current) {
+      await pendingMarkAllReadRef.current;
+      return;
+    }
 
-  return { items, unreadCount, loading, refresh, markRead, markAllRead };
+    const prevItemsSnapshot = items;
+    const prevUnreadSnapshot = unreadCount;
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: now })));
+    setUnreadCount(0);
+
+    const request = (async () => {
+      setMutating(true);
+      try {
+        await apiRequest("/api/notifications/read-all", { method: "POST" });
+      } catch {
+        setItems(prevItemsSnapshot);
+        setUnreadCount(prevUnreadSnapshot);
+      } finally {
+        setMutating(false);
+        pendingMarkAllReadRef.current = null;
+      }
+    })();
+
+    pendingMarkAllReadRef.current = request;
+    await request;
+  }, [items, unreadCount]);
+
+  const deleteOne = useCallback(async (id: string) => {
+    const prevItemsSnapshot = items;
+    const prevUnreadSnapshot = unreadCount;
+    const target = items.find((item) => item.id === id);
+    const wasUnread = Boolean(target && !target.readAt);
+
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    if (wasUnread) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+
+    try {
+      setMutating(true);
+      await apiRequest(`/api/notifications/${id}`, { method: "DELETE" });
+    } catch {
+      setItems(prevItemsSnapshot);
+      setUnreadCount(prevUnreadSnapshot);
+    } finally {
+      setMutating(false);
+    }
+  }, [items, unreadCount]);
+
+  const clearRead = useCallback(async () => {
+    if (pendingMarkAllReadRef.current) {
+      await pendingMarkAllReadRef.current;
+    }
+
+    const prevItemsSnapshot = items;
+    setItems((prev) => prev.filter((item) => !item.readAt));
+
+    try {
+      setMutating(true);
+      await apiRequest("/api/notifications/clear-read", { method: "POST" });
+    } catch {
+      setItems(prevItemsSnapshot);
+    } finally {
+      setMutating(false);
+    }
+  }, [items]);
+
+  return { items, unreadCount, loading, mutating, refresh, markRead, markAllRead, deleteOne, clearRead };
 }

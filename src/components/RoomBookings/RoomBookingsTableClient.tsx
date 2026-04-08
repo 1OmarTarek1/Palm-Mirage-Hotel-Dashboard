@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import DynamicTable from "@/components/shared/table/DynamicTable";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { roomBookingColumns, roomBookingFilters } from "@/config/tablePresets/roomBookingColumns";
-import { fetchRoomBookings, updateRoomBooking } from "@/lib/room-bookings";
+import { fetchRoomBookings, fetchRoomBookingsPage, updateRoomBooking } from "@/lib/room-bookings";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import type { RoomBooking, RoomBookingDraft } from "./data";
@@ -27,11 +28,32 @@ function mapBookingToDraft(booking: RoomBooking): RoomBookingDraft {
 
 function RoomBookingsTableClient() {
   const queryClient = useQueryClient();
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: queryKeys.roomBookings.list,
-    queryFn: () => fetchRoomBookings(),
+  const {
+    setTableQuery,
+    pageItems: bookings,
+    overviewItems: allBookings,
+    totalEntries: totalBookings,
+    isLoading,
+  } = useServerTableData<RoomBooking>({
+    queryKeyBase: queryKeys.roomBookings.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
+      fetchRoomBookingsPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
+        paymentStatus:
+          typeof query.filters.paymentStatus === "string"
+            ? query.filters.paymentStatus
+            : undefined,
+        sort: "newest",
+      }),
+    fetchOverview: () => fetchRoomBookings(),
     staleTime: 0,
     gcTime: 120_000,
+    // Fallback for demos: keep the table fresh even when realtime events/webhooks are delayed.
+    refetchInterval: 10_000,
   });
 
   const [highlightedBookingIds, setHighlightedBookingIds] = useState<string[]>([]);
@@ -93,18 +115,18 @@ function RoomBookingsTableClient() {
     const todayKey = new Date().toISOString().slice(0, 10);
     const isSameDay = (value?: string) => Boolean(value) && value?.slice(0, 10) === todayKey;
 
-    const arrivalsToday = bookings.filter((booking) => isSameDay(booking.checkInDate)).length;
-    const departuresToday = bookings.filter((booking) => isSameDay(booking.checkOutDate)).length;
-    const pendingBookings = bookings.filter((booking) => booking.status === "pending").length;
-    const unpaidBookings = bookings.filter((booking) => booking.paymentStatus === "unpaid").length;
-    const checkedInGuests = bookings.filter((booking) => booking.status === "checked-in").length;
-    const noShowBookings = bookings.filter((booking) => booking.status === "no-show").length;
-    const cancelledBookings = bookings.filter((booking) => booking.status === "cancelled").length;
+    const arrivalsToday = allBookings.filter((booking) => isSameDay(booking.checkInDate)).length;
+    const departuresToday = allBookings.filter((booking) => isSameDay(booking.checkOutDate)).length;
+    const pendingBookings = allBookings.filter((booking) => booking.status === "pending").length;
+    const unpaidBookings = allBookings.filter((booking) => booking.paymentStatus === "unpaid").length;
+    const checkedInGuests = allBookings.filter((booking) => booking.status === "checked-in").length;
+    const noShowBookings = allBookings.filter((booking) => booking.status === "no-show").length;
+    const cancelledBookings = allBookings.filter((booking) => booking.status === "cancelled").length;
     const totalRevenue = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,
-    }).format(bookings.reduce((sum, booking) => sum + booking.totalPrice, 0));
+    }).format(allBookings.reduce((sum, booking) => sum + booking.totalPrice, 0));
 
     return {
       arrivalsToday,
@@ -116,7 +138,7 @@ function RoomBookingsTableClient() {
       cancelledBookings,
       totalRevenue,
     };
-  }, [bookings]);
+  }, [allBookings]);
 
   const pageAlerts = useMemo(
     () => ({
@@ -189,6 +211,9 @@ function RoomBookingsTableClient() {
             isLoading={isLoading}
             filtersConfig={roomBookingFilters}
             pageSize={6}
+            mode="server"
+            totalEntries={totalBookings}
+            onQueryChange={setTableQuery}
             searchPlaceholder="Search room bookings..."
             actions={actions}
             highlightedRowKeys={highlightedBookingIds}

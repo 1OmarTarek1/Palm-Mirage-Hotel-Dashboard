@@ -9,6 +9,7 @@ export interface User {
   phoneNumber?: string;
   isConfirmed: boolean;
   image?: string;
+  imageFile?: File | null;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -40,12 +40,6 @@ export const authOptions: NextAuthOptions = {
       },
       authorize: async (credentials) => {
         const loginUrl = `${API_BASE_URL}/auth/login`;
-        // Safe diagnostics: which source, which URL
-        const baseUrlSource = process.env.API_BASE_URL ? "API_BASE_URL" : 
-                            process.env.NEXT_PUBLIC_API_BASE_URL ? "NEXT_PUBLIC_API_BASE_URL" : 
-                            process.env.NODE_ENV === "development" ? "dev-fallback" : "unknown";
-
-        console.log(`[NextAuth] Authorize Attempt: ${loginUrl} (Source: ${baseUrlSource})`);
 
         const response = await fetch(loginUrl, {
           method: "POST",
@@ -60,13 +54,22 @@ export const authOptions: NextAuthOptions = {
 
         // Safe logging of response status
         if (!response.ok) {
-          const textExcerpt = await (await response.clone().text()).slice(0, 100);
-          console.error(`[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`);
-          throw new Error(`Auth Error: ${response.status}`);
+          const rawText = await response.clone().text();
+          const textExcerpt = rawText.slice(0, 200);
+          let backendMessage = "";
+          try {
+            const parsed = JSON.parse(rawText);
+            backendMessage = parsed?.message || "";
+          } catch {
+            backendMessage = "";
+          }
+          console.error(
+            `[NextAuth] Login failed with status: ${response.status}. URL: ${loginUrl}. Snippet: ${textExcerpt}`
+          );
+          throw new Error(backendMessage || `Auth Error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log(`[NextAuth] Authorize Response Status: ${response.status}`);
 
         if (data.message === "Done") {
           // Broad search for the token: data.token, data.accessToken, or nested in data.data

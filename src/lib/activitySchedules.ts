@@ -5,6 +5,7 @@ import type {
   ActivityScheduleStatus,
 } from "@/components/ActivitySchedules/data";
 import { apiRequest, getErrorMessage } from "@/lib/api-client";
+import { fetchAllPaginatedItems } from "@/lib/fetchAllPaginatedItems";
 
 interface ApiActivitySummary {
   id?: string;
@@ -83,16 +84,61 @@ function buildPayload(schedule: ActivityScheduleDraft) {
 
 export async function fetchActivitySchedules() {
   try {
-    const data = await apiRequest<{ data?: { schedules?: ApiActivitySchedule[] } }>("/api/activity-schedules", {
-      params: {
-        limit: 100,
-        sort: "date_asc",
+    const schedules = await fetchAllPaginatedItems<
+      {
+        data?: {
+          schedules?: ApiActivitySchedule[];
+          pagination?: { page?: number; limit?: number; totalPages?: number };
+        };
       },
+      ApiActivitySchedule
+    >({
+      pageSize: 100,
+      requestPage: ({ page, limit }) =>
+        apiRequest("/api/activity-schedules", {
+          params: {
+            page,
+            limit,
+            sort: "date_asc",
+          },
+        }),
+      extractItems: (response) => response?.data?.schedules ?? [],
+      extractPagination: (response) => response?.data,
     });
+    return schedules.map(mapApiSchedule);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
 
-    const schedules = data?.data?.schedules;
+export type ActivitySchedulesListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  sort?: "newest" | "oldest" | "date_asc" | "date_desc";
+};
 
-    return Array.isArray(schedules) ? schedules.map(mapApiSchedule) : [];
+export async function fetchActivitySchedulesPage(params: ActivitySchedulesListQuery = {}) {
+  try {
+    const data = await apiRequest<{
+      data?: {
+        schedules?: ApiActivitySchedule[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/activity-schedules", { params });
+
+    const rows = data?.data?.schedules ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(rows) ? rows.map(mapApiSchedule) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

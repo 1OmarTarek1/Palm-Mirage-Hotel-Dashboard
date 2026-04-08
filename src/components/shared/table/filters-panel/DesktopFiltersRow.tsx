@@ -67,7 +67,7 @@ export default function DesktopFiltersRow<T>({
                 onFilterChange(config.key, value === "__all__" ? "" : value)
               }
             >
-              <SelectTrigger className="h-10 min-w-40 cursor-pointer rounded-xl px-3 py-2 text-xs font-medium">
+              <SelectTrigger className="h-11 min-w-40 cursor-pointer rounded-xl px-3 text-xs font-medium">
                 <SelectValue placeholder={`All ${config.label}`} />
               </SelectTrigger>
               <SelectContent>
@@ -80,7 +80,7 @@ export default function DesktopFiltersRow<T>({
               </SelectContent>
             </Select>
           ) : (
-            <div className="flex items-center gap-1 rounded-xl border border-border bg-card px-2 py-1.5 shadow-sm">
+            <div className="flex min-h-11 items-center gap-1 rounded-xl border border-border bg-card px-2 py-1.5 shadow-sm">
               <span className="font-header text-[10px] font-bold uppercase text-muted-foreground/70">
                 {config.label}:
               </span>
@@ -92,7 +92,7 @@ export default function DesktopFiltersRow<T>({
                 onChange={(event) =>
                   onRangeChange(config.key, "min", event.target.value)
                 }
-                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
+                className="h-8 w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
               />
               <span className="text-muted-foreground/70">-</span>
               <input
@@ -103,7 +103,7 @@ export default function DesktopFiltersRow<T>({
                 onChange={(event) =>
                   onRangeChange(config.key, "max", event.target.value)
                 }
-                className="w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
+                className="h-8 w-16 rounded-md bg-transparent px-1 font-main text-xs text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-muted/50"
               />
             </div>
           )}

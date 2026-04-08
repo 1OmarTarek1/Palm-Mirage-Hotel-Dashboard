@@ -1,5 +1,6 @@
 import type { ActivityBooking, ActivityBookingDraft } from "@/components/ActivityBookings/data";
 import { apiRequest, getErrorMessage } from "@/lib/api-client";
+import { fetchAllPaginatedItems } from "@/lib/fetchAllPaginatedItems";
  
 interface ApiBooking {
   _id?: string;
@@ -72,15 +73,53 @@ function mapApiBooking(booking: ApiBooking): ActivityBooking {
 
 export async function fetchActivityBookings() {
   try {
-    const data = await apiRequest<{ data?: { bookings?: ApiBooking[] } }>("/api/activity-bookings", {
-      params: {
-        limit: 100,
-      },
+    const bookings = await fetchAllPaginatedItems<
+      { data?: { bookings?: ApiBooking[]; pagination?: { page?: number; limit?: number; totalPages?: number } } },
+      ApiBooking
+    >({
+      pageSize: 100,
+      requestPage: ({ page, limit }) =>
+        apiRequest("/api/activity-bookings", {
+          params: { page, limit },
+        }),
+      extractItems: (response) => response?.data?.bookings ?? [],
+      extractPagination: (response) => response?.data,
     });
+    return bookings.map(mapApiBooking);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
 
-    const bookings = data?.data?.bookings;
+export type ActivityBookingsListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  paymentStatus?: string;
+  sort?: "newest" | "oldest";
+};
 
-    return Array.isArray(bookings) ? bookings.map(mapApiBooking) : [];
+export async function fetchActivityBookingsPage(params: ActivityBookingsListQuery = {}) {
+  try {
+    const data = await apiRequest<{
+      data?: {
+        bookings?: ApiBooking[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/activity-bookings", { params });
+
+    const rows = data?.data?.bookings ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(rows) ? rows.map(mapApiBooking) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

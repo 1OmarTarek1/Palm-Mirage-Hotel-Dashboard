@@ -24,10 +24,13 @@ export default function BadgeCell({ resolvedValue, displayMode = "table" }: Cell
   };
 
   return (
-    <div className={`flex ${displayMode === "card" ? "justify-start" : "justify-center"}`}>
+    <div className={`flex min-w-0 ${displayMode === "card" ? "justify-start" : "justify-center"}`}>
       <span
+        title={label}
         className={`inline-flex items-center rounded-full font-main font-bold uppercase tracking-widest ring-1 ring-inset shadow-sm transition-colors duration-300 ${getVariantClasses(value)} ${
-          displayMode === "card" ? "px-2.5 py-1 text-[9px]" : "px-3 py-1 text-[10px]"
+          displayMode === "card"
+            ? "max-w-full px-2.5 py-1 text-[9px]"
+            : "max-w-[9rem] truncate px-3 py-1 text-[10px]"
         }`}
       >
         {label}

@@ -49,7 +49,11 @@ export default function Dashboard() {
   } = useQuery<DashboardData>({
     queryKey: queryKeys.dashboardHome.stats,
     queryFn: getDashboardData,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 10_000,
   });
 
   const errorMessage = isError

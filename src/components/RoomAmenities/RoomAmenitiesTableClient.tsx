@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BadgeInfo, Sparkles, Type, Wand2 } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -13,8 +13,10 @@ import {
   createRoomAmenity,
   deleteRoomAmenity,
   fetchRoomAmenities,
+  fetchRoomAmenitiesPage,
   updateRoomAmenity,
 } from "@/lib/room-amenities";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import type { RoomAmenity } from "@/types/room-amenity";
@@ -23,9 +25,32 @@ import RoomAmenityForm from "./RoomAmenityForm";
 
 export default function RoomAmenitiesTableClient() {
   const queryClient = useQueryClient();
-  const { data: amenities = [], isLoading } = useQuery({
-    queryKey: queryKeys.roomAmenities.list,
-    queryFn: fetchRoomAmenities,
+  const {
+    setTableQuery,
+    pageItems: amenities,
+    overviewItems: allAmenities,
+    totalEntries: totalAmenitiesCount,
+    isLoading,
+  } = useServerTableData<RoomAmenity>({
+    queryKeyBase: queryKeys.roomAmenities.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
+      fetchRoomAmenitiesPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        sort:
+          query.sort?.key === "name"
+            ? query.sort.direction === "asc"
+              ? "name_asc"
+              : "name_desc"
+            : query.sort?.key === "updatedAt"
+              ? query.sort.direction === "asc"
+                ? "oldest"
+                : "newest"
+              : "newest",
+      }),
+    fetchOverview: fetchRoomAmenities,
     staleTime: 45_000,
   });
   const [creatingDraft, setCreatingDraft] = useState<RoomAmenity | null>(null);
@@ -50,11 +75,11 @@ export default function RoomAmenitiesTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalAmenities = amenities.length;
-    const withIcons = amenities.filter((amenity) => Boolean(amenity.icon)).length;
-    const withDescriptions = amenities.filter((amenity) => amenity.description.trim().length > 0).length;
+    const totalAmenities = totalAmenitiesCount;
+    const withIcons = allAmenities.filter((amenity) => Boolean(amenity.icon)).length;
+    const withDescriptions = allAmenities.filter((amenity) => amenity.description.trim().length > 0).length;
     const averageNameLength = totalAmenities > 0
-      ? Math.round(amenities.reduce((sum, amenity) => sum + amenity.name.trim().length, 0) / totalAmenities)
+      ? Math.round(allAmenities.reduce((sum, amenity) => sum + amenity.name.trim().length, 0) / totalAmenities)
       : 0;
 
     return [
@@ -89,7 +114,7 @@ export default function RoomAmenitiesTableClient() {
         tone: "secondary" as const,
       },
     ];
-  }, [amenities]);
+  }, [allAmenities, totalAmenitiesCount]);
 
   const handleConfirmCreate = async () => {
     if (!creatingDraft) return;
@@ -161,6 +186,9 @@ export default function RoomAmenitiesTableClient() {
           isLoading={isLoading}
           filtersConfig={roomAmenityFilters}
           pageSize={6}
+          mode="server"
+          totalEntries={totalAmenitiesCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search room amenities..."
           actions={actions}
         />

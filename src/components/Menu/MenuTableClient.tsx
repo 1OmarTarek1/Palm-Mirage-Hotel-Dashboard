@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, CookingPot, Salad, Store } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
@@ -9,7 +9,8 @@ import DynamicTable from "@/components/shared/table/DynamicTable";
 import TableOverview from "@/components/shared/table/TableOverview";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import { menuColumns, menuFilters } from "@/config/tablePresets/menuColumns";
-import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
+import { fetchMenuItems, fetchMenuItemsPage, createMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/menu";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { DASHBOARD_MODAL_EVENTS } from "@/lib/modal-events";
 import { queryKeys } from "@/lib/queryKeys";
 import { createEmptyMenuDraft, type MenuItem } from "./data";
@@ -20,9 +21,39 @@ import MenuDeleteConfirm from "./MenuDeleteConfirm";
 
 function MenuTableClient() {
   const queryClient = useQueryClient();
-  const { data: menuItems = [], isLoading } = useQuery({
-    queryKey: queryKeys.menu.list,
-    queryFn: fetchMenuItems,
+  const {
+    setTableQuery,
+    pageItems: menuItems,
+    overviewItems: allMenuItems,
+    totalEntries: totalItemsCount,
+    isLoading,
+  } = useServerTableData<MenuItem>({
+    queryKeyBase: queryKeys.menu.all,
+    initialPageSize: 6,
+    fetchPage: (query) =>
+      fetchMenuItemsPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        category: typeof query.filters.category === "string" ? query.filters.category : undefined,
+        available:
+          typeof query.filters.available === "string" ? query.filters.available : undefined,
+        sort:
+          query.sort?.key === "price"
+            ? query.sort.direction === "asc"
+              ? "price_asc"
+              : "price_desc"
+            : query.sort?.key === "name"
+              ? query.sort.direction === "asc"
+                ? "name_asc"
+                : "name_desc"
+              : query.sort?.key === "createdAt"
+                ? query.sort.direction === "asc"
+                  ? "oldest"
+                  : "newest"
+                : "newest",
+      }),
+    fetchOverview: fetchMenuItems,
     staleTime: 45_000,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -60,11 +91,11 @@ function MenuTableClient() {
   );
 
   const overviewItems = useMemo(() => {
-    const totalItems = menuItems.length;
-    const availableItems = menuItems.filter((item) => item.available).length;
-    const categories = new Set(menuItems.map((item) => item.category)).size;
+    const totalItems = totalItemsCount;
+    const availableItems = allMenuItems.filter((item) => item.available).length;
+    const categories = new Set(allMenuItems.map((item) => item.category)).size;
     const averagePrice = totalItems > 0
-      ? Math.round(menuItems.reduce((sum, item) => sum + item.price, 0) / totalItems)
+      ? Math.round(allMenuItems.reduce((sum, item) => sum + item.price, 0) / totalItems)
       : 0;
 
     return [
@@ -98,7 +129,7 @@ function MenuTableClient() {
         icon: CircleDollarSign,
       },
     ];
-  }, [menuItems]);
+  }, [allMenuItems, totalItemsCount]);
 
   const handleCloseViewModal = () => setViewingItemId(null);
   const handleCloseAddModal = () => {
@@ -189,7 +220,10 @@ function MenuTableClient() {
           data={menuItems}
           isLoading={isLoading}
           filtersConfig={menuFilters}
-          pageSize={6}
+          pageSize={10}
+          mode="server"
+          totalEntries={totalItemsCount}
+          onQueryChange={setTableQuery}
           searchPlaceholder="Search menu products..."
           actions={actions}
         />

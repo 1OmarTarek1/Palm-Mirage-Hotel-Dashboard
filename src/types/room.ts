@@ -1,1 +1,1 @@
-export interface Room {}
+export type Room = Record<string, unknown>;

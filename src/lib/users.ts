@@ -33,6 +33,21 @@ function mapApiUser(user: ApiUser): User {
 }
 
 function buildUserPayload(user: User) {
+  if (user.imageFile) {
+    const formData = new FormData();
+    formData.append("userName", user.userName);
+    formData.append("email", user.email);
+    formData.append("role", user.role);
+    formData.append("gender", user.gender);
+    formData.append("country", user.country);
+    formData.append("phoneNumber", user.phoneNumber ?? "");
+    formData.append("isConfirmed", String(user.isConfirmed));
+    formData.append("password", user.password ?? "");
+    formData.append("image", user.imageFile);
+
+    return formData;
+  }
+
   return {
     userName: user.userName,
     email: user.email,
@@ -55,9 +70,45 @@ function buildUserUpdatePayload(user: User) {
 
 export async function fetchUsers(): Promise<User[]> {
   try {
-    const data = await apiRequest<{ data?: { users?: ApiUser[] } }>("/api/users");
+    const data = await apiRequest<{ data?: { users?: ApiUser[] } }>("/api/users", {
+      params: { page: 1, limit: 1000 },
+    });
     const users = data?.data?.users ?? [];
     return Array.isArray(users) ? users.map(mapApiUser) : [];
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type UsersListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  gender?: string;
+  isConfirmed?: string;
+  sort?: "newest" | "oldest" | "userName_asc" | "userName_desc";
+};
+
+export async function fetchUsersPage(params: UsersListQuery = {}) {
+  try {
+    const data = await apiRequest<{
+      data?: {
+        users?: ApiUser[];
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/users", { params });
+    const users = data?.data?.users ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(users) ? users.map(mapApiUser) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

@@ -1,5 +1,6 @@
 import type { MenuItem, MenuCategory, MenuIcon } from "@/components/Menu/data";
 import { apiRequest, getErrorMessage } from "@/lib/api-client";
+import { fetchAllPaginatedItems } from "@/lib/fetchAllPaginatedItems";
 
 interface ApiMenuItem {
   _id?: string;
@@ -52,27 +53,68 @@ function buildMenuFormData(item: MenuItem) {
   return formData;
 }
 
-/** Backend paginates get-all-items (default limit 10); dashboard needs the full list for the table. */
-const MENU_ADMIN_LIST_LIMIT = 500;
-
 export async function fetchMenuItems() {
   try {
-    const qs = new URLSearchParams({
-      page: "1",
-      limit: String(MENU_ADMIN_LIST_LIMIT),
+    const items = await fetchAllPaginatedItems<
+      {
+        data?:
+          | {
+              items?: ApiMenuItem[];
+              menuItems?: ApiMenuItem[];
+              pagination?: { page?: number; limit?: number; totalPages?: number };
+            }
+          | ApiMenuItem[];
+      },
+      ApiMenuItem
+    >({
+      pageSize: 100,
+      requestPage: ({ page, limit }) =>
+        apiRequest("/api/menu", {
+          params: { page, limit },
+        }),
+      extractItems: (response) => {
+        if (Array.isArray(response?.data)) return response.data;
+        return response?.data?.items ?? response?.data?.menuItems ?? [];
+      },
+      extractPagination: (response) =>
+        Array.isArray(response?.data) ? undefined : response?.data,
     });
+
+    return items.map(mapApiMenuItem);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export type MenuListQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  available?: string;
+  sort?: "newest" | "oldest" | "price_asc" | "price_desc" | "name_asc" | "name_desc";
+};
+
+export async function fetchMenuItemsPage(params: MenuListQuery = {}) {
+  try {
     const data = await apiRequest<{
       data?: {
         items?: ApiMenuItem[];
-        menuItems?: ApiMenuItem[];
-      } | ApiMenuItem[];
-    }>(`/api/menu?${qs.toString()}`);
+        pagination?: { page?: number; limit?: number; total?: number; totalPages?: number };
+      };
+    }>("/api/menu", { params });
 
-    const items = Array.isArray(data?.data)
-      ? data.data
-      : data?.data?.items ?? data?.data?.menuItems ?? [];
-
-    return Array.isArray(items) ? items.map(mapApiMenuItem) : [];
+    const rows = data?.data?.items ?? [];
+    const pg = data?.data?.pagination ?? {};
+    return {
+      items: Array.isArray(rows) ? rows.map(mapApiMenuItem) : [],
+      pagination: {
+        page: Number(pg.page ?? params.page ?? 1),
+        limit: Number(pg.limit ?? params.limit ?? 10),
+        total: Number(pg.total ?? 0),
+        totalPages: Number(pg.totalPages ?? 1),
+      },
+    };
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

@@ -1,16 +1,21 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import DashboardSectionCard from "@/components/shared/layouts/DashboardSectionCard";
 import SharedModal from "@/components/shared/modal/SharedModal";
 import DynamicTable from "@/components/shared/table/DynamicTable";
+import { useServerTableData } from "@/hooks/useServerTableData";
 import { useDashboardAlerts } from "@/components/shared/alerts/dashboard-alerts-context";
 import { queryKeys } from "@/lib/queryKeys";
 import { restaurantBookingColumns, restaurantBookingFilters } from "@/config/tablePresets/restaurantBookingColumns";
-import { fetchRestaurantBookings, updateRestaurantBooking } from "@/lib/restaurant-bookings";
+import {
+  fetchRestaurantBookings,
+  fetchRestaurantBookingsPage,
+  updateRestaurantBooking,
+} from "@/lib/restaurant-bookings";
 
 import RestaurantBookingDetailsView from "./RestaurantBookingDetailsView";
 import RestaurantBookingEditForm from "./RestaurantBookingEditForm";
@@ -28,9 +33,28 @@ function mapBookingToDraft(booking: RestaurantBooking): RestaurantBookingDraft {
 
 export default function RestaurantBookingsTableClient() {
   const queryClient = useQueryClient();
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: queryKeys.restaurantBookings.list,
-    queryFn: fetchRestaurantBookings,
+  const {
+    setTableQuery,
+    pageItems: bookings,
+    overviewItems: allBookings,
+    totalEntries: totalBookingsCount,
+    isLoading,
+  } = useServerTableData<RestaurantBooking>({
+    queryKeyBase: queryKeys.restaurantBookings.all,
+    initialPageSize: 8,
+    fetchPage: (query) =>
+      fetchRestaurantBookingsPage({
+        page: query.page,
+        limit: query.pageSize,
+        search: query.search || undefined,
+        status: typeof query.filters.status === "string" ? query.filters.status : undefined,
+        paymentStatus:
+          typeof query.filters.paymentStatus === "string"
+            ? query.filters.paymentStatus
+            : undefined,
+        sort: "newest",
+      }),
+    fetchOverview: fetchRestaurantBookings,
     staleTime: 0,
     gcTime: 120_000,
   });
@@ -52,13 +76,13 @@ export default function RestaurantBookingsTableClient() {
   const bookingOverview = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10);
 
-    const totalBookings = bookings.length;
-    const pendingBookings = bookings.filter((booking) => booking.status === "pending").length;
-    const assignedTables = bookings.filter((booking) => booking.tableNumber !== null).length;
-    const totalGuests = bookings.reduce((sum, booking) => sum + booking.guests, 0);
-    const unassignedBookings = bookings.filter((booking) => booking.tableNumber === null).length;
-    const largePartyBookings = bookings.filter((booking) => booking.guests >= 5).length;
-    const completedToday = bookings.filter(
+    const totalBookings = totalBookingsCount;
+    const pendingBookings = allBookings.filter((booking) => booking.status === "pending").length;
+    const assignedTables = allBookings.filter((booking) => booking.tableNumber !== null).length;
+    const totalGuests = allBookings.reduce((sum, booking) => sum + booking.guests, 0);
+    const unassignedBookings = allBookings.filter((booking) => booking.tableNumber === null).length;
+    const largePartyBookings = allBookings.filter((booking) => booking.guests >= 5).length;
+    const completedToday = allBookings.filter(
       (booking) => booking.status === "completed" && booking.bookingDate === todayKey
     ).length;
 
@@ -71,7 +95,7 @@ export default function RestaurantBookingsTableClient() {
       largePartyBookings,
       completedToday,
     };
-  }, [bookings]);
+  }, [allBookings, totalBookingsCount]);
 
   useDashboardAlerts({
     title: "Restaurant notifications",
@@ -140,6 +164,9 @@ export default function RestaurantBookingsTableClient() {
             isLoading={isLoading}
             filtersConfig={restaurantBookingFilters}
             pageSize={8}
+            mode="server"
+            totalEntries={totalBookingsCount}
+            onQueryChange={setTableQuery}
             searchPlaceholder="Search restaurant bookings..."
             actions={actions}
           />

@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { Input } from "@/components/ui/input";
 
 import type { RestaurantTableDraft } from "./data";
@@ -15,18 +13,11 @@ export default function RestaurantTableForm({
   draft,
   onChange,
 }: RestaurantTableFormProps) {
-  const [formData, setFormData] = useState<RestaurantTableDraft>(draft);
-
-  useEffect(() => {
-    setFormData(draft);
-  }, [draft]);
-
   const handleChange = <K extends keyof RestaurantTableDraft>(
     key: K,
     value: RestaurantTableDraft[K]
   ) => {
-    const next = { ...formData, [key]: value };
-    setFormData(next);
+    const next = { ...draft, [key]: value };
     onChange(next);
   };
 
@@ -37,7 +28,7 @@ export default function RestaurantTableForm({
         <Input
           type="number"
           min={1}
-          value={formData.number}
+          value={draft.number}
           onChange={(event) => handleChange("number", Number(event.target.value))}
           className="h-11 rounded-xl bg-card px-4"
         />
@@ -48,7 +39,7 @@ export default function RestaurantTableForm({
         <Input
           type="number"
           min={1}
-          value={formData.chairs}
+          value={draft.chairs}
           onChange={(event) => handleChange("chairs", Number(event.target.value))}
           className="h-11 rounded-xl bg-card px-4"
         />

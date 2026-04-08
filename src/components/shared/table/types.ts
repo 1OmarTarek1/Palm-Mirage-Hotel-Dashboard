@@ -28,6 +28,13 @@ export interface SortConfig<T> {
   key: Column<T>["key"];
   direction: "asc" | "desc";
 }
+export interface TableQueryState<T> {
+  page: number;
+  pageSize: number;
+  search: string;
+  filters: Filters<T>;
+  sort: SortConfig<T> | null;
+}
 
 export interface RangeFilterValue {
   min?: number | string;
@@ -56,6 +63,9 @@ export interface DynamicTableProps<T> {
   data: T[];
   isLoading?: boolean;
   pageSize?: number;
+  mode?: "client" | "server";
+  totalEntries?: number;
+  onQueryChange?: (state: TableQueryState<T>) => void;
   searchPlaceholder?: string;
   filtersConfig?: FilterConfig<T>[];
   actions?: RowActionConfig<T>[];

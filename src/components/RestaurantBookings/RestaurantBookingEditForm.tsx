@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import {
   Select,
   SelectContent,
@@ -27,21 +25,13 @@ export default function RestaurantBookingEditForm({
   booking,
   onChange,
 }: RestaurantBookingEditFormProps) {
-  const [formData, setFormData] = useState<RestaurantBookingDraft>(booking);
-
-  useEffect(() => {
-    setFormData(booking);
-  }, [booking]);
-
   const handleStatus = (status: RestaurantBookingDraft["status"]) => {
-    const updated = { ...formData, status };
-    setFormData(updated);
+    const updated = { ...booking, status };
     onChange(updated);
   };
 
   const handlePaymentStatus = (paymentStatus: NonNullable<RestaurantBookingDraft["paymentStatus"]>) => {
-    const updated = { ...formData, paymentStatus };
-    setFormData(updated);
+    const updated = { ...booking, paymentStatus };
     onChange(updated);
   };
 
@@ -50,7 +40,7 @@ export default function RestaurantBookingEditForm({
       <label className="space-y-2">
         <span className="font-main text-sm font-semibold text-foreground">Status</span>
         <Select
-          value={formData.status}
+          value={booking.status}
           onValueChange={(value) => handleStatus(value as RestaurantBookingDraft["status"])}
         >
           <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -69,7 +59,7 @@ export default function RestaurantBookingEditForm({
       <label className="space-y-2">
         <span className="font-main text-sm font-semibold text-foreground">Payment status</span>
         <Select
-          value={formData.paymentStatus ?? "unpaid"}
+          value={booking.paymentStatus ?? "unpaid"}
           onValueChange={(value) =>
             handlePaymentStatus(value as NonNullable<RestaurantBookingDraft["paymentStatus"]>)
           }

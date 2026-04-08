@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -18,15 +18,8 @@ interface RoomAmenityFormProps {
 }
 
 export default function RoomAmenityForm({ amenity, onChange }: RoomAmenityFormProps) {
-  const [formData, setFormData] = useState<RoomAmenity>(amenity);
-
-  useEffect(() => {
-    setFormData(amenity);
-  }, [amenity]);
-
   const handleChange = <K extends keyof RoomAmenity>(key: K, value: RoomAmenity[K]) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...amenity, [key]: value };
     onChange(updated);
   };
 
@@ -36,7 +29,7 @@ export default function RoomAmenityForm({ amenity, onChange }: RoomAmenityFormPr
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Amenity Name</span>
           <input
-            value={formData.name}
+            value={amenity.name}
             onChange={(event) => handleChange("name", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
             placeholder="e.g. Air Conditioning"
@@ -47,10 +40,10 @@ export default function RoomAmenityForm({ amenity, onChange }: RoomAmenityFormPr
           <span className="font-main text-sm font-semibold text-foreground">Icon</span>
           <div className="flex items-center gap-3">
             <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl border border-border bg-primary/5 text-primary">
-              <DynamicIcon name={formData.icon || "Wifi"} size={22} />
+              <DynamicIcon name={amenity.icon || "Wifi"} size={22} />
             </div>
             <Select
-              value={formData.icon || "Wifi"}
+              value={amenity.icon || "Wifi"}
               onValueChange={(value) => handleChange("icon", value)}
             >
               <SelectTrigger className="h-[50px] rounded-2xl border-border bg-muted/35">
@@ -73,7 +66,7 @@ export default function RoomAmenityForm({ amenity, onChange }: RoomAmenityFormPr
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Description</span>
           <textarea
-            value={formData.description}
+            value={amenity.description}
             onChange={(event) => handleChange("description", event.target.value)}
             rows={3}
             className="font-main w-full resize-none rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"

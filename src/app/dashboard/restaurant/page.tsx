@@ -19,15 +19,15 @@ export default function RestaurantPage() {
         <div className="flex justify-start">
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/restaurant/bookings">
-                <BookMarked className="h-4 w-4" />
-                Restaurant bookings
+              <Link href="/dashboard/menu">
+                <UtensilsCrossed className="h-4 w-4" />
+                Menus
               </Link>
             </Button>
             <Button asChild variant="palmSecondary">
-              <Link href="/dashboard/menu">
-                <UtensilsCrossed className="h-4 w-4" />
-                Menu
+              <Link href="/dashboard/restaurant/bookings">
+                <BookMarked className="h-4 w-4" />
+                Bookings
               </Link>
             </Button>
           </div>
