@@ -51,7 +51,7 @@ function MenuTableClient() {
                 ? query.sort.direction === "asc"
                   ? "oldest"
                   : "newest"
-                : undefined,
+                : "newest",
       }),
     fetchOverview: fetchMenuItems,
     staleTime: 45_000,

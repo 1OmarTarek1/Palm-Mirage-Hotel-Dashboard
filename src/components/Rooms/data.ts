@@ -43,6 +43,7 @@ export interface RoomDraft
     "id" | "createdAt" | "reviewsCount" | "viewsCount" | "rating" | "finalPrice" | "amenityDetails"
   > {
   imageFiles?: File[];
+  deletedImageIds?: string[];
 }
 
 export function createEmptyRoomDraft(): RoomDraft {
@@ -62,5 +63,6 @@ export function createEmptyRoomDraft(): RoomDraft {
     checkInTime: "14:00",
     checkOutTime: "12:00",
     cancellationPolicy: "",
+    deletedImageIds: [],
   };
 }

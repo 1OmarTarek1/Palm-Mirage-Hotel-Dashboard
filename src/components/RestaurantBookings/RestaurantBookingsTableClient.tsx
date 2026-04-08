@@ -52,6 +52,7 @@ export default function RestaurantBookingsTableClient() {
           typeof query.filters.paymentStatus === "string"
             ? query.filters.paymentStatus
             : undefined,
+        sort: "newest",
       }),
     fetchOverview: fetchRestaurantBookings,
     staleTime: 0,

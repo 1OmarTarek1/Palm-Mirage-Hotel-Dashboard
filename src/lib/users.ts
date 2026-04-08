@@ -33,6 +33,21 @@ function mapApiUser(user: ApiUser): User {
 }
 
 function buildUserPayload(user: User) {
+  if (user.imageFile) {
+    const formData = new FormData();
+    formData.append("userName", user.userName);
+    formData.append("email", user.email);
+    formData.append("role", user.role);
+    formData.append("gender", user.gender);
+    formData.append("country", user.country);
+    formData.append("phoneNumber", user.phoneNumber ?? "");
+    formData.append("isConfirmed", String(user.isConfirmed));
+    formData.append("password", user.password ?? "");
+    formData.append("image", user.imageFile);
+
+    return formData;
+  }
+
   return {
     userName: user.userName,
     email: user.email,

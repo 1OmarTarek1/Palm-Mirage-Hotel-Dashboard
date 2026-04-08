@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -26,15 +26,8 @@ export default function MenuEditForm({
   item,
   onChange,
 }: MenuEditFormProps) {
-  const [formData, setFormData] = useState<MenuItem>(item);
-
-  useEffect(() => {
-    setFormData(item);
-  }, [item]);
-
   const handleChange = <K extends keyof MenuItem>(key: K, value: MenuItem[K]) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...item, [key]: value };
     onChange(updated);
   };
 
@@ -49,12 +42,11 @@ export default function MenuEditForm({
 
     const previewUrl = URL.createObjectURL(file);
     const updated: MenuItem = {
-      ...formData,
+      ...item,
       [type]: previewUrl,
       [`${type}File`]: file,
     };
 
-    setFormData(updated);
     onChange(updated);
   };
 
@@ -70,10 +62,10 @@ export default function MenuEditForm({
         <div className="space-y-4">
           <span className="text-sm font-semibold text-foreground">Product Image</span>
           <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-muted/30">
-            {formData.image ? (
+            {item.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={formData.image}
+                src={item.image}
                 alt="Preview"
                 className="h-full w-full object-cover"
               />
@@ -95,10 +87,10 @@ export default function MenuEditForm({
         <div className="space-y-4">
           <span className="text-sm font-semibold text-foreground">Category Hero Image</span>
           <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-muted/30">
-            {formData.categoryHeroImg ? (
+            {item.categoryHeroImg ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={formData.categoryHeroImg}
+                src={item.categoryHeroImg}
                 alt="Hero Preview"
                 className="h-full w-full object-cover"
               />
@@ -121,9 +113,9 @@ export default function MenuEditForm({
         <div className="space-y-2">
           <label className="text-sm font-semibold text-foreground">Name</label>
           <input
-            value={formData.name}
+            value={item.name}
             onChange={(e) => handleChange("name", e.target.value)}
-            className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm transition-[border-color,background-color,box-shadow] duration-150 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Item name"
           />
         </div>
@@ -132,9 +124,10 @@ export default function MenuEditForm({
           <label className="text-sm font-semibold text-foreground">Price ($)</label>
           <input
             type="number"
-            value={formData.price}
+            min="0"
+            value={item.price}
             onChange={(e) => handleNumberChange("price", e.target.value)}
-            className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm transition-[border-color,background-color,box-shadow] duration-150 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="0.00"
           />
         </div>
@@ -142,7 +135,7 @@ export default function MenuEditForm({
         <div className="space-y-2">
           <label className="text-sm font-semibold text-foreground">Category</label>
           <Select
-            value={formData.category}
+            value={item.category}
             onValueChange={(value) => handleChange("category", value as MenuItem["category"])}
           >
             <SelectTrigger className="h-11 rounded-xl bg-muted/30">
@@ -161,7 +154,7 @@ export default function MenuEditForm({
         <div className="space-y-2">
           <label className="text-sm font-semibold text-foreground">Category Icon</label>
           <Select
-            value={formData.categoryIcon}
+            value={item.categoryIcon}
             onValueChange={(value) => handleChange("categoryIcon", value as MenuItem["categoryIcon"])}
           >
             <SelectTrigger className="h-11 rounded-xl bg-muted/30">
@@ -184,22 +177,22 @@ export default function MenuEditForm({
           <label className="text-sm font-semibold text-foreground">Visibility / Availability</label>
           <button
             type="button"
-            onClick={() => handleChange("available", !formData.available)}
+            onClick={() => handleChange("available", !item.available)}
             className={`flex w-full items-center justify-between rounded-xl border p-4 transition-all ${
-              formData.available
+              item.available
                 ? "border-primary/20 bg-primary/5 text-primary"
                 : "border-border bg-muted/20 text-muted-foreground"
             }`}
           >
-            <span className="font-semibold">{formData.available ? "Currently Available" : "Sold Out / Hidden"}</span>
-            <div className={`h-2 w-2 rounded-full ${formData.available ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+            <span className="font-semibold">{item.available ? "Currently Available" : "Sold Out / Hidden"}</span>
+            <div className={`h-2 w-2 rounded-full ${item.available ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
           </button>
         </div>
 
         <div className="space-y-2 md:col-span-2">
           <label className="text-sm font-semibold text-foreground">Description</label>
           <textarea
-            value={formData.description}
+            value={item.description}
             onChange={(e) => handleChange("description", e.target.value)}
             rows={4}
             className="w-full rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"

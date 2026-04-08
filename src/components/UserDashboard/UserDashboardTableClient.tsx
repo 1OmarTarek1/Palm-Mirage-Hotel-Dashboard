@@ -40,7 +40,7 @@ function UserDashboardTableClient() {
             ? query.sort.direction === "asc"
               ? "userName_asc"
               : "userName_desc"
-            : undefined,
+            : "newest",
       }),
     fetchOverview: fetchUsers,
     staleTime: 45_000,

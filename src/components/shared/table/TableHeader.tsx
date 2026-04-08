@@ -62,7 +62,7 @@ export default function TableHeader<T>({
           <th
             key={String(col.key)}
             onClick={() => onSort(col)}
-            className={`px-6 py-5 font-header text-[13px] font-bold uppercase tracking-[0.14em] text-foreground/90 select-none ${getHeaderAlignmentClassName(col.headerAlign)}
+            className={`overflow-hidden px-6 py-5 font-header text-[13px] font-bold uppercase tracking-[0.14em] text-foreground/90 select-none ${getHeaderAlignmentClassName(col.headerAlign)}
               ${
                 col.sortable
                   ? "cursor-pointer transition-colors hover:text-primary"

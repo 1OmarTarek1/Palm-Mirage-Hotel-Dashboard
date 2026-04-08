@@ -18,6 +18,8 @@ type UseServerTableDataOptions<TItem, TOverview = TItem> = {
   fetchOverview?: () => Promise<TOverview[]>;
   staleTime?: number;
   gcTime?: number;
+  refetchInterval?: number | false;
+  refetchOnWindowFocus?: boolean;
 };
 
 export function useServerTableData<TItem, TOverview = TItem>({
@@ -27,6 +29,8 @@ export function useServerTableData<TItem, TOverview = TItem>({
   fetchOverview,
   staleTime = 45_000,
   gcTime,
+  refetchInterval = false,
+  refetchOnWindowFocus = true,
 }: UseServerTableDataOptions<TItem, TOverview>) {
   const [tableQuery, setTableQuery] = useState<TableQueryState<TItem>>({
     page: 1,
@@ -39,7 +43,10 @@ export function useServerTableData<TItem, TOverview = TItem>({
   const pageQuery = useQuery({
     queryKey: [...queryKeyBase, "list", tableQuery],
     queryFn: () => fetchPage(tableQuery),
+    placeholderData: (previousData) => previousData,
     staleTime,
+    refetchInterval,
+    refetchOnWindowFocus,
     ...(typeof gcTime === "number" ? { gcTime } : {}),
   });
 
@@ -47,6 +54,8 @@ export function useServerTableData<TItem, TOverview = TItem>({
     queryKey: [...queryKeyBase, "overview"],
     queryFn: async () => (fetchOverview ? fetchOverview() : ([] as TOverview[])),
     staleTime,
+    refetchInterval,
+    refetchOnWindowFocus,
     ...(typeof gcTime === "number" ? { gcTime } : {}),
     enabled: typeof fetchOverview === "function",
   });
@@ -57,6 +66,6 @@ export function useServerTableData<TItem, TOverview = TItem>({
     pageItems: pageQuery.data?.items ?? [],
     totalEntries: pageQuery.data?.pagination?.total ?? 0,
     overviewItems: (overviewQuery.data ?? []) as TOverview[],
-    isLoading: pageQuery.isLoading,
+    isLoading: pageQuery.isLoading && !pageQuery.data,
   };
 }

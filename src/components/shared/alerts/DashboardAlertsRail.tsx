@@ -15,6 +15,7 @@ interface DashboardAlertsRailProps {
   onClose: () => void;
   inboxItems: AdminInboxItem[];
   inboxLoading: boolean;
+  inboxBusy?: boolean;
   onInboxMarkRead: (id: string) => void;
   onInboxMarkAllRead: () => void;
   onInboxDeleteOne: (id: string) => void;
@@ -69,6 +70,7 @@ export default function DashboardAlertsRail({
   onClose,
   inboxItems,
   inboxLoading,
+  inboxBusy = false,
   onInboxMarkRead,
   onInboxMarkAllRead,
   onInboxDeleteOne,
@@ -166,10 +168,12 @@ export default function DashboardAlertsRail({
           <AdminInboxSection
             items={inboxItems}
             loading={inboxLoading}
+            busy={inboxBusy}
             onMarkRead={onInboxMarkRead}
             onMarkAllRead={onInboxMarkAllRead}
             onDeleteOne={onInboxDeleteOne}
             onClearRead={onInboxClearRead}
+            onNotificationNavigate={onClose}
           />
         </div>
       </aside>

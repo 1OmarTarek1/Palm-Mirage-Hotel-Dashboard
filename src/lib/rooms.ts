@@ -112,6 +112,12 @@ function buildRoomFormData(room: RoomDraft) {
       .forEach((id) => formData.append("amenities", id));
   }
 
+  if (room.deletedImageIds?.length) {
+    room.deletedImageIds
+      .filter((id) => id && typeof id === "string")
+      .forEach((id) => formData.append("deletedImages", id));
+  }
+
   if (room.imageFiles?.length) {
     room.imageFiles.forEach((file) => formData.append("roomImages", file));
   }

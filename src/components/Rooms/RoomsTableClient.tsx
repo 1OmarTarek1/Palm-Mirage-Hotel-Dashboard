@@ -48,7 +48,7 @@ function RoomsTableClient() {
                 ? query.sort.direction === "asc"
                   ? "oldest"
                   : "newest"
-                : undefined,
+                : "newest",
         roomType:
           typeof query.filters.roomType === "string"
             ? query.filters.roomType
@@ -216,6 +216,7 @@ function RoomsTableClient() {
           checkInTime: room.checkInTime,
           checkOutTime: room.checkOutTime,
           cancellationPolicy: room.cancellationPolicy,
+          deletedImageIds: [],
         });
         setEditingRoomId(room.id);
       },

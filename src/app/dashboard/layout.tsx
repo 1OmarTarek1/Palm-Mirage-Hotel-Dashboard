@@ -37,6 +37,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onClose={() => setIsAlertsPanelOpen(false)}
             inboxItems={inbox.items}
             inboxLoading={inbox.loading}
+            inboxBusy={inbox.mutating}
             onInboxMarkRead={(id) => void inbox.markRead(id)}
             onInboxMarkAllRead={() => void inbox.markAllRead()}
             onInboxDeleteOne={(id) => void inbox.deleteOne(id)}

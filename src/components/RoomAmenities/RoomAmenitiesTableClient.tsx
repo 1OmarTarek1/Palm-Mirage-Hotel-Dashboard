@@ -39,6 +39,16 @@ export default function RoomAmenitiesTableClient() {
         page: query.page,
         limit: query.pageSize,
         search: query.search || undefined,
+        sort:
+          query.sort?.key === "name"
+            ? query.sort.direction === "asc"
+              ? "name_asc"
+              : "name_desc"
+            : query.sort?.key === "updatedAt"
+              ? query.sort.direction === "asc"
+                ? "oldest"
+                : "newest"
+              : "newest",
       }),
     fetchOverview: fetchRoomAmenities,
     staleTime: 45_000,

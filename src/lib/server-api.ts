@@ -51,24 +51,24 @@ async function getProxyHeaders(request: NextRequest, requireAuth: boolean) {
     headers.set("Content-Type", contentType);
   }
 
-  if (!requireAuth) {
-    return headers;
-  }
-
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
   });
 
   const accessToken = typeof token?.accessToken === "string" ? token.accessToken : null;
-  const role = typeof token?.user?.role === "string" ? token.user.role : null;
 
   if (!accessToken) {
+    if (!requireAuth) {
+      return headers;
+    }
+
     throw new Error("Your session has expired. Please sign in again.");
   }
 
-  const authScheme = role === "admin" ? "System" : "Bearer";
-  headers.set("Authorization", `${authScheme} ${accessToken}`);
+  // Forward the current admin token even for non-auth-required dashboard GETs so
+  // backend catalog routes bypass any public cache and always reflect fresh CRUD changes.
+  headers.set("Authorization", `System ${accessToken}`);
 
   return headers;
 }

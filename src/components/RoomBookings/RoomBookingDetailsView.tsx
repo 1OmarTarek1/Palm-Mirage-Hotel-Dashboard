@@ -10,7 +10,7 @@ interface RoomBookingDetailsViewProps {
 
 export default function RoomBookingDetailsView({ booking }: RoomBookingDetailsViewProps) {
   return (
-    <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
+    <div className="space-y-6">
       <div className="overflow-hidden rounded-[28px] border border-border bg-muted">
         <div className="relative h-64 w-full md:h-72">
           {booking.roomImage ? (

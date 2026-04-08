@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Select,
   SelectContent,
@@ -30,23 +30,16 @@ export default function ActivityScheduleEditForm({
   isEditing = false,
   onChange,
 }: ActivityScheduleEditFormProps) {
-  const [formData, setFormData] = useState<ActivityScheduleDraft>(schedule);
-
-  useEffect(() => {
-    setFormData(schedule);
-  }, [schedule]);
-
   const selectedActivity = useMemo(
-    () => activities.find((activity) => activity.id === formData.activityId) ?? null,
-    [activities, formData.activityId]
+    () => activities.find((activity) => activity.id === schedule.activityId) ?? null,
+    [activities, schedule.activityId]
   );
 
   const handleChange = <K extends keyof ActivityScheduleDraft>(
     key: K,
     value: ActivityScheduleDraft[K]
   ) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...schedule, [key]: value };
     onChange(updated);
   };
 
@@ -66,7 +59,7 @@ export default function ActivityScheduleEditForm({
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Activity</span>
           <Select
-            value={formData.activityId}
+            value={schedule.activityId}
             onValueChange={(value) => handleChange("activityId", value)}
             disabled={isEditing}
           >
@@ -118,7 +111,7 @@ export default function ActivityScheduleEditForm({
           <span className="font-main text-sm font-semibold text-foreground">Date</span>
           <input
             type="date"
-            value={formData.date}
+            value={schedule.date}
             onChange={(event) => handleChange("date", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -127,7 +120,7 @@ export default function ActivityScheduleEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Status</span>
           <Select
-            value={formData.status}
+            value={schedule.status}
             onValueChange={(value) => handleChange("status", value as ActivityScheduleDraft["status"])}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -147,7 +140,7 @@ export default function ActivityScheduleEditForm({
           <span className="font-main text-sm font-semibold text-foreground">Start Time</span>
           <input
             type="time"
-            value={formData.startTime}
+            value={schedule.startTime}
             onChange={(event) => handleChange("startTime", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -157,7 +150,7 @@ export default function ActivityScheduleEditForm({
           <span className="font-main text-sm font-semibold text-foreground">End Time</span>
           <input
             type="time"
-            value={formData.endTime}
+            value={schedule.endTime}
             onChange={(event) => handleChange("endTime", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -168,7 +161,7 @@ export default function ActivityScheduleEditForm({
           <input
             type="number"
             min="1"
-            value={formData.capacity}
+            value={schedule.capacity}
             onChange={(event) => handleNumberChange("capacity", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -179,7 +172,7 @@ export default function ActivityScheduleEditForm({
           <input
             type="number"
             min="0"
-            value={formData.availableSeats}
+            value={schedule.availableSeats}
             onChange={(event) => handleNumberChange("availableSeats", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -191,7 +184,7 @@ export default function ActivityScheduleEditForm({
             type="number"
             min="0"
             placeholder="Leave empty to use the activity base price"
-            value={formData.priceOverride ?? ""}
+            value={schedule.priceOverride ?? ""}
             onChange={(event) => handleNumberChange("priceOverride", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -201,7 +194,7 @@ export default function ActivityScheduleEditForm({
           <span className="font-main text-sm font-semibold text-foreground">Notes</span>
           <textarea
             rows={4}
-            value={formData.notes}
+            value={schedule.notes}
             onChange={(event) => handleChange("notes", event.target.value)}
             className="font-main w-full rounded-3xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />

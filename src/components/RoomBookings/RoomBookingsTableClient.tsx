@@ -47,10 +47,13 @@ function RoomBookingsTableClient() {
           typeof query.filters.paymentStatus === "string"
             ? query.filters.paymentStatus
             : undefined,
+        sort: "newest",
       }),
     fetchOverview: () => fetchRoomBookings(),
     staleTime: 0,
     gcTime: 120_000,
+    // Fallback for demos: keep the table fresh even when realtime events/webhooks are delayed.
+    refetchInterval: 10_000,
   });
 
   const [highlightedBookingIds, setHighlightedBookingIds] = useState<string[]>([]);

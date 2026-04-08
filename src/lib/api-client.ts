@@ -11,6 +11,51 @@ interface ApiErrorPayload {
   }>;
 }
 
+function humanizeFieldName(field: string) {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeValidationMessage(message: string) {
+  const fieldMatch = message.match(/^"([^"]+)"\s+(.*)$/);
+  const fieldName = fieldMatch ? humanizeFieldName(fieldMatch[1]) : null;
+  const ruleText = fieldMatch ? fieldMatch[2] : message;
+
+  if (message.includes('"password"') && message.includes("fails to match the required pattern")) {
+    return "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, and a number.";
+  }
+
+  if (fieldName && ruleText === "is required") {
+    return `${fieldName} is required.`;
+  }
+
+  if (fieldName && ruleText === "is not allowed to be empty") {
+    return `${fieldName} cannot be empty.`;
+  }
+
+  if (fieldName && ruleText === "must be a valid email") {
+    return "Please enter a valid email address.";
+  }
+
+  if (fieldName && ruleText.startsWith("length must be at least ")) {
+    const countMatch = ruleText.match(/length must be at least (\d+) characters long/);
+    if (countMatch) {
+      return `${fieldName} must be at least ${countMatch[1]} characters long.`;
+    }
+  }
+
+  if (fieldName && ruleText.startsWith("length must be less than or equal to ")) {
+    const countMatch = ruleText.match(/length must be less than or equal to (\d+) characters long/);
+    if (countMatch) {
+      return `${fieldName} must be ${countMatch[1]} characters or fewer.`;
+    }
+  }
+
+  return message;
+}
+
 export class ApiError extends Error {
   status: number;
   data: ApiErrorPayload | string | null;
@@ -103,11 +148,11 @@ export function getErrorMessage(error: unknown) {
       typeof error.data === "object" && error.data !== null ? error.data.details : undefined;
 
     if (Array.isArray(validationDetails) && validationDetails.length > 0) {
-      return validationDetails[0]?.message ?? error.message;
+      return normalizeValidationMessage(validationDetails[0]?.message ?? error.message);
     }
 
-    return error.message;
+    return normalizeValidationMessage(error.message);
   }
 
-  return error instanceof Error ? error.message : "Request failed";
+  return error instanceof Error ? normalizeValidationMessage(error.message) : "Request failed";
 }

@@ -30,14 +30,14 @@ export default function ImageCardCell({
 
   return (
     <div
-      className={`flex items-center ${
+      className={`inline-flex min-w-0 items-center ${
         displayMode === "card" ? "gap-3" : "gap-5"
       } ${
         isLeftAligned ? "justify-start text-left" : isRightAligned ? "justify-end text-right" : "justify-center text-center"
       }`}
     >
       <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/5 ${
+        className={`relative shrink-0 flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/5 ${
           displayMode === "card" ? "h-12 w-16 rounded-[18px]" : "h-16 w-24"
         }`}
       >
@@ -61,21 +61,27 @@ export default function ImageCardCell({
         )}
       </div>
       <div
-        className={`flex flex-col gap-0.5 ${
+        className={`min-w-0 flex flex-col gap-0.5 ${
           isLeftAligned ? "items-start" : isRightAligned ? "items-end" : "items-center"
         }`}
       >
         <span
+          title={String(resolvedValue ?? "")}
           className={`font-header font-extrabold leading-tight text-foreground ${
-            displayMode === "card" ? "text-sm" : "text-sm"
+            displayMode === "card"
+              ? "block max-w-full truncate text-sm"
+              : "block max-w-[11.5rem] truncate text-sm"
           }`}
         >
           {String(resolvedValue ?? "")}
         </span>
         {subtitleText && (
           <span
+            title={subtitleText}
             className={`font-main font-black uppercase tracking-widest text-primary/85 ${
-              displayMode === "card" ? "text-[9px]" : "text-[10px]"
+              displayMode === "card"
+                ? "block max-w-full truncate text-[9px]"
+                : "block max-w-[11rem] truncate text-[10px]"
             }`}
           >
             {subtitleText}

@@ -52,7 +52,7 @@ function ActivityBookingsTableClient() {
             ? query.sort.direction === "asc"
               ? "oldest"
               : "newest"
-            : undefined,
+            : "newest",
       }),
     fetchOverview: fetchActivityBookings,
     staleTime: 0,

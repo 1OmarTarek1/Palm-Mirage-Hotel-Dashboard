@@ -89,7 +89,7 @@ function ActivitySchedulesTableClient() {
             ? query.sort.direction === "asc"
               ? "oldest"
               : "newest"
-            : undefined,
+            : "newest",
       }),
     fetchOverview: fetchActivitySchedules,
     staleTime: 20_000,

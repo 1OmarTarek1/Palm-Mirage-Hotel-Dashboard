@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -30,15 +30,8 @@ export default function ActivityEditForm({
   activity,
   onChange,
 }: ActivityEditFormProps) {
-  const [formData, setFormData] = useState<Activity>(activity);
-
-  useEffect(() => {
-    setFormData(activity);
-  }, [activity]);
-
   const handleChange = <K extends keyof Activity>(key: K, value: Activity[K]) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...activity, [key]: value };
     onChange(updated);
   };
 
@@ -48,38 +41,38 @@ export default function ActivityEditForm({
   };
 
   const handleStatChange = (index: number, key: keyof ActivityStat, value: string) => {
-    const updatedStats = formData.stats.map((stat, statIndex) =>
+    const updatedStats = activity.stats.map((stat, statIndex) =>
       statIndex === index ? { ...stat, [key]: value } : stat
     );
     handleChange("stats", updatedStats);
   };
 
   const handleAddStat = () => {
-    handleChange("stats", [...formData.stats, { value: "", label: "" }]);
+    handleChange("stats", [...activity.stats, { value: "", label: "" }]);
   };
 
   const handleRemoveStat = (index: number) => {
     handleChange(
       "stats",
-      formData.stats.filter((_, statIndex) => statIndex !== index)
+      activity.stats.filter((_, statIndex) => statIndex !== index)
     );
   };
 
   const handleHighlightChange = (index: number, value: string) => {
-    const updatedHighlights = formData.highlights.map((highlight, highlightIndex) =>
+    const updatedHighlights = activity.highlights.map((highlight, highlightIndex) =>
       highlightIndex === index ? value : highlight
     );
     handleChange("highlights", updatedHighlights);
   };
 
   const handleAddHighlight = () => {
-    handleChange("highlights", [...formData.highlights, ""]);
+    handleChange("highlights", [...activity.highlights, ""]);
   };
 
   const handleRemoveHighlight = (index: number) => {
     handleChange(
       "highlights",
-      formData.highlights.filter((_, highlightIndex) => highlightIndex !== index)
+      activity.highlights.filter((_, highlightIndex) => highlightIndex !== index)
     );
   };
 
@@ -89,12 +82,11 @@ export default function ActivityEditForm({
 
     const previewUrl = URL.createObjectURL(file);
     const updated: Activity = {
-      ...formData,
+      ...activity,
       image: previewUrl,
       imageFile: file,
     };
 
-    setFormData(updated);
     onChange(updated);
   };
 
@@ -105,10 +97,10 @@ export default function ActivityEditForm({
           <span className="font-main text-sm font-semibold text-foreground">Activity Image</span>
           <div className="space-y-3">
             <div className="relative h-48 overflow-hidden rounded-[24px] border border-border bg-muted/35">
-              {formData.image ? (
+              {activity.image ? (
                 <Image
-                  src={formData.image}
-                  alt={formData.title || "Activity preview"}
+                  src={activity.image}
+                  alt={activity.title || "Activity preview"}
                   fill
                   unoptimized
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -132,7 +124,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Title</span>
           <input
-            value={formData.title}
+            value={activity.title}
             onChange={(event) => handleChange("title", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -141,7 +133,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Label</span>
           <input
-            value={formData.label}
+            value={activity.label}
             onChange={(event) => handleChange("label", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -150,7 +142,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Category</span>
           <Select
-            value={formData.category}
+            value={activity.category}
             onValueChange={(value) => handleChange("category", value as Activity["category"])}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -169,7 +161,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">icon</span>
           <Select
-            value={formData.icon}
+            value={activity.icon}
             onValueChange={(value) => handleChange("icon", value as Activity["icon"])}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -188,7 +180,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Location</span>
           <input
-            value={formData.location}
+            value={activity.location}
             onChange={(event) => handleChange("location", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -199,7 +191,7 @@ export default function ActivityEditForm({
           <input
             type="number"
             min="0"
-            value={formData.basePrice}
+            value={activity.basePrice}
             onChange={(event) => handleNumberChange("basePrice", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -208,7 +200,7 @@ export default function ActivityEditForm({
         <label className="space-y-2">
           <span className="font-main text-sm font-semibold text-foreground">Pricing Type</span>
           <Select
-            value={formData.pricingType}
+            value={activity.pricingType}
             onValueChange={(value) => handleChange("pricingType", value as Activity["pricingType"])}
           >
             <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -230,7 +222,7 @@ export default function ActivityEditForm({
             type="number"
             min="15"
             step="15"
-            value={formData.durationMinutes}
+            value={activity.durationMinutes}
             onChange={(event) => handleNumberChange("durationMinutes", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -241,7 +233,7 @@ export default function ActivityEditForm({
           <input
             type="number"
             min="1"
-            value={formData.defaultCapacity}
+            value={activity.defaultCapacity}
             onChange={(event) => handleNumberChange("defaultCapacity", event.target.value)}
             className="font-main w-full rounded-2xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
           />
@@ -251,18 +243,18 @@ export default function ActivityEditForm({
           <span className="font-main text-sm font-semibold text-foreground">Visibility</span>
           <button
             type="button"
-            onClick={() => handleChange("isActive", !formData.isActive)}
+            onClick={() => handleChange("isActive", !activity.isActive)}
             className={`flex w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm transition ${
-              formData.isActive
+              activity.isActive
                 ? "border-primary/30 bg-primary/10 text-primary"
                 : "border-border bg-card text-muted-foreground"
             }`}
           >
             <span className="font-main font-semibold">
-              {formData.isActive ? "Visible for booking" : "Hidden from booking"}
+              {activity.isActive ? "Visible for booking" : "Hidden from booking"}
             </span>
             <span className="font-main text-xs uppercase tracking-[0.2em]">
-              {formData.isActive ? "Active" : "Hidden"}
+              {activity.isActive ? "Active" : "Hidden"}
             </span>
           </button>
         </label>
@@ -281,7 +273,7 @@ export default function ActivityEditForm({
           </div>
 
           <div className="space-y-3">
-            {formData.highlights.map((highlight, index) => (
+            {activity.highlights.map((highlight, index) => (
               <div
                 key={`highlight-${index}`}
                 className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_auto]"
@@ -303,7 +295,7 @@ export default function ActivityEditForm({
               </div>
             ))}
 
-            {formData.highlights.length === 0 ? (
+            {activity.highlights.length === 0 ? (
               <div className="font-main rounded-[24px] border border-dashed border-border bg-muted/35 px-4 py-5 text-sm text-muted-foreground">
                 No highlights added yet.
               </div>
@@ -325,7 +317,7 @@ export default function ActivityEditForm({
           </div>
 
           <div className="space-y-3">
-            {formData.stats.map((stat, index) => (
+            {activity.stats.map((stat, index) => (
               <div
                 key={`stat-${index}`}
                 className="grid gap-3 rounded-[24px] border border-border bg-muted/35 p-3 sm:grid-cols-[1fr_1fr_auto]"
@@ -353,7 +345,7 @@ export default function ActivityEditForm({
               </div>
             ))}
 
-            {formData.stats.length === 0 ? (
+            {activity.stats.length === 0 ? (
               <div className="font-main rounded-[24px] border border-dashed border-border bg-muted/35 px-4 py-5 text-sm text-muted-foreground">
                 No stats added yet.
               </div>
@@ -364,7 +356,7 @@ export default function ActivityEditForm({
         <label className="space-y-2 md:col-span-2">
           <span className="font-main text-sm font-semibold text-foreground">Description</span>
           <textarea
-            value={formData.description}
+            value={activity.description}
             onChange={(event) => handleChange("description", event.target.value)}
             rows={5}
             className="font-main w-full rounded-3xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"

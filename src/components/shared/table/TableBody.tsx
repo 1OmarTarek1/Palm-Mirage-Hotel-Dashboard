@@ -34,14 +34,14 @@ export default function TableBody<T extends object>({
             {columns.map((col, colIndex) => (
               <td
                 key={`${String(col.key)}-${colIndex}`}
-                className={`px-6 py-4 font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}
+                className={`px-6 py-4 align-middle font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}
               >
                 {col.type === "image-card" ? (
                   <div className={`flex items-center gap-3 ${col.cellAlign === "left" ? "justify-start" : col.cellAlign === "right" ? "justify-end" : "justify-center"}`}>
-                    <div className="h-12 w-12 rounded-2xl bg-muted" />
-                    <div className="space-y-2">
-                      <div className="h-3.5 w-28 rounded-full bg-muted" />
-                      <div className="h-3 w-20 rounded-full bg-accent" />
+                    <div className="h-16 w-24 shrink-0 rounded-2xl bg-muted" />
+                    <div className="min-w-0 space-y-2">
+                      <div className="h-3.5 w-32 rounded-full bg-muted" />
+                      <div className="h-3 w-24 rounded-full bg-accent" />
                     </div>
                   </div>
                 ) : col.type === "action-dropdown" ? (
@@ -78,7 +78,7 @@ export default function TableBody<T extends object>({
             }`}
           >
             {columns.map((col) => (
-              <td key={String(col.key)} className={`px-6 py-4 font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}>
+              <td key={String(col.key)} className={`px-6 py-4 align-middle font-main text-[13.5px] font-medium text-foreground/80 ${getCellAlignmentClass(col.cellAlign)}`}>
                 <CellRenderer 
                   row={row} 
                   column={col} 

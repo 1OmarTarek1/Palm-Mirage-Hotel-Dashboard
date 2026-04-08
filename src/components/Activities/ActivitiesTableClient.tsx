@@ -45,7 +45,7 @@ function ActivitiesTableClient() {
               ? query.sort.direction === "asc"
                 ? "oldest"
                 : "newest"
-              : undefined,
+              : "newest",
       }),
     fetchOverview: fetchActivities,
     staleTime: 45_000,

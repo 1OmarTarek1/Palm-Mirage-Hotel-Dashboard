@@ -43,6 +43,16 @@ function FacilitiesTableClient() {
         status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         category:
           typeof query.filters.category === "string" ? query.filters.category : undefined,
+        sort:
+          query.sort?.key === "name"
+            ? query.sort.direction === "asc"
+              ? "name_asc"
+              : "name_desc"
+            : query.sort?.key === "updatedAt"
+              ? query.sort.direction === "asc"
+                ? "oldest"
+                : "newest"
+              : "newest",
       }),
     fetchOverview: fetchFacilities,
     staleTime: 45_000,

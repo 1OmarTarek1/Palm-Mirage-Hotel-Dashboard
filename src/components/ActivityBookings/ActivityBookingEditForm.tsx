@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -25,18 +23,11 @@ export default function ActivityBookingEditForm({
   booking,
   onChange,
 }: ActivityBookingEditFormProps) {
-  const [formData, setFormData] = useState<ActivityBookingDraft>(booking);
-
-  useEffect(() => {
-    setFormData(booking);
-  }, [booking]);
-
   const handleChange = <K extends keyof ActivityBookingDraft>(
     key: K,
     value: ActivityBookingDraft[K]
   ) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
+    const updated = { ...booking, [key]: value };
     onChange(updated);
   };
 
@@ -45,7 +36,7 @@ export default function ActivityBookingEditForm({
       <label className="space-y-2">
         <span className="font-main text-sm font-semibold text-foreground">Status</span>
         <Select
-          value={formData.status}
+          value={booking.status}
           onValueChange={(value) => handleChange("status", value as ActivityBookingDraft["status"])}
         >
           <SelectTrigger className="h-[50px] rounded-2xl bg-muted/35">
@@ -64,7 +55,7 @@ export default function ActivityBookingEditForm({
       <label className="space-y-2">
         <span className="font-main text-sm font-semibold text-foreground">Payment Status</span>
         <Select
-          value={formData.paymentStatus}
+          value={booking.paymentStatus}
           onValueChange={(value) =>
             handleChange("paymentStatus", value as ActivityBookingDraft["paymentStatus"])
           }
@@ -86,7 +77,7 @@ export default function ActivityBookingEditForm({
         <span className="font-main text-sm font-semibold text-foreground">Cancellation Reason</span>
         <textarea
           rows={4}
-          value={formData.cancellationReason}
+          value={booking.cancellationReason}
           onChange={(event) => handleChange("cancellationReason", event.target.value)}
           className="font-main w-full rounded-3xl border border-border bg-muted/35 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-card"
         />
