@@ -4,6 +4,11 @@ import { queryKeys } from "@/lib/queryKeys";
 
 type BookingResource = "room" | "activity" | "restaurant";
 
+function invalidateAndRefetch(queryClient: QueryClient, queryKey: readonly unknown[]) {
+  void queryClient.invalidateQueries({ queryKey });
+  void queryClient.refetchQueries({ queryKey, type: "active" });
+}
+
 /** Room inventory flags may change when room bookings move */
 export function invalidateBookingOperationalQueries(
   queryClient: QueryClient,
@@ -12,24 +17,24 @@ export function invalidateBookingOperationalQueries(
   const resource = payload?.resource;
 
   if (!resource || resource === "room") {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.roomBookings.all });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
+    invalidateAndRefetch(queryClient, queryKeys.roomBookings.all);
+    invalidateAndRefetch(queryClient, queryKeys.rooms.all);
   }
   if (!resource || resource === "activity") {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.activityBookings.all });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.activitySchedules.all });
+    invalidateAndRefetch(queryClient, queryKeys.activityBookings.all);
+    invalidateAndRefetch(queryClient, queryKeys.activitySchedules.all);
   }
   if (!resource || resource === "restaurant") {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.restaurantBookings.all });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.restaurantTables.all });
+    invalidateAndRefetch(queryClient, queryKeys.restaurantBookings.all);
+    invalidateAndRefetch(queryClient, queryKeys.restaurantTables.all);
   }
 
-  void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardHome.all });
+  invalidateAndRefetch(queryClient, queryKeys.dashboardHome.all);
 }
 
 export function invalidatePaymentOperationalQueries(queryClient: QueryClient) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.roomBookings.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.activityBookings.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.restaurantBookings.all });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardHome.all });
+  invalidateAndRefetch(queryClient, queryKeys.roomBookings.all);
+  invalidateAndRefetch(queryClient, queryKeys.activityBookings.all);
+  invalidateAndRefetch(queryClient, queryKeys.restaurantBookings.all);
+  invalidateAndRefetch(queryClient, queryKeys.dashboardHome.all);
 }
