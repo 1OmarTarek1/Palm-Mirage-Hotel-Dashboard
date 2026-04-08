@@ -51,7 +51,7 @@ export default function MenuEditForm({
   };
 
   const renderIcon = (iconName: MenuIcon) => {
-    const IconComponent = (Icons as Record<string, LucideIcon>)[iconName];
+    const IconComponent = (Icons as unknown as Record<string, LucideIcon>)[iconName];
     return IconComponent ? <IconComponent size={16} /> : null;
   };
 
