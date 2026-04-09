@@ -69,19 +69,22 @@ export function useAdminNotificationInbox() {
     }
   }, [enabled]);
 
-  const refreshRef = useRef(refreshUnreadOnly);
-  refreshRef.current = refreshUnreadOnly;
+  const refreshListRef = useRef(refresh);
+  refreshListRef.current = refresh;
+
+  const refreshUnreadRef = useRef(refreshUnreadOnly);
+  refreshUnreadRef.current = refreshUnreadOnly;
 
   useEffect(() => {
     if (!enabled) return;
 
     const bridged = () => {
-      void refreshRef.current();
+      void refreshListRef.current();
     };
 
     registerPersistedNotificationRefresh(bridged);
     void refreshUnreadOnly();
-    const interval = window.setInterval(() => void refreshRef.current(), 120_000);
+    const interval = window.setInterval(() => void refreshUnreadRef.current(), 120_000);
 
     return () => {
       unregisterPersistedNotificationRefresh(bridged);
