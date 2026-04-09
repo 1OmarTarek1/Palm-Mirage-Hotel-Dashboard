@@ -47,6 +47,10 @@ export default function RestaurantBookingsTableClient() {
         page: query.page,
         limit: query.pageSize,
         search: query.search || undefined,
+        bookingMode:
+          typeof query.filters.bookingMode === "string"
+            ? query.filters.bookingMode
+            : undefined,
         status: typeof query.filters.status === "string" ? query.filters.status : undefined,
         paymentStatus:
           typeof query.filters.paymentStatus === "string"

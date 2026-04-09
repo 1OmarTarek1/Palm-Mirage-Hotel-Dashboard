@@ -104,6 +104,7 @@ export type RestaurantBookingsListQuery = {
   page?: number;
   limit?: number;
   search?: string;
+  bookingMode?: string;
   status?: string;
   paymentStatus?: string;
   sort?: "newest" | "oldest" | "start_asc" | "start_desc";

@@ -109,6 +109,7 @@ export type ActivitiesListQuery = {
   limit?: number;
   search?: string;
   category?: string;
+  isActive?: string;
   sort?: "newest" | "oldest" | "title_asc" | "title_desc";
 };
 

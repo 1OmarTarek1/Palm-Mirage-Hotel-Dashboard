@@ -91,6 +91,7 @@ export const restaurantBookingPreset = createTablePreset<RestaurantBooking>(
         { label: "Table only", value: "table_only" },
         { label: "Dine in", value: "dine_in" },
         { label: "Room service", value: "room_service" },
+        { label: "Pickup", value: "pickup" },
       ],
     },
     {

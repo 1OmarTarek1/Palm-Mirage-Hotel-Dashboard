@@ -36,6 +36,10 @@ function ActivitiesTableClient() {
         limit: query.pageSize,
         search: query.search || undefined,
         category: typeof query.filters.category === "string" ? query.filters.category : undefined,
+        isActive:
+          typeof query.filters.isActive === "string"
+            ? query.filters.isActive
+            : undefined,
         sort:
           query.sort?.key === "title"
             ? query.sort.direction === "asc"
